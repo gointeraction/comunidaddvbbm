@@ -1,0 +1,402 @@
+   301→   301→transaccional mediante el servicio configurado en Firebase (SendGrid o equivalente).
+   302→   302→Las dependencias externas críticas son: Firebase Platform (sin alternativa de contingencia en esta versión), Google
+   303→   303→Cloud Storage para alojamiento de imágenes de recursos y avatares, y el proveedor de email transaccional
+   304→   304→configurado. Cualquier interrupción de estos servicios afecta la disponibilidad de funcionalidades específicas según
+   305→   305→se documenta en el Capítulo 4 (Requisitos No Funcionales).
+   306→   306→AutoDev — Especificación de Requisitos de Software v1.0 // page 11
+   307→   307→
+   308→   308→=== PAGE 13 ===
+   309→   309→Capítulo 3 — Requisitos Funcionales
+   310→   310→Este capítulo lista los requisitos funcionales del sistema AutoDev. Cada requisito recibe un identificador único
+   311→   311→(RF-NNN), una descripción en una sola oración verificable, una prioridad (Alta, Media, Baja) y el módulo al que
+   312→   312→pertenece. La prioridad Alta corresponde a requisitos sin los cuales el MVP no puede lanzarse; Media corresponde
+   313→   313→a requisitos necesarios para la fase 2; Baja corresponde a mejoras diferibles. La trazabilidad con casos de uso,
+   314→   314→criterios de aceptación y escenarios BDD se presenta en el Apéndice B.
+   315→   315→3.1 Módulo de Autenticación (RF-001 a RF-008)
+   316→   316→ID Descripción Prioridad
+   317→   317→RF-001 El sistema debe permitir a un usuario invitado registrarse proporcionando email y contraseña con Alta
+   318→   318→mínimo 8 caracteres.
+   319→   319→RF-002 El sistema debe verificar unicidad de email al registrar y rechazar registros con email ya existente. Alta
+   320→   320→RF-003 El sistema debe enviar un email de verificación tras el registro exitoso. Media
+   321→   321→RF-004 El sistema debe permitir a un usuario iniciar sesión con email y contraseña. Alta
+   322→   322→RF-005 El sistema debe permitir a un usuario cerrar sesión. Alta
+   323→   323→RF-006 El sistema debe permitir recuperar contraseña mediante enlace enviado al email registrado. Alta
+   324→   324→RF-007 El sistema debe bloquear temporalmente tras 5 intentos fallidos de login consecutivos durante 15 Media
+   325→   325→minutos.
+   326→   326→RF-008 El sistema debe persistir la sesión del usuario mediante token JWT con expiración de 30 días. Alta
+   327→   327→3.2 Módulo de Onboarding y Perfil (RF-009 a RF-018)
+   328→   328→ID Descripción Prioridad
+   329→   329→RF-009 Tras el registro, el sistema debe redirigir al usuario al wizard de onboarding de 4 pasos. Alta
+   330→   330→RF-010 El paso 1 del onboarding debe capturar el nombre para mostrar del usuario (mínimo 2 caracteres). Alta
+   331→   331→RF-011 El paso 2 del onboarding debe permitir seleccionar al menos un interés entre: Automatización, IA, Alta
+   332→   332→Desarrollo Web, Comunidad.
+   333→   333→RF-012 El paso 3 del onboarding debe permitir seleccionar exactamente un nivel de experiencia: Alta
+   334→   334→Principiante, Intermedio, Avanzado.
+   335→   335→RF-013 El paso 4 del onboarding debe capturar una presentación personal de mínimo 20 caracteres. Alta
+   336→   336→RF-014 El sistema debe impedir el acceso a las demás secciones hasta completar el onboarding. Alta
+   337→   337→RF-015 El sistema debe permitir al usuario editar su perfil (nombre, intereses, nivel, presentación) desde la Alta
+   338→   338→página de perfil.
+   339→   339→AutoDev — Especificación de Requisitos de Software v1.0 // page 12
+   340→   340→
+   341→   341→=== PAGE 14 ===
+   342→   342→ID Descripción Prioridad
+   343→   343→RF-016 El sistema debe permitir al usuario subir un avatar (JPG, PNG o WebP, máximo 2MB) Media
+   344→   344→almacenado en Cloud Storage.
+   345→   345→RF-017 El sistema debe generar un avatar por defecto con las iniciales del usuario si no se sube uno. Media
+   346→   346→RF-018 El sistema debe mostrar el nivel, XP acumulada y misiones completadas en el perfil público del Media
+   347→   347→usuario.
+   348→   348→3.3 Módulo de Foro (RF-019 a RF-028)
+   349→   349→ID Descripción Prioridad
+   350→   350→RF-019 El sistema debe permitir a un Miembro crear un post con título (máximo 100 caracteres), Alta
+   351→   351→contenido (máximo 5000 caracteres) y hasta 3 etiquetas.
+   352→   352→RF-020 El sistema debe permitir al autor editar su propio post dentro de los 30 minutos posteriores a la Alta
+   353→   353→publicación.
+   354→   354→RF-021 El sistema debe permitir al autor eliminar su propio post en cualquier momento. Alta
+   355→   355→RF-022 El sistema debe permitir a un Miembro comentar en cualquier post con texto de máximo 1000 Alta
+   356→   356→caracteres.
+   357→   357→RF-023 El sistema debe permitir a un Miembro reaccionar (like) a un post o comentario, con toggle (un Alta
+   358→   358→like por usuario).
+   359→   359→RF-024 El sistema debe listar los posts en orden cronológico descendente con paginación de 20 posts por Alta
+   360→   360→página.
+   361→   361→RF-025 El sistema debe permitir filtrar posts por etiqueta (automatización, IA, webapps, general) y Alta
+   362→   362→combinar con búsqueda de texto.
+   363→   363→RF-026 El sistema debe mostrar en cada post el avatar, nombre y nivel del autor, fecha relativa y conteo de Alta
+   364→   364→comentarios/likes.
+   365→   365→RF-027 El sistema debe notificar al autor de un post cuando reciba un nuevo comentario o like. Media
+   366→   366→RF-028 El sistema debe impedir la publicación de posts con contenido vacío o que incumpla el filtro de Media
+   367→   367→palabras prohibidas.
+   368→   368→3.4 Módulo de Cursos (RF-029 a RF-035)
+   369→   369→ID Descripción Prioridad
+   370→   370→RF-029 El sistema debe listar los cursos disponibles con título, autor, duración estimada y número de Alta
+   371→   371→lecciones.
+   372→   372→RF-030 El sistema debe permitir a un Miembro inscribirse en un curso (gratis). Alta
+   373→   373→RF-031 El sistema debe permitir a un Miembro marcar una lección como completada. Alta
+   374→   374→AutoDev — Especificación de Requisitos de Software v1.0 // page 13
+   375→   375→
+   376→   376→=== PAGE 15 ===
+   377→   377→ID Descripción Prioridad
+   378→   378→RF-032 El sistema debe mostrar el progreso del usuario por curso como porcentaje de lecciones Alta
+   379→   379→completadas.
+   380→   380→RF-033 El sistema debe otorgar XP al completar una lección (configurable por curso, default 50 XP). Media
+   381→   381→RF-034 El sistema debe permitir a un Autor crear cursos compuestos por lecciones con título, contenido y Media
+   382→   382→recursos adjuntos.
+   383→   383→RF-035 El sistema debe mostrar un certificado simulado (no válido oficialmente) al completar el 100% de Baja
+   384→   384→un curso.
+   385→   385→3.5 Módulo de Recursos (RF-036 a RF-043)
+   386→   386→ID Descripción Prioridad
+   387→   387→RF-036 El sistema debe permitir a un Autor publicar un recurso con título, descripción, tipo, nivel e Alta
+   388→   388→imagen destacada.
+   389→   389→RF-037 El sistema debe soportar los siguientes tipos de recurso: Skill, Plugin, Subagent, MCP Server, Alta
+   390→   390→Agent Team, Tutorial.
+   391→   391→RF-038 El sistema debe permitir filtrar recursos por tipo, nivel (Principiante, Intermedio, Avanzado) y Alta
+   392→   392→búsqueda de texto.
+   393→   393→RF-039 El sistema debe mostrar cada recurso con imagen destacada, título, descripción, etiqueta de nivel y Alta
+   394→   394→botón de acción (./ver).
+   395→   395→RF-040 El sistema debe permitir a un Miembro descargar o enlazar al recurso externo (URL o archivo en Alta
+   396→   396→Storage).
+   397→   397→RF-041 El sistema debe contar el número de descargas/visitas por recurso para mostrar popularidad. Media
+   398→   398→RF-042 El sistema debe permitir al Autor editar o eliminar sus propios recursos. Alta
+   399→   399→RF-043 El sistema debe permitir a un Miembro marcar un recurso como favorito y ver su lista de favoritos. Media
+   400→   400→3.6 Módulo de Directos (RF-044 a RF-048)
+   401→   401→ID Descripción Prioridad
+   402→   402→RF-044 El sistema debe mostrar un calendario de próximas sesiones en vivo con título, fecha, hora y cupo Alta
+   403→   403→máximo.
+   404→   404→RF-045 El sistema debe permitir a un Miembro reservar un cupo en una sesión en vivo gratuita. Alta
+   405→   405→RF-046 El sistema debe impedir reservas cuando el cupo esté agotado, mostrando lista de espera. Alta
+   406→   406→RF-047 El sistema debe enviar notificación push y email recordatorio 1 hora antes de la sesión. Media
+   407→   407→RF-048 El sistema debe permitir al Autor o Admin cancelar una sesión, liberando los cupos y notificando a Media
+   408→   408→los inscritos.
+   409→   409→AutoDev — Especificación de Requisitos de Software v1.0 // page 14
+   410→   410→
+   411→   411→=== PAGE 16 ===
+   412→   412→3.7 Módulo de Miembros (RF-049 a RF-053)
+   413→   413→ID Descripción Prioridad
+   414→   414→RF-049 El sistema debe mostrar un directorio de miembros con avatar, nombre, nivel, fecha de unión, Alta
+   415→   415→especializaciones, última actividad y métricas (posts, comentarios).
+   416→   416→RF-050 El sistema debe permitir filtrar miembros por nivel (Principiante, Intermedio, Avanzado) y Alta
+   417→   417→especialización.
+   418→   418→RF-051 El sistema debe permitir ordenar miembros por recientes, más activos o todos. Alta
+   419→   419→RF-052 El sistema debe mostrar estadísticas globales: total de miembros, miembros activos hoy. Media
+   420→   420→RF-053 El sistema debe permitir ver el perfil público de un miembro con su actividad reciente (últimos 10 Media
+   421→   421→posts/comentarios).
+   422→   422→3.8 Módulo de Ranking (RF-054 a RF-057)
+   423→   423→ID Descripción Prioridad
+   424→   424→RF-054 El sistema debe calcular semanalmente un leaderboard con los 100 miembros con mayor XP Alta
+   425→   425→acumulada en la semana.
+   426→   426→RF-055 El sistema debe mostrar visualmente el top 3 con medallas (oro, plata, bronce) y posiciones 4-100 Alta
+   427→   427→en tabla.
+   428→   428→RF-056 El sistema debe reiniciar el leaderboard cada lunes a las 00:00 UTC-4 y archivar el ranking de la Alta
+   429→   429→semana anterior.
+   430→   430→RF-057 El sistema debe otorgar premios XP bonus a los top 3 (500, 300, 200 XP respectivamente) el día Media
+   431→   431→del reseteo.
+   432→   432→3.9 Módulo de Gamificación (RF-058 a RF-062)
+   433→   433→ID Descripción Prioridad
+   434→   434→RF-058 El sistema debe asignar XP por acciones: 10 XP por comentario, 25 XP por post, 50 XP por Alta
+   435→   435→lección completada, 5 XP por like recibido.
+   436→   436→RF-059 El sistema debe definir misiones como conjunto de tareas (ej. "Completa tu perfil" requiere avatar Alta
+   437→   437→+ presentación + 1 interés).
+   438→   438→RF-060 El sistema debe otorgar XP bonus al completar una misión (configurable, default 100 XP). Alta
+   439→   439→RF-061 El sistema debe definir logros desbloqueables por hitos (ej. "Primer post", "10 comentarios", "Top Media
+   440→   440→10 semanal").
+   441→   441→RF-062 El sistema debe mostrar un panel de progreso con misiones activas, logros obtenidos y XP Alta
+   442→   442→actual/necesaria para subir de nivel.
+   443→   443→AutoDev — Especificación de Requisitos de Software v1.0 // page 15
+   444→   444→
+   445→   445→=== PAGE 17 ===
+   446→   446→3.10 Módulo de Notificaciones (RF-063 a RF-067)
+   447→   447→ID Descripción Prioridad
+   448→   448→RF-063 El sistema debe generar notificaciones in-app por eventos: nuevo comentario en post propio, Alta
+   449→   449→mención, like recibido, misión completada, ranking actualizado.
+   450→   450→RF-064 El sistema debe mostrar un indicador (badge) en la campana de notificaciones con el conteo de no Alta
+   451→   451→leídas.
+   452→   452→RF-065 El sistema debe permitir marcar notificaciones como leídas individualmente o todas a la vez. Alta
+   453→   453→RF-066 El sistema debe enviar notificaciones push vía FCM cuando el usuario tenga la suscripción activa. Media
+   454→   454→RF-067 El sistema debe enviar email transaccional para eventos críticos: registro, recuperación de Media
+   455→   455→contraseña, directo próximo.
+   456→   456→3.11 Módulo de Administración (RF-068 a RF-075)
+   457→   457→ID Descripción Prioridad
+   458→   458→RF-068 El sistema debe proporcionar un panel de administración accesible solo a usuarios con rol Alta
+   459→   459→Administrador.
+   460→   460→RF-069 El sistema debe permitir al Administrador listar y buscar usuarios, y cambiar su rol (Miembro, Alta
+   461→   461→Autor, Moderador, Administrador).
+   462→   462→RF-070 El sistema debe permitir al Administrador o Moderador ocultar posts o comentarios que incumplan Alta
+   463→   463→las normas, registrando motivo.
+   464→   464→RF-071 El sistema debe permitir al Administrador suspender temporalmente a un usuario (sin acceso a Alta
+   465→   465→publicar) por un período configurable.
+   466→   466→RF-072 El sistema debe permitir al Administrador gestionar cursos y recursos de cualquier Autor (editar, Media
+   467→   467→eliminar).
+   468→   468→RF-073 El sistema debe permitir al Administrador configurar las sesiones en vivo (crear, editar, cancelar). Media
+   469→   469→RF-074 El sistema debe mostrar métricas globales en el panel: usuarios activos diarios, posts/día, recursos Media
+   470→   470→descargados, retención D7/D30.
+   471→   471→RF-075 El sistema debe mantener un log de auditoría inmutable (append-only) de las acciones Media
+   472→   472→administrativas realizadas.
+   473→   473→Resumen de cobertura: Esta especificación define 75 requisitos funcionales distribuidos en 11 módulos. La
+   474→   474→prioridad Alta agrupa 51 requisitos (68%), Media 23 (31%) y Baja 1 (1%). El MVP (fase 1) implementará
+   475→   475→todos los requisitos Alta; las fases 2 y 3 añadirán los Media; los Baja se diferirán al backlog.
+   476→   476→AutoDev — Especificación de Requisitos de Software v1.0 // page 16
+   477→   477→
+   478→   478→=== PAGE 18 ===
+   479→   479→Capítulo 4 — Requisitos No Funcionales
+   480→   480→Los requisitos no funcionales describen atributos de calidad del sistema que deben verificarse de manera objetiva,
+   481→   481→generalmente mediante instrumentación o pruebas de carga. Cada requisito incluye una métrica cuantificable y un
+   482→   482→método de verificación. A diferencia de los requisitos funcionales, los no funcionales rara vez se validan con un
+   483→   483→escenario BDD aislado; se validan mediante benchmarks, monitoreo continuo y auditorías periódicas.
+   484→   484→4.1 Rendimiento
+   485→   485→El sistema debe ofrecer tiempos de respuesta predecibles y rápidos. La paginación y la carga diferida son
+   486→   486→obligatorias para cualquier listado que pueda exceder 20 elementos. Firestore está optimizado para consultas por
+   487→   487→índice compuesto, por lo que cualquier consulta nueva debe revisarse contra el plan de índices (Capítulo 10).
+   488→   488→ID Métrica Objetivo Verificación
+   489→   489→RNF-01 Time to First Byte (TTFB) en Firebase Hosting < 500 ms (p95) Lighthouse CI en
+   490→   490→pipeline
+   491→   491→RNF-02 Carga inicial de la home (LCP) < 2.5 s en 4G Web Vitals en
+   492→   492→producción
+   493→   493→RNF-03 Latencia de Cloud Functions HTTP < 300 ms (p95) excluyendo cold start Cloud Monitoring
+   494→   494→RNF-04 Cold start de Cloud Functions < 2 s en el 95% de invocaciones Cloud Monitoring
+   495→   495→RNF-05 Tiempo de consulta a Firestore (lectura simple) < 100 ms (p99) Cloud Monitoring
+   496→   496→RNF-06 Paginación de foro (20 posts) < 800 ms incluyendo render E2E Cypress con
+   497→   497→perf hooks
+   498→   498→RNF-07 Tiempo de carga de imagen de Storage (avatar < 400 ms Lighthouse
+   499→   499→200KB)
+   500→   500→4.2 Escalabilidad
+   501→   501→Firebase escala horizontalmente de forma nativa. Firestore distribuye automáticamente los documentos entre shards
+   502→   502→y Cloud Functions escala a cero cuando no hay tráfico. Las consideraciones de escalabilidad se centran en: (i)
+   503→   503→diseño de consultas que no requieran escaneos de colección completos, (ii) uso de subcolecciones en lugar de arrays
+   504→   504→grandes para evitar documentos que excedan 1 MB, y (iii) uso de Cloud Functions para agregaciones que no pueden
+   505→   505→resolverse con consultas directas.
+   506→   506→ID Métrica Objetivo Verificación
+   507→   507→RNF-08 Usuarios concurrentes soportados 10.000 sin degradación Prueba de carga con
+   508→   508→k6
+   509→   509→RNF-09 Documentos en colección de posts Hasta 1 millón sin paginación lenta Índices compuestos
+   510→   510→+ cursor pagination
+   511→   511→AutoDev — Especificación de Requisitos de Software v1.0 // page 17
+   512→   512→
+   513→   513→=== PAGE 19 ===
+   514→   514→ID Métrica Objetivo Verificación
+   515→   515→RNF-10 Cloud Functions concurrentes Autoescalado hasta 1000 por región Firebase Functions
+   516→   516→config
+   517→   517→RNF-11 Tamaño máximo de documento Firestore < 500 KB (límite Firestore 1 MB) Validación en Cloud
+   518→   518→Function pre-write
+   519→   519→4.3 Seguridad
+   520→   520→La seguridad se implementa en tres capas: (i) Firebase App Check para verificar que las peticiones provienen de la
+   521→   521→app legítima, (ii) reglas de Firestore como única fuente de verdad para autorización a datos, y (iii) validación de
+   522→   522→entrada en Cloud Functions para operaciones que no pasan por Firestore directamente. El frontend no implementa
+   523→   523→lógica de autorización; solo oculta acciones visualmente.
+   524→   524→ID Métrica Objetivo Verificación
+   525→   525→RNF-12 Cobertura de reglas de seguridad Firestore 100% de colecciones con reglas Audit script en CI
+   526→   526→RNF-13 Rate limiting de Cloud Functions sensibles Máx 5 llamadas/min por usuario en Cloud Functions
+   527→   527→login y registro middleware
+   528→   528→RNF-14 Cumplimiento OWASP Top 10 0 vulnerabilidades críticas o altas Snyk + ZAP scan en
+   529→   529→CI
+   530→   530→RNF-15 Sanitización de contenido HTML en posts Strip de tags <script>, <iframe>, on* DOMPurify en
+   531→   531→attributes frontend y validación
+   532→   532→en backend
+   533→   533→RNF-16 Hashing de contraseñas Firebase Auth (scrypt con sal única) Heredado de
+   534→   534→Firebase Auth
+   535→   535→RNF-17 Protección contra CSRF Token anti-CSRF en formularios Verificación en
+   536→   536→Cloud Functions
+   537→   537→4.4 Disponibilidad y observabilidad
+   538→   538→El SLA de Firebase para Firestore y Cloud Functions es del 99.95% en us-central1. No se implementa redundancia
+   539→   539→multi-región en v1.0 por costo; se contempla para la fase 3 si la base de usuarios supera 10.000 activos mensuales.
+   540→   540→La observabilidad se basa en Cloud Logging para logs estructurados, Cloud Monitoring para métricas, y Firebase
+   541→   541→Analytics para eventos de producto.
+   542→   542→ID Métrica Objetivo Verificación
+   543→   543→RNF-18 Disponibilidad mensual del sistema >= 99.9% Status page + Cloud
+   544→   544→Monitoring SLO
+   545→   545→RNF-19 Tiempo de recuperación ante incidente (RTO) < 2 horas Runbook
+   546→   546→documentado
+   547→   547→AutoDev — Especificación de Requisitos de Software v1.0 // page 18
+   548→   548→
+   549→   549→=== PAGE 20 ===
+   550→   550→ID Métrica Objetivo Verificación
+   551→   551→RNF-20 Logs estructurados en Cloud Functions 100% con trace ID y user ID Audit log sample en
+   552→   552→CI
+   553→   553→RNF-21 Alertas proactivas Latencia p95 > 1s o error rate > 1% Cloud Monitoring
+   554→   554→alerting policies
+   555→   555→4.5 Usabilidad y accesibilidad
+   556→   556→AutoDev debe ser usable por personas con discapacidades visuales, motoras y cognitivas. Se sigue WCAG 2.1 nivel
+   557→   557→AA. La interfaz responsive abarca desde 375px (móvil) hasta 1920px (desktop) con breakpoints en 768px y
+   558→   558→1280px. El contraste mínimo de texto contra fondo es 4.5:1, exceptuando texto decorativo. Todos los elementos
+   559→   559→interactivos son navegables por teclado con focus visible.
+   560→   560→ID Métrica Objetivo Verificación
+   561→   561→RNF-22 Cumplimiento WCAG 2.1 AA 100% de páginas axe-core en CI
+   562→   562→RNF-23 Contraste de color >= 4.5:1 para texto normal Lighthouse
+   563→   563→accessibility audit
+   564→   564→RNF-24 Navegación por teclado 100% de flujos críticos accesibles Prueba manual +
+   565→   565→E2E
+   566→   566→RNF-25 Soporte de lectores de pantalla ARIA labels en todos los elementos Prueba con NVDA y
+   567→   567→interactivos VoiceOver
+   568→   568→RNF-26 Responsive en 375px, 768px, 1280px, 1920px Sin scroll horizontal, sin contenido E2E en Playwright
+   569→   569→cortado con viewports
+   570→   570→4.6 Mantenibilidad y compatibilidad
+   571→   571→El código debe ser mantenible por un equipo pequeño (3-5 desarrolladores). Se exige TypeScript estricto, cobertura
+   572→   572→mínima del 80% en líneas y 70% en ramas para Cloud Functions. El frontend se organiza por features (módulos)
+   573→   573→con co-localización de componentes, hooks, tipos y pruebas. La compatibilidad aborda las últimas dos versiones de
+   574→   574→los navegadores mayoritarios; IE11 no se soporta.
+   575→   575→ID Métrica Objetivo Verificación
+   576→   576→RNF-27 Cobertura de pruebas unitarias (Cloud Functions) >= 80% líneas, 70% ramas Jest + Istanbul en CI
+   577→   577→RNF-28 Linting sin errores 0 errores ESLint, 0 errores CI gate
+   578→   578→TypeScript
+   579→   579→RNF-29 Tamaño máximo de archivo 500 líneas (excepto generados) ESLint rule
+   580→   580→max-lines
+   581→   581→RNF-30 Navegadores soportados Últimas 2 versiones de Chrome, Browserlist +
+   582→   582→Firefox, Safari, Edge Playwright
+   583→   583→AutoDev — Especificación de Requisitos de Software v1.0 // page 19
+   584→   584→
+   585→   585→=== PAGE 21 ===
+   586→   586→ID Métrica Objetivo Verificación
+   587→   587→RNF-31 i18n preparado Textos extraídos en /messages/es.json Audit script en CI
+   588→   588→AutoDev — Especificación de Requisitos de Software v1.0 // page 20
+   589→   589→
+   590→   590→=== PAGE 22 ===
+   591→   591→Capítulo 5 — Casos de Uso Detallados
+   592→   592→5.1 Diagrama de casos de uso (descripción textual)
+   593→   593→Dado que este documento se distribuye en formato PDF y la notación gráfica UML puede comprometerse al
+   594→   594→rasterizar, se presenta el modelo de casos de uso en forma tabular. La tabla lista cada actor, los casos de uso en los
+   595→   595→que participa como primario y los casos en los que participa como secundario. El detalle de cada caso de uso se
+   596→   596→encuentra en las secciones 5.3 a 5.14.
+   597→   597→Actor Casos de uso primarios Casos de uso secundarios
+   598→   598→Invitado CU-001 Registro de cuenta, CU-004 Login —
+   599→   599→Miembro CU-002 Onboarding, CU-003 Publicar post, CU-004 Comentar post, CU-011 (mencionado en
+   600→   600→CU-005 Filtrar miembros, CU-007 Inscribirse a directo, CU-008 Ver notificaciones)
+   601→   601→ranking, CU-009 Completar misión, CU-010 Recibir notificación,
+   602→   602→CU-012 Buscar recurso
+   603→   603→Autor CU-006 Publicar recurso Todos los del Miembro
+   604→   604→Moderador CU-011 Moderar contenido —
+   605→   605→Administrador CU-011 Moderar (extendido), gestión usuarios, métricas —
+   606→   606→5.2 Plantilla de caso de uso
+   607→   607→Cada caso de uso se documenta siguiendo la plantilla: identificador, nombre, actor primario, precondiciones,
+   608→   608→postcondiciones, flujo principal numerado, flujos alternativos y excepciones. Esta estructura facilita la conversión
+   609→   609→directa a escenarios BDD en el Capítulo 7.
+   610→   610→5.3 CU-001 — Registro de cuenta
+   611→   611→Campo Valor
+   612→   612→ID CU-001
+   613→   613→Nombre Registro de cuenta
+   614→   614→Actor primario Invitado
+   615→   615→Precondiciones El invitado no tiene sesión activa. El email no está registrado.
+   616→   616→Postcondiciones Se crea el documento de usuario en Firestore con estado "onboarding_pending". Se envía email de
+   617→   617→verificación. Se redirige al wizard de onboarding.
+   618→   618→Flujo principal:
+   619→   619→1 El invitado accede a la página /registro.
+   620→   620→2 El sistema muestra el formulario con campos: email, contraseña, confirmar contraseña.
+   621→   621→AutoDev — Especificación de Requisitos de Software v1.0 // page 21
+   622→   622→
+   623→   623→=== PAGE 23 ===
+   624→   624→3 El invitado completa los campos y pulsa "crear_cuenta".
+   625→   625→4 El frontend valida formato de email y longitud mínima de contraseña (8 caracteres).
+   626→   626→5 El frontend llama a Firebase Auth: createUserWithEmailAndPassword(email, password).
+   627→   627→6 Firebase Auth crea el usuario y devuelve el UID.
+   628→   628→7 Una Cloud Function onUserCreate (trigger auth.user().onCreate) crea el documento /users/{uid} con
+   629→   629→campos: email, role="member", status="onboarding_pending", createdAt.
+   630→   630→8 El sistema envía email de verificación vía Firebase Auth sendEmailVerification().
+   631→   631→9 El sistema redirige al usuario al wizard de onboarding (paso 1).
+   632→   632→Flujos alternativos:
+   633→   633→l A1 — Email ya registrado: En el paso 5, Firebase Auth devuelve error auth/email-already-in-use. El
+   634→   634→sistema muestra mensaje "Ya existe una cuenta con este email" y ofrece enlace a /login.
+   635→   635→l A2 — Contraseña débil: En el paso 5, Firebase Auth devuelve error auth/weak-password. El sistema
+   636→   636→resalta el campo contraseña con mensaje "Mínimo 8 caracteres".
+   637→   637→l A3 — Email inválido: El paso 4 rechaza antes de llamar a Firebase. El sistema muestra "Email no válido"
+   638→   638→junto al campo.
+   639→   639→Excepciones:
+   640→   640→l E1 — Firebase Auth no disponible: El sistema muestra mensaje genérico "Servicio no disponible
+   641→   641→temporalmente" y registra el error en Cloud Logging con trace ID.
+   642→   642→l E2 — Cloud Function onUserCreate falla: El usuario se crea en Auth pero no en Firestore. Una Cloud
+   643→   643→Function de reconciliación (scheduled, cada 5 min) detecta huérfanos y los corrige.
+   644→   644→5.4 CU-002 — Onboarding de perfil
+   645→   645→Campo Valor
+   646→   646→ID CU-002
+   647→   647→Nombre Onboarding de perfil
+   648→   648→Actor primario Miembro (recién registrado)
+   649→   649→Precondiciones El usuario tiene cuenta autenticada. Su documento en Firestore tiene status="onboarding_pending".
+   650→   650→Postcondiciones El documento /users/{uid} se actualiza con name, interests[], level, bio, status="active". Se otorga XP
+   651→   651→inicial (50 XP). Se publica un post automático de presentación en el foro.
+   652→   652→Flujo principal:
+   653→   653→1 El usuario es redirigido a /onboarding/paso-1 tras el registro.
+   654→   654→2 Paso 1: Captura del nombre (mínimo 2 caracteres). El usuario pulsa "continuar".
+   655→   655→AutoDev — Especificación de Requisitos de Software v1.0 // page 22
+   656→   656→
+   657→   657→=== PAGE 24 ===
+   658→   658→3 Paso 2: Selección de al menos 1 interés entre Automatización, IA, Desarrollo Web, Comunidad. Botón
+   659→   659→"continuar" habilitado solo cuando hay selección.
+   660→   660→4 Paso 3: Selección de exactamente 1 nivel (Principiante, Intermedio, Avanzado).
+   661→   661→5 Paso 4: Captura de presentación personal (mínimo 20 caracteres). El usuario pulsa "guardar_perfil &&
+   662→   662→continuar".
+   663→   663→6 El frontend valida todos los campos antes de enviar.
+   664→   664→7 El frontend llama a la Cloud Function HTTP completeOnboarding con los datos consolidados.
+   665→   665→8 La Cloud Function valida los datos, actualiza el documento /users/{uid} (status="active"), otorga 50 XP y
+   666→   666→crea un post automático en /posts con tag "presentacion".
+   667→   667→9 El sistema redirige al usuario al /foro.
+   668→   668→Flujos alternativos:
+   669→   669→l A1 — Saltar paso opcional: Si el usuario intenta cerrar la pestaña, el sistema mantiene el
+   670→   670→status="onboarding_pending" y vuelve a mostrar el wizard en el siguiente login.
+   671→   671→l A2 — Volver atrás: El usuario puede navegar entre pasos con los botones "atrás" sin perder datos en
+   672→   672→memoria.
+   673→   673→5.5 CU-003 — Publicar post en foro
+   674→   674→Campo Valor
+   675→   675→ID CU-003
+   676→   676→Nombre Publicar post en foro
+   677→   677→Actor primario Miembro
+   678→   678→Precondiciones Usuario autenticado con status="active".
+   679→   679→Postcondiciones Se crea un documento en /posts con autor, contenido, etiquetas y timestamp. Se otorgan 25 XP al autor. Se
+   680→   680→actualiza el contador postsCount del autor.
+   681→   681→Flujo principal:
+   682→   682→1 El Miembro accede a /foro y localiza el input "¿qué estás construyendo hoy?".
+   683→   683→2 El Miembro pulsa el input y se expande el formulario con título, contenido y selector de etiquetas.
+   684→   684→3 El Miembro completa título (máx 100), contenido (máx 5000) y selecciona hasta 3 etiquetas.
+   685→   685→4 El Miembro pulsa "publicar".
+   686→   686→5 El frontend valida longitudes y formato, sanitiza HTML con DOMPurify.
+   687→   687→6 El frontend escribe directamente en /posts mediante set() con uid autogenerado.
+   688→   688→7 La Cloud Function onPostCreate (trigger firestore onCreate) valida reglas, otorga 25 XP al autor e
+   689→   689→incrementa postsCount.
+   690→   690→AutoDev — Especificación de Requisitos de Software v1.0 // page 23
+   691→   691→
+   692→   692→=== PAGE 25 ===
+   693→   693→8 El post aparece en la cabecera del listado del foro.
+   694→   694→Flujos alternativos:
+   695→   695→l A1 — Contenido vacío: El paso 5 rechaza y muestra "El contenido no puede estar vacío".
+   696→   696→l A2 — Palabra prohibida: El paso 5 detecta una palabra de la lista negra y solicita revisión.
+   697→   697→l A3 — Rate limit: Si el usuario publica más de 3 posts en 10 minutos, el sistema bloquea con mensaje
+   698→   698→"Espera unos minutos antes de publicar de nuevo".
+   699→   699→5.6 CU-004 — Comentar post
+   700→   700→Campo Valor
+
+[showing lines 301-700 of 1962; use offset=701 with limit to continue reading]

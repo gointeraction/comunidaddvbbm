@@ -1,0 +1,754 @@
+     1→     1→'use client';
+     2→     2→
+     3→     3→import { useState, useMemo } from 'react';
+     4→     4→import { useAppStore } from '@/stores/app-store';
+     5→     5→import { MOCK_COMMENTS } from '@/lib/mock-data';
+     6→     6→import type { Post, Comment, ExperienceLevel } from '@/types/autodev';
+     7→     7→
+     8→     8→import { Button } from '@/components/ui/button';
+     9→     9→import { Input } from '@/components/ui/input';
+    10→    10→import { Textarea } from '@/components/ui/textarea';
+    11→    11→import {
+    12→    12→  Dialog,
+    13→    13→  DialogContent,
+    14→    14→  DialogHeader,
+    15→    15→  DialogTitle,
+    16→    16→} from '@/components/ui/dialog';
+    17→    17→import { Badge } from '@/components/ui/badge';
+    18→    18→import { Card, CardContent } from '@/components/ui/card';
+    19→    19→import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+    20→    20→import { Separator } from '@/components/ui/separator';
+    21→    21→import {
+    22→    22→  Heart,
+    23→    23→  MessageSquare,
+    24→    24→  Tag,
+    25→    25→  Search,
+    26→    26→  Plus,
+    27→    27→  ArrowLeft,
+    28→    28→  Clock,
+    29→    29→  Send,
+    30→    30→  Filter,
+    31→    31→} from 'lucide-react';
+    32→    32→
+    33→    33→const TAG_OPTIONS = ['automatizacion', 'ia', 'webapps', 'general'] as const;
+    34→    34→const TAG_LABELS: Record<string, string> = {
+    35→    35→  todos: 'Todos',
+    36→    36→  automatizacion: 'Automatización',
+    37→    37→  ia: 'IA',
+    38→    38→  webapps: 'WebApps',
+    39→    39→  general: 'General',
+    40→    40→};
+    41→    41→
+    42→    42→const LEVEL_COLORS: Record<ExperienceLevel, string> = {
+    43→    43→  principiante: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+    44→    44→  intermedio: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    45→    45→  avanzado: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    46→    46→};
+    47→    47→
+    48→    48→function getInitials(name: string): string {
+    49→    49→  return name
+    50→    50→    .split(' ')
+    51→    51→    .map((w) => w[0])
+    52→    52→    .join('')
+    53→    53→    .toUpperCase()
+    54→    54→    .slice(0, 2);
+    55→    55→}
+    56→    56→
+    57→    57→function relativeTime(dateStr: string): string {
+    58→    58→  const now = Date.now();
+    59→    59→  const then = new Date(dateStr).getTime();
+    60→    60→  const diffMs = now - then;
+    61→    61→  const diffMin = Math.floor(diffMs / 60000);
+    62→    62→  const diffH = Math.floor(diffMs / 3600000);
+    63→    63→  const diffD = Math.floor(diffMs / 86400000);
+    64→    64→  const diffW = Math.floor(diffMs / 604800000);
+    65→    65→
+    66→    66→  if (diffMin < 1) return 'ahora';
+    67→    67→  if (diffMin < 60) return `hace ${diffMin}m`;
+    68→    68→  if (diffH < 24) return `hace ${diffH}h`;
+    69→    69→  if (diffD < 7) return `hace ${diffD}d`;
+    70→    70→  return `hace ${diffW}w`;
+    71→    71→}
+    72→    72→
+    73→    73→// ── Post Card ──────────────────────────────────────────
+    74→    74→function PostCard({ post }: { post: Post }) {
+    75→    75→  const navigate = useAppStore((s) => s.navigate);
+    76→    76→  const likePost = useAppStore((s) => s.likePost);
+    77→    77→
+    78→    78→  return (
+    79→    79→    <Card className="glass-card border-border/50 hover:border-primary/30 transition-colors">
+    80→    80→      <CardContent className="p-4 md:p-5">
+    81→    81→        {/* Author row */}
+    82→    82→        <div className="flex items-center gap-3 mb-3">
+    83→    83→          <Avatar className="h-8 w-8">
+    84→    84→            <AvatarFallback className="bg-primary/10 text-primary text-xs font-mono">
+    85→    85→              {getInitials(post.authorName)}
+    86→    86→            </AvatarFallback>
+    87→    87→          </Avatar>
+    88→    88→          <div className="flex items-center gap-2 flex-wrap">
+    89→    89→            <span className="text-sm font-medium text-foreground">
+    90→    90→              {post.authorName}
+    91→    91→            </span>
+    92→    92→            <Badge
+    93→    93→              variant="outline"
+    94→    94→              className={`text-[10px] px-1.5 py-0 ${LEVEL_COLORS[post.authorLevel]}`}
+    95→    95→            >
+    96→    96→              {post.authorLevel}
+    97→    97→            </Badge>
+    98→    98→            <span className="text-xs text-muted-foreground flex items-center gap-1">
+    99→    99→              <Clock className="size-3" />
+   100→   100→              {relativeTime(post.createdAt)}
+   101→   101→            </span>
+   102→   102→          </div>
+   103→   103→        </div>
+   104→   104→
+   105→   105→        {/* Title */}
+   106→   106→        <h3
+   107→   107→          className="font-semibold text-foreground cursor-pointer hover:text-primary transition-colors mb-2 text-sm md:text-base leading-snug"
+   108→   108→          onClick={() =>
+   109→   109→            navigate('foro-detalle', { postId: post.postId })
+   110→   110→          }
+   111→   111→        >
+   112→   112→          {post.title}
+   113→   113→        </h3>
+   114→   114→
+   115→   115→        {/* Content preview */}
+   116→   116→        <p className="text-muted-foreground text-sm leading-relaxed mb-3 line-clamp-2">
+   117→   117→          {post.content}
+   118→   118→        </p>
+   119→   119→
+   120→   120→        {/* Tags */}
+   121→   121→        <div className="flex flex-wrap gap-1.5 mb-3">
+   122→   122→          {post.tags.map((tag) => (
+   123→   123→            <Badge
+   124→   124→              key={tag}
+   125→   125→              variant="outline"
+   126→   126→              className="text-[10px] px-2 py-0 border-primary/30 text-primary/80 bg-primary/5"
+   127→   127→            >
+   128→   128→              <Tag className="size-2.5 mr-1" />
+   129→   129→              {TAG_LABELS[tag] || tag}
+   130→   130→            </Badge>
+   131→   131→          ))}
+   132→   132→        </div>
+   133→   133→
+   134→   134→        <Separator className="mb-3 bg-border/50" />
+   135→   135→
+   136→   136→        {/* Actions row */}
+   137→   137→        <div className="flex items-center justify-between">
+   138→   138→          <div className="flex items-center gap-4">
+   139→   139→            {/* Like */}
+   140→   140→            <button
+   141→   141→              onClick={() => likePost(post.postId)}
+   142→   142→              className="flex items-center gap-1.5 text-sm group transition-colors"
+   143→   143→              aria-label={
+   144→   144→                post.likedByUser ? 'Quitar me gusta' : 'Dar me gusta'
+   145→   145→              }
+   146→   146→            >
+   147→   147→              <Heart
+   148→   148→                className={`size-4 transition-colors ${
+   149→   149→                  post.likedByUser
+   150→   150→                    ? 'fill-red-500 text-red-500'
+   151→   151→                    : 'text-muted-foreground group-hover:text-red-400'
+   152→   152→                }`}
+   153→   153→              />
+   154→   154→              <span
+   155→   155→                className={
+   156→   156→                  post.likedByUser
+   157→   157→                    ? 'text-red-400'
+   158→   158→                    : 'text-muted-foreground'
+   159→   159→                }
+   160→   160→              >
+   161→   161→                {post.likesCount}
+   162→   162→              </span>
+   163→   163→            </button>
+   164→   164→
+   165→   165→            {/* Comments */}
+   166→   166→            <button
+   167→   167→              onClick={() =>
+   168→   168→                navigate('foro-detalle', { postId: post.postId })
+   169→   169→              }
+   170→   170→              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+   171→   171→              aria-label="Ver comentarios"
+   172→   172→            >
+   173→   173→              <MessageSquare className="size-4" />
+   174→   174→              <span>{post.commentsCount}</span>
+   175→   175→            </button>
+   176→   176→          </div>
+   177→   177→
+   178→   178→          <button
+   179→   179→            onClick={() =>
+   180→   180→              navigate('foro-detalle', { postId: post.postId })
+   181→   181→            }
+   182→   182→            className="text-xs text-primary hover:underline cursor-pointer"
+   183→   183→          >
+   184→   184→            Ver más
+   185→   185→          </button>
+   186→   186→        </div>
+   187→   187→      </CardContent>
+   188→   188→    </Card>
+   189→   189→  );
+   190→   190→}
+   191→   191→
+   192→   192→// ── Post Detail ────────────────────────────────────────
+   193→   193→function PostDetail() {
+   194→   194→  const { posts, routeParams, navigate, createComment, likePost, likeComment } =
+   195→   195→    useAppStore();
+   196→   196→  const postId = routeParams.postId || '';
+   197→   197→  const post = posts.find((p) => p.postId === postId);
+   198→   198→  const [commentText, setCommentText] = useState('');
+   199→   199→  const [localComments, setLocalComments] = useState<Comment[]>(
+   200→   200→    MOCK_COMMENTS[postId] || []
+   201→   201→  );
+   202→   202→  const [localLikes, setLocalLikes] = useState<Record<string, boolean>>({});
+   203→   203→
+   204→   204→  function handleSubmitComment() {
+   205→   205→    if (!commentText.trim() || !postId) return;
+   206→   206→    createComment(postId, commentText.trim());
+   207→   207→    const newComment: Comment = {
+   208→   208→      commentId: 'c-' + Date.now(),
+   209→   209→      postId,
+   210→   210→      authorId: 'self',
+   211→   211→      authorName: 'Tú',
+   212→   212→      authorLevel: 'intermedio',
+   213→   213→      authorAvatarUrl: null,
+   214→   214→      content: commentText.trim(),
+   215→   215→      likesCount: 0,
+   216→   216→      likedByUser: false,
+   217→   217→      hidden: false,
+   218→   218→      createdAt: new Date().toISOString(),
+   219→   219→      updatedAt: new Date().toISOString(),
+   220→   220→    };
+   221→   221→    setLocalComments((prev) => [...prev, newComment]);
+   222→   222→    setCommentText('');
+   223→   223→  }
+   224→   224→
+   225→   225→  function handleLikeComment(commentId: string) {
+   226→   226→    setLocalComments((prev) =>
+   227→   227→      prev.map((c) => {
+   228→   228→        if (c.commentId !== commentId) return c;
+   229→   229→        const wasLiked = localLikes[commentId];
+   230→   230→        setLocalLikes((l) => ({ ...l, [commentId]: !wasLiked }));
+   231→   231→        return {
+   232→   232→          ...c,
+   233→   233→          likedByUser: !wasLiked,
+   234→   234→          likesCount: wasLiked ? c.likesCount - 1 : c.likesCount + 1,
+   235→   235→        };
+   236→   236→      })
+   237→   237→    );
+   238→   238→  }
+   239→   239→
+   240→   240→  if (!post) {
+   241→   241→    return (
+   242→   242→      <div className="text-center py-20 text-muted-foreground">
+   243→   243→        <p className="terminal-text">Post no encontrado</p>
+   244→   244→        <Button
+   245→   245→          variant="ghost"
+   246→   246→          className="mt-4 text-primary"
+   247→   247→          onClick={() => navigate('foro')}
+   248→   248→        >
+   249→   249→          <ArrowLeft className="size-4 mr-2" />
+   250→   250→          Volver al foro
+   251→   251→        </Button>
+   252→   252→      </div>
+   253→   253→    );
+   254→   254→  }
+   255→   255→
+   256→   256→  return (
+   257→   257→    <div className="animate-fade-in-up">
+   258→   258→      {/* Back link */}
+   259→   259→      <button
+   260→   260→        onClick={() => navigate('foro')}
+   261→   261→        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-6 cursor-pointer"
+   262→   262→      >
+   263→   263→        <ArrowLeft className="size-4" />
+   264→   264→        Volver al foro
+   265→   265→      </button>
+   266→   266→
+   267→   267→      {/* Post */}
+   268→   268→      <Card className="glass-card border-border/50 mb-6">
+   269→   269→        <CardContent className="p-5 md:p-6">
+   270→   270→          <div className="flex items-center gap-3 mb-4">
+   271→   271→            <Avatar className="h-10 w-10">
+   272→   272→              <AvatarFallback className="bg-primary/10 text-primary text-sm font-mono">
+   273→   273→                {getInitials(post.authorName)}
+   274→   274→              </AvatarFallback>
+   275→   275→            </Avatar>
+   276→   276→            <div className="flex items-center gap-2 flex-wrap">
+   277→   277→              <span className="font-medium">{post.authorName}</span>
+   278→   278→              <Badge
+   279→   279→                variant="outline"
+   280→   280→                className={`text-[10px] px-1.5 py-0 ${LEVEL_COLORS[post.authorLevel]}`}
+   281→   281→              >
+   282→   282→                {post.authorLevel}
+   283→   283→              </Badge>
+   284→   284→              <span className="text-xs text-muted-foreground flex items-center gap-1">
+   285→   285→                <Clock className="size-3" />
+   286→   286→                {relativeTime(post.createdAt)}
+   287→   287→              </span>
+   288→   288→            </div>
+   289→   289→          </div>
+   290→   290→
+   291→   291→          <h2 className="text-xl font-semibold text-foreground mb-3">
+   292→   292→            {post.title}
+   293→   293→          </h2>
+   294→   294→
+   295→   295→          <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line mb-4">
+   296→   296→            {post.content}
+   297→   297→          </div>
+   298→   298→
+   299→   299→          <div className="flex flex-wrap gap-1.5 mb-4">
+   300→   300→            {post.tags.map((tag) => (
+   301→   301→              <Badge
+   302→   302→                key={tag}
+   303→   303→                variant="outline"
+   304→   304→                className="text-[10px] px-2 py-0 border-primary/30 text-primary/80 bg-primary/5"
+   305→   305→              >
+   306→   306→                <Tag className="size-2.5 mr-1" />
+   307→   307→                {TAG_LABELS[tag] || tag}
+   308→   308→              </Badge>
+   309→   309→            ))}
+   310→   310→          </div>
+   311→   311→
+   312→   312→          <Separator className="mb-4 bg-border/50" />
+   313→   313→
+   314→   314→          <div className="flex items-center gap-4">
+   315→   315→            <button
+   316→   316→              onClick={() => likePost(post.postId)}
+   317→   317→              className="flex items-center gap-1.5 text-sm group transition-colors"
+   318→   318→            >
+   319→   319→              <Heart
+   320→   320→                className={`size-5 transition-colors ${
+   321→   321→                  post.likedByUser
+   322→   322→                    ? 'fill-red-500 text-red-500'
+   323→   323→                    : 'text-muted-foreground group-hover:text-red-400'
+   324→   324→                }`}
+   325→   325→              />
+   326→   326→              <span
+   327→   327→                className={
+   328→   328→                  post.likedByUser
+   329→   329→                    ? 'text-red-400'
+   330→   330→                    : 'text-muted-foreground'
+   331→   331→                }
+   332→   332→              >
+   333→   333→                {post.likesCount}
+   334→   334→              </span>
+   335→   335→            </button>
+   336→   336→            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+   337→   337→              <MessageSquare className="size-4" />
+   338→   338→              {post.commentsCount}
+   339→   339→            </span>
+   340→   340→          </div>
+   341→   341→        </CardContent>
+   342→   342→      </Card>
+   343→   343→
+   344→   344→      {/* Comments */}
+   345→   345→      <div className="mb-4">
+   346→   346→        <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+   347→   347→          <MessageSquare className="size-4 text-primary" />
+   348→   348→          Comentarios ({localComments.length})
+   349→   349→        </h3>
+   350→   350→
+   351→   351→        {localComments.length > 0 && (
+   352→   352→          <div className="space-y-3 mb-6 max-h-96 overflow-y-auto custom-scrollbar">
+   353→   353→            {localComments.map((comment) => (
+   354→   354→              <Card
+   355→   355→                key={comment.commentId}
+   356→   356→                className="glass-card border-border/50"
+   357→   357→              >
+   358→   358→                <CardContent className="p-4">
+   359→   359→                  <div className="flex items-center gap-2 mb-2">
+   360→   360→                    <Avatar className="h-7 w-7">
+   361→   361→                      <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-mono">
+   362→   362→                        {getInitials(comment.authorName)}
+   363→   363→                      </AvatarFallback>
+   364→   364→                    </Avatar>
+   365→   365→                    <span className="text-sm font-medium">
+   366→   366→                      {comment.authorName}
+   367→   367→                    </span>
+   368→   368→                    <Badge
+   369→   369→                      variant="outline"
+   370→   370→                      className={`text-[10px] px-1.5 py-0 ${LEVEL_COLORS[comment.authorLevel]}`}
+   371→   371→                    >
+   372→   372→                      {comment.authorLevel}
+   373→   373→                    </Badge>
+   374→   374→                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+   375→   375→                      <Clock className="size-3" />
+   376→   376→                      {relativeTime(comment.createdAt)}
+   377→   377→                    </span>
+   378→   378→                  </div>
+   379→   379→                  <p className="text-sm text-muted-foreground leading-relaxed">
+   380→   380→                    {comment.content}
+   381→   381→                  </p>
+   382→   382→                  <button
+   383→   383→                    onClick={() => handleLikeComment(comment.commentId)}
+   384→   384→                    className="flex items-center gap-1 text-xs mt-2 text-muted-foreground hover:text-red-400 transition-colors"
+   385→   385→                  >
+   386→   386→                    <Heart
+   387→   387→                      className={`size-3.5 ${
+   388→   388→                        comment.likedByUser
+   389→   389→                          ? 'fill-red-500 text-red-500'
+   390→   390→                          : ''
+   391→   391→                      }`}
+   392→   392→                    />
+   393→   393→                    {comment.likesCount}
+   394→   394→                  </button>
+   395→   395→                </CardContent>
+   396→   396→              </Card>
+   397→   397→            ))}
+   398→   398→          </div>
+   399→   399→        )}
+   400→   400→
+   401→   401→        {/* Add comment */}
+   402→   402→        <div className="flex gap-2">
+   403→   403→          <Input
+   404→   404→            value={commentText}
+   405→   405→            onChange={(e) => setCommentText(e.target.value)}
+   406→   406→            placeholder="Añadir comentario..."
+   407→   407→            className="flex-1 bg-secondary/50 border-border/50 text-sm"
+   408→   408→            onKeyDown={(e) => {
+   409→   409→              if (e.key === 'Enter' && !e.shiftKey) {
+   410→   410→                e.preventDefault();
+   411→   411→                handleSubmitComment();
+   412→   412→              }
+   413→   413→            }}
+   414→   414→          />
+   415→   415→          <Button
+   416→   416→            size="icon"
+   417→   417→            onClick={handleSubmitComment}
+   418→   418→            disabled={!commentText.trim()}
+   419→   419→            className="shrink-0"
+   420→   420→          >
+   421→   421→            <Send className="size-4" />
+   422→   422→          </Button>
+   423→   423→        </div>
+   424→   424→      </div>
+   425→   425→    </div>
+   426→   426→  );
+   427→   427→}
+   428→   428→
+   429→   429→// ── Create Post Dialog ─────────────────────────────────
+   430→   430→function CreatePostDialog({
+   431→   431→  open,
+   432→   432→  onOpenChange,
+   433→   433→}: {
+   434→   434→  open: boolean;
+   435→   435→  onOpenChange: (open: boolean) => void;
+   436→   436→}) {
+   437→   437→  const createPost = useAppStore((s) => s.createPost);
+   438→   438→  const [title, setTitle] = useState('');
+   439→   439→  const [content, setContent] = useState('');
+   440→   440→  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+   441→   441→  const [errors, setErrors] = useState<{ title?: string; content?: string }>(
+   442→   442→    {}
+   443→   443→  );
+   444→   444→
+   445→   445→  const toggleTag = (tag: string) => {
+   446→   446→    setSelectedTags((prev) => {
+   447→   447→      if (prev.includes(tag)) return prev.filter((t) => t !== tag);
+   448→   448→      if (prev.length >= 3) return prev;
+   449→   449→      return [...prev, tag];
+   450→   450→    });
+   451→   451→  };
+   452→   452→
+   453→   453→  const handlePublish = () => {
+   454→   454→    const newErrors: { title?: string; content?: string } = {};
+   455→   455→    if (!title.trim()) newErrors.title = 'El título es obligatorio';
+   456→   456→    if (!content.trim()) newErrors.content = 'El contenido es obligatorio';
+   457→   457→    if (Object.keys(newErrors).length > 0) {
+   458→   458→      setErrors(newErrors);
+   459→   459→      return;
+   460→   460→    }
+   461→   461→    createPost(title.trim(), content.trim(), selectedTags);
+   462→   462→    setTitle('');
+   463→   463→    setContent('');
+   464→   464→    setSelectedTags([]);
+   465→   465→    setErrors({});
+   466→   466→    onOpenChange(false);
+   467→   467→  };
+   468→   468→
+   469→   469→  const handleCancel = () => {
+   470→   470→    setTitle('');
+   471→   471→    setContent('');
+   472→   472→    setSelectedTags([]);
+   473→   473→    setErrors({});
+   474→   474→    onOpenChange(false);
+   475→   475→  };
+   476→   476→
+   477→   477→  return (
+   478→   478→    <Dialog open={open} onOpenChange={onOpenChange}>
+   479→   479→      <DialogContent className="sm:max-w-lg bg-card border-border/50 max-h-[90vh] overflow-y-auto custom-scrollbar">
+   480→   480→        <DialogHeader>
+   481→   481→          <DialogTitle className="terminal-text text-primary">
+   482→   482→            ~/nuevo-post
+   483→   483→          </DialogTitle>
+   484→   484→        </DialogHeader>
+   485→   485→
+   486→   486→        <div className="space-y-4 mt-2">
+   487→   487→          {/* Title */}
+   488→   488→          <div className="space-y-1.5">
+   489→   489→            <div className="flex items-center justify-between">
+   490→   490→              <label className="text-sm text-muted-foreground">Título</label>
+   491→   491→              <span className="text-[10px] text-muted-foreground terminal-text">
+   492→   492→                {title.length}/100
+   493→   493→              </span>
+   494→   494→            </div>
+   495→   495→            <Input
+   496→   496→              value={title}
+   497→   497→              onChange={(e) => {
+   498→   498→                if (e.target.value.length <= 100) {
+   499→   499→                  setTitle(e.target.value);
+   500→   500→                  if (errors.title) setErrors((prev) => ({ ...prev, title: undefined }));
+   501→   501→                }
+   502→   502→              }}
+   503→   503→              placeholder="Título de tu publicación"
+   504→   504→              className="bg-secondary/50 border-border/50"
+   505→   505→            />
+   506→   506→            {errors.title && (
+   507→   507→              <p className="text-xs text-terminal-red">{errors.title}</p>
+   508→   508→            )}
+   509→   509→          </div>
+   510→   510→
+   511→   511→          {/* Content */}
+   512→   512→          <div className="space-y-1.5">
+   513→   513→            <div className="flex items-center justify-between">
+   514→   514→              <label className="text-sm text-muted-foreground">Contenido</label>
+   515→   515→              <span className="text-[10px] text-muted-foreground terminal-text">
+   516→   516→                {content.length}/5000
+   517→   517→              </span>
+   518→   518→            </div>
+   519→   519→            <Textarea
+   520→   520→              value={content}
+   521→   521→              onChange={(e) => {
+   522→   522→                if (e.target.value.length <= 5000) {
+   523→   523→                  setContent(e.target.value);
+   524→   524→                  if (errors.content) setErrors((prev) => ({ ...prev, content: undefined }));
+   525→   525→                }
+   526→   526→              }}
+   527→   527→              placeholder="¿Qué estás construyendo hoy?"
+   528→   528→              rows={6}
+   529→   529→              className="bg-secondary/50 border-border/50 resize-none"
+   530→   530→            />
+   531→   531→            {errors.content && (
+   532→   532→              <p className="text-xs text-terminal-red">{errors.content}</p>
+   533→   533→            )}
+   534→   534→          </div>
+   535→   535→
+   536→   536→          {/* Tags */}
+   537→   537→          <div className="space-y-2">
+   538→   538→            <label className="text-sm text-muted-foreground flex items-center gap-1.5">
+   539→   539→              <Tag className="size-3.5" />
+   540→   540→              Tags (máx. 3)
+   541→   541→            </label>
+   542→   542→            <div className="flex flex-wrap gap-2">
+   543→   543→              {TAG_OPTIONS.map((tag) => {
+   544→   544→                const isSelected = selectedTags.includes(tag);
+   545→   545→                const isDisabled = !isSelected && selectedTags.length >= 3;
+   546→   546→                return (
+   547→   547→                  <button
+   548→   548→                    key={tag}
+   549→   549→                    onClick={() => !isDisabled && toggleTag(tag)}
+   550→   550→                    disabled={isDisabled}
+   551→   551→                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer border ${
+   552→   552→                      isSelected
+   553→   553→                        ? 'bg-primary/20 border-primary/50 text-primary'
+   554→   554→                        : isDisabled
+   555→   555→                          ? 'bg-secondary/30 border-border/30 text-muted-foreground/40 cursor-not-allowed'
+   556→   556→                          : 'bg-secondary/50 border-border/50 text-muted-foreground hover:border-primary/30 hover:text-primary/80'
+   557→   557→                    }`}
+   558→   558→                  >
+   559→   559→                    {TAG_LABELS[tag]}
+   560→   560→                  </button>
+   561→   561→                );
+   562→   562→              })}
+   563→   563→            </div>
+   564→   564→          </div>
+   565→   565→
+   566→   566→          {/* Actions */}
+   567→   567→          <div className="flex gap-3 pt-2">
+   568→   568→            <Button
+   569→   569→              variant="ghost"
+   570→   570→              onClick={handleCancel}
+   571→   571→              className="flex-1"
+   572→   572→            >
+   573→   573→              Cancelar
+   574→   574→            </Button>
+   575→   575→            <Button
+   576→   576→              onClick={handlePublish}
+   577→   577→              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+   578→   578→            >
+   579→   579→              <Plus className="size-4 mr-1.5" />
+   580→   580→              Publicar
+   581→   581→            </Button>
+   582→   582→          </div>
+   583→   583→        </div>
+   584→   584→      </DialogContent>
+   585→   585→    </Dialog>
+   586→   586→  );
+   587→   587→}
+   588→   588→
+   589→   589→// ── Forum Page (main export) ───────────────────────────
+   590→   590→export default function ForumPage() {
+   591→   591→  const { route, posts, navigate } = useAppStore();
+   592→   592→
+   593→   593→  // Detail view
+   594→   594→  if (route === 'foro-detalle') {
+   595→   595→    return (
+   596→   596→      <div className="space-y-1">
+   597→   597→        <div className="terminal-text text-xs mb-6">
+   598→   598→          <span className="terminal-prompt">autodev</span>{' '}
+   599→   599→          <span className="terminal-path">~/foro</span>{' '}
+   600→   600→          <span className="terminal-comment">— detalle</span>
+   601→   601→        </div>
+   602→   602→        <PostDetail />
+   603→   603→      </div>
+   604→   604→    );
+   605→   605→  }
+   606→   606→
+   607→   607→  return <ForumList />;
+   608→   608→}
+   609→   609→
+   610→   610→function ForumList() {
+   611→   611→  const { posts, navigate } = useAppStore();
+   612→   612→  const [dialogOpen, setDialogOpen] = useState(false);
+   613→   613→  const [activeTag, setActiveTag] = useState('todos');
+   614→   614→  const [searchText, setSearchText] = useState('');
+   615→   615→  const [visibleCount, setVisibleCount] = useState(20);
+   616→   616→  const PER_PAGE = 20;
+   617→   617→
+   618→   618→  const filteredPosts = useMemo(() => {
+   619→   619→    return posts.filter((p) => {
+   620→   620→      if (p.hidden) return false;
+   621→   621→      if (activeTag !== 'todos' && !p.tags.includes(activeTag)) return false;
+   622→   622→      if (searchText.trim()) {
+   623→   623→        const q = searchText.toLowerCase();
+   624→   624→        return (
+   625→   625→          p.title.toLowerCase().includes(q) ||
+   626→   626→          p.content.toLowerCase().includes(q) ||
+   627→   627→          p.authorName.toLowerCase().includes(q)
+   628→   628→        );
+   629→   629→      }
+   630→   630→      return true;
+   631→   631→    });
+   632→   632→  }, [posts, activeTag, searchText]);
+   633→   633→
+   634→   634→  const visiblePosts = filteredPosts.slice(0, visibleCount);
+   635→   635→  const hasMore = visibleCount < filteredPosts.length;
+   636→   636→
+   637→   637→  const filterChips = [
+   638→   638→    'todos',
+   639→   639→    'automatizacion',
+   640→   640→    'ia',
+   641→   641→    'webapps',
+   642→   642→    'general',
+   643→   643→  ] as const;
+   644→   644→
+   645→   645→  return (
+   646→   646→    <div className="space-y-5">
+   647→   647→      {/* Terminal header */}
+   648→   648→      <div className="terminal-text text-xs">
+   649→   649→        <span className="terminal-prompt">autodev</span>{' '}
+   650→   650→        <span className="terminal-path">~/foro</span>
+   651→   651→        <span className="animate-blink text-foreground">▋</span>
+   652→   652→      </div>
+   653→   653→
+   654→   654→      {/* Post creation area */}
+   655→   655→      <Card className="glass-card border-border/50">
+   656→   656→        <CardContent className="p-4">
+   657→   657→          <div
+   658→   658→            onClick={() => setDialogOpen(true)}
+   659→   659→            className="flex items-center gap-3 cursor-pointer group"
+   660→   660→          >
+   661→   661→            <div className="flex-1 flex items-center gap-2 text-muted-foreground group-hover:text-primary/70 transition-colors">
+   662→   662→              <span className="terminal-prompt">$</span>
+   663→   663→              <span className="text-sm">
+   664→   664→                ¿Qué estás construyendo hoy?
+   665→   665→              </span>
+   666→   666→            </div>
+   667→   667→            <Button
+   668→   668→              size="sm"
+   669→   669→              onClick={(e) => {
+   670→   670→                e.stopPropagation();
+   671→   671→                setDialogOpen(true);
+   672→   672→              }}
+   673→   673→              className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+   674→   674→            >
+   675→   675→              <Plus className="size-4 mr-1.5" />
+   676→   676→              Publicar
+   677→   677→            </Button>
+   678→   678→          </div>
+   679→   679→        </CardContent>
+   680→   680→      </Card>
+   681→   681→
+   682→   682→      <CreatePostDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+   683→   683→
+   684→   684→      {/* Filter bar */}
+   685→   685→      <div className="flex flex-col sm:flex-row gap-3">
+   686→   686→        {/* Tag chips */}
+   687→   687→        <div className="flex items-center gap-1.5 flex-wrap">
+   688→   688→          <Filter className="size-4 text-muted-foreground mr-1 shrink-0" />
+   689→   689→          {filterChips.map((tag) => (
+   690→   690→            <button
+   691→   691→              key={tag}
+   692→   692→              onClick={() => setActiveTag(tag)}
+   693→   693→              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer border whitespace-nowrap ${
+   694→   694→                activeTag === tag
+   695→   695→                  ? 'bg-primary/20 border-primary/50 text-primary'
+   696→   696→                  : 'bg-secondary/50 border-border/50 text-muted-foreground hover:border-primary/30 hover:text-primary/80'
+   697→   697→              }`}
+   698→   698→            >
+   699→   699→              {TAG_LABELS[tag]}
+   700→   700→            </button>
+   701→   701→          ))}
+   702→   702→        </div>
+   703→   703→
+   704→   704→        {/* Search */}
+   705→   705→        <div className="relative sm:ml-auto w-full sm:w-64">
+   706→   706→          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+   707→   707→          <Input
+   708→   708→            value={searchText}
+   709→   709→            onChange={(e) => {
+   710→   710→              setSearchText(e.target.value);
+   711→   711→              setVisibleCount(PER_PAGE);
+   712→   712→            }}
+   713→   713→            placeholder="Buscar..."
+   714→   714→            className="pl-9 bg-secondary/50 border-border/50 text-sm"
+   715→   715→          />
+   716→   716→        </div>
+   717→   717→      </div>
+   718→   718→
+   719→   719→      {/* Post list */}
+   720→   720→      <div className="space-y-3">
+   721→   721→        {visiblePosts.length === 0 ? (
+   722→   722→          <div className="text-center py-16">
+   723→   723→            <p className="terminal-text text-muted-foreground text-sm">
+   724→   724→              No se encontraron publicaciones
+   725→   725→            </p>
+   726→   726→            <p className="terminal-text text-muted-foreground/50 text-xs mt-1">
+   727→   727→              Prueba con otros filtros o crea una nueva publicación
+   728→   728→            </p>
+   729→   729→          </div>
+   730→   730→        ) : (
+   731→   731→          <>
+   732→   732→            {visiblePosts.map((post) => (
+   733→   733→              <PostCard key={post.postId} post={post} />
+   734→   734→            ))}
+   735→   735→
+   736→   736→            {hasMore && (
+   737→   737→              <div className="flex justify-center pt-4">
+   738→   738→                <Button
+   739→   739→                  variant="outline"
+   740→   740→                  onClick={() =>
+   741→   741→                    setVisibleCount((prev) => prev + PER_PAGE)
+   742→   742→                  }
+   743→   743→                  className="border-primary/30 text-primary hover:bg-primary/10 hover:text-primary"
+   744→   744→                >
+   745→   745→                  Cargar más
+   746→   746→                </Button>
+   747→   747→              </div>
+   748→   748→            )}
+   749→   749→          </>
+   750→   750→        )}
+   751→   751→      </div>
+   752→   752→    </div>
+   753→   753→  );
+   754→   754→}

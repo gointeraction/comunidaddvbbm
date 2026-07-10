@@ -1,0 +1,502 @@
+     1→     1→     1→=== PAGE 1 ===
+     2→     2→     2→$ SRS · V1.0 · SPECIFICATION DRIVEN DEVELOPMENT
+     3→     3→     3→AAuuttooDDeevv
+     4→     4→     4→// especificación_de_requisitos.md
+     5→     5→     5→## document_summary
+     6→     6→     6→Este documento define las especificaciones técnicas y funcionales de
+     7→     7→     7→AutoDev, una plataforma comunitaria para desarrolladores enfocada en
+     8→     8→     8→automatización, inteligencia artificial y desarrollo web. Cubre el ciclo
+     9→     9→     9→completo: requisitos funcionales, casos de uso, criterios de aceptación,
+    10→    10→    10→escenarios de prueba BDD automatizables, arquitectura del sistema basada
+    11→    11→    11→en Firebase (Auth, Firestore, Cloud Functions, Storage, FCM y Analytics) y
+    12→    12→    12→diseño detallado de la base de datos NoSQL con reglas de seguridad y
+    13→    13→    13→triggers serverless.
+    14→    14→    14→// VERSION // FECHA
+    15→    15→    15→1.0 — Release Candidate 10 de Julio, 2026
+    16→    16→    16→// AUTOR // METODOLOGÍA
+    17→    17→    17→Equipo de Producto — AutoDev SDD + BDD (Gherkin)
+    18→    18→    18→auth foro cursos recursos directos miembros ranking
+    19→    19→    19→{ }
+    20→    20→    20→gamificacion firestore cloud_functions
+    21→    21→    21→$ build --target=production --stack=firebase ● READY_TO_DEPLOY
+    22→    22→    22→
+    23→    23→    23→=== PAGE 2 ===
+    24→    24→    24→Tabla de Contenidos
+    25→    25→    25→Capítulo 1 — Introducción 6
+    26→    26→    26→1.1 Propósito del documento . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+    27→    27→    27→1.2 Alcance del sistema . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+    28→    28→    28→1.3 Definiciones, acrónimos y glosario . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+    29→    29→    29→1.4 Referencias . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+    30→    30→    30→1.5 Visión general del documento . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+    31→    31→    31→Capítulo 2 — Descripción General 9
+    32→    32→    32→2.1 Perspectiva del producto . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 9
+    33→    33→    33→2.2 Funciones del producto . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 9
+    34→    34→    34→2.3 Características de los usuarios . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10
+    35→    35→    35→2.4 Restricciones . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10
+    36→    36→    36→2.5 Suposiciones y dependencias . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10
+    37→    37→    37→Capítulo 3 — Requisitos Funcionales 12
+    38→    38→    38→3.1 Módulo de Autenticación (RF-001 a RF-008) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12
+    39→    39→    39→3.2 Módulo de Onboarding y Perfil (RF-009 a RF-018) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12
+    40→    40→    40→3.3 Módulo de Foro (RF-019 a RF-028) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13
+    41→    41→    41→3.4 Módulo de Cursos (RF-029 a RF-035) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13
+    42→    42→    42→3.5 Módulo de Recursos (RF-036 a RF-043) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 14
+    43→    43→    43→3.6 Módulo de Directos (RF-044 a RF-048) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 14
+    44→    44→    44→3.7 Módulo de Miembros (RF-049 a RF-053) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+    45→    45→    45→3.8 Módulo de Ranking (RF-054 a RF-057) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+    46→    46→    46→3.9 Módulo de Gamificación (RF-058 a RF-062) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+    47→    47→    47→AutoDev — Especificación de Requisitos de Software v1.0 // page 01
+    48→    48→    48→
+    49→    49→    49→=== PAGE 3 ===
+    50→    50→    50→3.10 Módulo de Notificaciones (RF-063 a RF-067) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16
+    51→    51→    51→3.11 Módulo de Administración (RF-068 a RF-075) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16
+    52→    52→    52→Capítulo 4 — Requisitos No Funcionales 17
+    53→    53→    53→4.1 Rendimiento . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17
+    54→    54→    54→4.2 Escalabilidad . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17
+    55→    55→    55→4.3 Seguridad . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 18
+    56→    56→    56→4.4 Disponibilidad y observabilidad . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 18
+    57→    57→    57→4.5 Usabilidad y accesibilidad . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19
+    58→    58→    58→4.6 Mantenibilidad y compatibilidad . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19
+    59→    59→    59→Capítulo 5 — Casos de Uso Detallados 21
+    60→    60→    60→5.1 Diagrama de casos de uso (descripción textual) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21
+    61→    61→    61→5.2 Plantilla de caso de uso . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21
+    62→    62→    62→5.3 CU-001 — Registro de cuenta . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21
+    63→    63→    63→5.4 CU-002 — Onboarding de perfil . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22
+    64→    64→    64→5.5 CU-003 — Publicar post en foro . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23
+    65→    65→    65→5.6 CU-004 — Comentar post . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 24
+    66→    66→    66→5.7 CU-005 — Filtrar miembros por especialidad . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 24
+    67→    67→    67→5.8 CU-006 — Publicar recurso . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 25
+    68→    68→    68→5.9 CU-007 — Inscribirse a directo . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 25
+    69→    69→    69→5.10 CU-008 — Visualizar ranking semanal . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26
+    70→    70→    70→5.11 CU-009 — Completar misión . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26
+    71→    71→    71→5.12 CU-010 — Recibir notificación push . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26
+    72→    72→    72→5.13 CU-011 — Moderar contenido (admin/mod) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 27
+    73→    73→    73→5.14 CU-012 — Buscar recurso por tipo . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 27
+    74→    74→    74→Capítulo 6 — Criterios de Aceptación 28
+    75→    75→    75→AutoDev — Especificación de Requisitos de Software v1.0 // page 02
+    76→    76→    76→
+    77→    77→    77→=== PAGE 4 ===
+    78→    78→    78→6.1 Criterios de aceptación por módulo . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 28
+    79→    79→    79→Capítulo 7 — Escenarios de Prueba Automatizables (BDD) 31
+    80→    80→    80→7.1 Feature: Autenticación . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 31
+    81→    81→    81→7.2 Feature: Onboarding . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 32
+    82→    82→    82→7.3 Feature: Foro . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 33
+    83→    83→    83→7.4 Feature: Recursos . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 34
+    84→    84→    84→7.5 Feature: Directos . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 35
+    85→    85→    85→7.6 Feature: Ranking y Gamificación . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 35
+    86→    86→    86→7.7 Feature: Notificaciones . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 36
+    87→    87→    87→7.8 Feature: Administración . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 37
+    88→    88→    88→Capítulo 8 — Estrategia de Pruebas 38
+    89→    89→    89→8.1 Pirámide de pruebas . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 38
+    90→    90→    90→8.2 Stack de pruebas detallado . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 38
+    91→    91→    91→8.3 Cobertura mínima . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 39
+    92→    92→    92→8.4 CI/CD Pipeline . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 39
+    93→    93→    93→8.5 Datos de prueba y seed . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 39
+    94→    94→    94→8.6 Gestión de ambientes . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 39
+    95→    95→    95→Capítulo 9 — Arquitectura del Sistema 40
+    96→    96→    96→9.1 Vista general . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 40
+    97→    97→    97→9.2 Componentes y responsabilidades . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 40
+    98→    98→    98→9.3 Patrones arquitectónicos . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 41
+    99→    99→    99→9.3.1 Repository Pattern en el frontend . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 41
+   100→   100→   100→9.3.2 Event-driven backend con triggers de Firestore . . . . . . . . . . . . . . . . . . . . . . . . . 41
+   101→   101→   101→9.3.3 Serverless con escalado a cero . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 41
+   102→   102→   102→AutoDev — Especificación de Requisitos de Software v1.0 // page 03
+   103→   103→   103→
+   104→   104→   104→=== PAGE 5 ===
+   105→   105→   105→9.3.4 Single source of truth en Firestore Rules . . . . . . . . . . . . . . . . . . . . . . . . . . . . 41
+   106→   106→   106→9.4 Flujos de datos principales . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 41
+   107→   107→   107→9.4.1 Flujo: Publicación de un post . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 41
+   108→   108→   108→9.4.2 Flujo: Cálculo del ranking semanal . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 41
+   109→   109→   109→9.4.3 Flujo: Notificación push tras comentario . . . . . . . . . . . . . . . . . . . . . . . . . . . . 41
+   110→   110→   110→9.5 Seguridad perimetral . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 42
+   111→   111→   111→9.6 Estrategia multi-región y escalado . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 42
+   112→   112→   112→Capítulo 10 — Diseño de Base de Datos (Firestore) 43
+   113→   113→   113→10.1 Modelo de datos general . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 43
+   114→   114→   114→10.2 Colección: users . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 43
+   115→   115→   115→10.3 Colección: posts y subcolección comments . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 43
+   116→   116→   116→10.4 Colección: resources . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 44
+   117→   117→   117→10.5 Colección: courses y subcolección lessons . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 44
+   118→   118→   118→10.6 Colección: lives y subcolecciones . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 45
+   119→   119→   119→10.7 Colección: rankings (histórico) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 46
+   120→   120→   120→10.8 Colecciones: missions, achievements, notifications, audit_logs . . . . . . . . . . . . . . . . . . . . . . . . 46
+   121→   121→   121→10.9 Índices compuestos necesarios . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 47
+   122→   122→   122→10.10 Reglas de seguridad Firestore . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 48
+   123→   123→   123→10.11 Triggers de Cloud Functions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 49
+   124→   124→   124→10.12 Snippet de Cloud Function: onPostCreate . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 50
+   125→   125→   125→Capítulo 11 — Roadmap y Entregables 52
+   126→   126→   126→11.1 Fases del roadmap . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 52
+   127→   127→   127→11.2 Criterios de salida por fase . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 52
+   128→   128→   128→11.3 Riesgos y mitigaciones . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 52
+   129→   129→   129→Capítulo 12 — Apéndices 54
+   130→   130→   130→AutoDev — Especificación de Requisitos de Software v1.0 // page 04
+   131→   131→   131→
+   132→   132→   132→=== PAGE 6 ===
+   133→   133→   133→Apendice A — Glosario completo . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 54
+   134→   134→   134→Apendice B — Matriz de trazabilidad . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 54
+   135→   135→   135→Apendice C — Convenciones de nombrado . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 56
+   136→   136→   136→Apendice D — Documentos relacionados . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 57
+   137→   137→   137→AutoDev — Especificación de Requisitos de Software v1.0 // page 05
+   138→   138→   138→
+   139→   139→   139→=== PAGE 7 ===
+   140→   140→   140→Capítulo 1 — Introducción
+   141→   141→   141→1.1 Propósito del documento
+   142→   142→   142→El presente documento constituye la Especificación de Requisitos de Software (SRS) de AutoDev, elaborada bajo
+   143→   143→   143→la metodología Specification Driven Development (SDD). Su objetivo principal es establecer una base formal y
+   144→   144→   144→verificable que articule, en un único artefacto, los requisitos funcionales, los casos de uso, los criterios de
+   145→   145→   145→aceptación, los escenarios de prueba automatizables y el diseño arquitectónico del sistema. Esta especificación sirve
+   146→   146→   146→como contrato entre los stakeholders de producto, el equipo de ingeniería y los validadores de calidad, garantizando
+   147→   147→   147→que toda decisión técnica posterior pueda trazarse a un requisito explícito y a un escenario de aceptación ejecutable.
+   148→   148→   148→La elección del enfoque SDD no es accidental: AutoDev es una plataforma comunitaria orientada a desarrolladores
+   149→   149→   149→que valoran la precisión técnica y la reproducibilidad. Un documento de especificación tradicional, ambiguo o
+   150→   150→   150→descriptivo, generaría interpretaciones divergentes entre frontend, backend y QA. Al adoptar SDD junto con
+   151→   151→   151→Behavior Driven Development (BDD) para los escenarios de aceptación, aseguramos que cada funcionalidad pueda
+   152→   152→   152→validarse mediante pruebas automatizadas escritas en lenguaje Gherkin, ejecutables contra el Firebase Emulator
+   153→   153→   153→Suite y desplegadas en un pipeline de integración continua.
+   154→   154→   154→Este documento está dirigido a product owners, ingenieros fullstack, ingenieros de QA, arquitectos de soluciones y
+   155→   155→   155→a cualquier revisor técnico que necesite comprender el alcance del sistema antes de su implementación. La versión
+   156→   156→   156→1.0 corresponde a la línea base inicial sobre la cual se construirán las iteraciones incrementales posteriores.
+   157→   157→   157→1.2 Alcance del sistema
+   158→   158→   158→AutoDev es una plataforma web responsive orientada a la comunidad de desarrolladores interesados en
+   159→   159→   159→automatización, inteligencia artificial y desarrollo web moderno. El sistema permite a los usuarios registrarse,
+   160→   160→   160→configurar su perfil técnico, publicar y consumir contenido en un foro comunitario, acceder a cursos y recursos
+   161→   161→   161→educativos, participar en sesiones en vivo, visualizar el directorio de miembros y competir en un ranking semanal
+   162→   162→   162→impulsado por un sistema de gamificación basado en puntos de experiencia (XP).
+   163→   163→   163→El alcance funcional cubierto por esta especificación incluye: (i) autenticación de usuarios mediante Firebase
+   164→   164→   164→Authentication con email y contraseña; (ii) onboarding guiado en cuatro pasos (registro, configuración de perfil,
+   165→   165→   165→selección de intereses y nivel, presentación comunitaria); (iii) foro público con posts, comentarios, reacciones y
+   166→   166→   166→filtros por etiqueta; (iv) catálogo de cursos con seguimiento de progreso por lección; (v) repositorio de recursos
+   167→   167→   167→tipificados (Skill, Plugin, Subagent, MCP Server, Agent Team, Tutorial); (vi) calendario de sesiones en vivo con
+   168→   168→   168→reserva de cupos limitados; (vii) directorio de miembros con filtros por nivel y especialidad; (viii) leaderboard
+   169→   169→   169→semanal con cálculo de XP y reparto de premios; (ix) sistema de misiones y logros; (x) notificaciones in-app, por
+   170→   170→   170→email y push; (xi) panel de administración con moderación de contenido y métricas globales.
+   171→   171→   171→Quedan fuera del alcance de esta versión: integraciones de pago con Stripe (planificada para la fase 4), mensajería
+   172→   172→   172→directa entre miembros (fase 5), aplicación móvil nativa (la plataforma web es responsive pero no se empaqueta
+   173→   173→   173→como app instalable en esta versión), integraciones con GitHub/GitLab para sincronización de repositorios, y
+   174→   174→   174→funcionalidades de IA generativa para recomendación de contenido.
+   175→   175→   175→1.3 Definiciones, acrónimos y glosario
+   176→   176→   176→AutoDev — Especificación de Requisitos de Software v1.0 // page 06
+   177→   177→   177→
+   178→   178→   178→=== PAGE 8 ===
+   179→   179→   179→Para asegurar la consistencia terminológica a lo largo del documento, se establecen las siguientes definiciones.
+   180→   180→   180→Cualquier término técnico no listado aquí conserva su significado estándar en la literatura de ingeniería de software.
+   181→   181→   181→Término Definición
+   182→   182→   182→SDD Specification Driven Development. Metodología que prioriza la especificación formal de requisitos
+   183→   183→   183→antes de la implementación.
+   184→   184→   184→SRS Software Requirements Specification. Documento que describe requisitos funcionales y no funcionales
+   185→   185→   185→del sistema.
+   186→   186→   186→BDD Behavior Driven Development. Práctica que expresa requisitos como comportamientos en lenguaje
+   187→   187→   187→natural estructurado (Gherkin).
+   188→   188→   188→Gherkin Lenguaje estructurado (Given/When/Then) para describir escenarios de prueba ejecutables.
+   189→   189→   189→Firebase Plataforma Backend-as-a-Service de Google Cloud que provee Auth, Firestore, Functions, Storage,
+   190→   190→   190→Hosting y Analytics.
+   191→   191→   191→Firestore Base de datos NoSQL orientada a documentos, en tiempo real, con sincronización offline.
+   192→   192→   192→Cloud Functions Funciones serverless de Firebase ejecutadas en respuesta a eventos (HTTP, triggers de Firestore,
+   193→   193→   193→scheduled).
+   194→   194→   194→FCM Firebase Cloud Messaging. Servicio de notificaciones push multiplataforma.
+   195→   195→   195→XP Experience Points. Unidad de puntaje en el sistema de gamificación de AutoDev.
+   196→   196→   196→Onboarding Proceso guiado de registro y configuración inicial de un nuevo usuario.
+   197→   197→   197→Leaderboard Tabla de clasificación semanal de usuarios ordenada por XP acumulada.
+   198→   198→   198→MCP Server Model Context Protocol Server. Recurso tipificado en AutoDev para integraciones con LLMs.
+   199→   199→   199→Misión Conjunto de tareas asignadas al usuario que otorgan XP al completarse.
+   200→   200→   200→App Check Servicio Firebase que protege backends contra abuso verificando la identidad de la app cliente.
+   201→   201→   201→1.4 Referencias
+   202→   202→   202→Este documento se alinea con las siguientes normas y referencias técnicas: IEEE Std 830-1998 (Recommended
+   203→   203→   203→Practice for Software Requirements Specifications), la documentación oficial de Firebase Authentication, Firestore
+   204→   204→   204→Data Model, Cloud Functions v2 y Firebase Security Rules (versión actualizada a julio 2026), la guía WCAG 2.1
+   205→   205→   205→del W3C para accesibilidad web, y la especificación de Gherkin mantenida por Cucumber. Las decisiones
+   206→   206→   206→arquitectónicas se documentan siguiendo el patrón ADR (Architecture Decision Records) y los principios SOLID
+   207→   207→   207→para el diseño de componentes.
+   208→   208→   208→1.5 Visión general del documento
+   209→   209→   209→El documento se organiza en doce capítulos. El Capítulo 2 ofrece una descripción general del producto, los roles de
+   210→   210→   210→usuario y las restricciones. El Capítulo 3 lista los requisitos funcionales (RF-001 a RF-060) agrupados por módulo.
+   211→   211→   211→El Capítulo 4 especifica los requisitos no funcionales con métricas verificables. El Capítulo 5 detalla doce casos de
+   212→   212→   212→AutoDev — Especificación de Requisitos de Software v1.0 // page 07
+   213→   213→   213→
+   214→   214→   214→=== PAGE 9 ===
+   215→   215→   215→uso clave con flujos principal y alternativos. El Capítulo 6 presenta la matriz de criterios de aceptación. El Capítulo
+   216→   216→   216→7 contiene los escenarios BDD en Gherkin para los flujos automatizables. El Capítulo 8 describe la estrategia de
+   217→   217→   217→pruebas y la pirámide adoptada. El Capítulo 9 define la arquitectura del sistema sobre Firebase. El Capítulo 10
+   218→   218→   218→detalla el modelo de datos en Firestore, índices, reglas de seguridad y triggers de Cloud Functions. El Capítulo 11
+   219→   219→   219→presenta el roadmap en cuatro fases y los riesgos identificados. El Capítulo 12 incluye los apéndices: glosario,
+   220→   220→   220→matriz de trazabilidad y convenciones.
+   221→   221→   221→AutoDev — Especificación de Requisitos de Software v1.0 // page 08
+   222→   222→   222→
+   223→   223→   223→=== PAGE 10 ===
+   224→   224→   224→Capítulo 2 — Descripción General
+   225→   225→   225→2.1 Perspectiva del producto
+   226→   226→   226→AutoDev es un producto independiente que se posiciona como una comunidad técnica especializada para
+   227→   227→   227→desarrolladores hispanohablantes interesados en automatización, inteligencia artificial aplicada y desarrollo web
+   228→   228→   228→moderno. A diferencia de plataformas genéricas como Stack Overflow o Reddit, AutoDev combina tres
+   229→   229→   229→dimensiones que normalmente viven separadas: el aprendizaje estructurado (cursos y tutoriales), la colaboración
+   230→   230→   230→comunitaria (foro y directorio de miembros) y la motivación sostenida (gamificación con XP, misiones y ranking
+   231→   231→   231→semanal). El sistema no es un componente embebido dentro de un producto mayor; es una plataforma autónoma
+   232→   232→   232→que se integra con servicios externos únicamente para autenticación (Firebase Auth), almacenamiento (Firestore y
+   233→   233→   233→Storage) y notificaciones push (FCM).
+   234→   234→   234→La interfaz está diseñada con una estética de terminal moderna: tema oscuro, tipografía monoespaciada para
+   235→   235→   235→elementos decorativos, prefijos de shell ($) y rutas estilo Unix (autodev ~/foro). Esta elección visual no es
+   236→   236→   236→decorativa sino funcional: comunica pertenencia a una audiencia técnica y reduce la fricción estética para
+   237→   237→   237→desarrolladores que pasan largas jornadas en editores de código con temas similares. El frontend es responsive y se
+   238→   238→   238→optimiza para resoluciones de escritorio (1280px y superiores) primero, con adaptaciones para tablet (768px) y
+   239→   239→   239→móvil (375px).
+   240→   240→   240→2.2 Funciones del producto
+   241→   241→   241→El producto se organiza en once módulos funcionales. Cada módulo agrupa un conjunto cohesionado de requisitos
+   242→   242→   242→funcionales que se detallan en el Capítulo 3. La tabla siguiente resume los módulos, su propósito y el identificador
+   243→   243→   243→de los requisitos asociados.
+   244→   244→   244→Módulo Propósito RF asociados
+   245→   245→   245→Autenticación Registro, login, recuperación de contraseña y verificación de email RF-001 a RF-008
+   246→   246→   246→Onboarding y Perfil Configuración inicial del perfil, intereses, nivel y presentación RF-009 a RF-018
+   247→   247→   247→Foro Publicación, comentario, reacción, filtrado y búsqueda de posts RF-019 a RF-028
+   248→   248→   248→Cursos Catálogo de cursos y seguimiento de progreso por lección RF-029 a RF-035
+   249→   249→   249→Recursos Publicación y consumo de recursos tipificados (Skill, Plugin, etc.) RF-036 a RF-043
+   250→   250→   250→Directos Calendario de sesiones en vivo y reserva de cupos RF-044 a RF-048
+   251→   251→   251→Miembros Directorio con filtros y perfil público RF-049 a RF-053
+   252→   252→   252→Ranking Leaderboard semanal con cálculo de XP y premios RF-054 a RF-057
+   253→   253→   253→Gamificación Misiones, logros, niveles y asignación de XP RF-058 a RF-062
+   254→   254→   254→Notificaciones Notificaciones in-app, email y push FCM RF-063 a RF-067
+   255→   255→   255→Administración Moderación, gestión de usuarios y métricas globales RF-068 a RF-075
+   256→   256→   256→AutoDev — Especificación de Requisitos de Software v1.0 // page 09
+   257→   257→   257→
+   258→   258→   258→=== PAGE 11 ===
+   259→   259→   259→2.3 Características de los usuarios
+   260→   260→   260→AutoDev define cinco roles de usuario con permisos diferenciados. El diseño de permisos sigue el principio de
+   261→   261→   261→mínimo privilegio: cada rol recibe solo los permisos necesarios para sus objetivos. Las reglas de seguridad de
+   262→   262→   262→Firestore (Capítulo 10) hacen cumplir estos permisos a nivel de base de datos, de modo que cualquier acceso no
+   263→   263→   263→autorizado sea rechazado incluso si el frontend tuviera un bug.
+   264→   264→   264→Rol Descripción Permisos clave
+   265→   265→   265→Invitado Usuario no autenticado que explora la Ver landing, ver recursos públicos, crear cuenta. No puede
+   266→   266→   266→plataforma. publicar ni interactuar.
+   267→   267→   267→Miembro Usuario registrado con onboarding Publicar posts, comentar, reaccionar, reservar cupos en directos,
+   268→   268→   268→completo. ganar XP, participar en ranking.
+   269→   269→   269→Autor Miembro con permisos de publicación de Todos los permisos de Miembro más: publicar recursos, publicar
+   270→   270→   270→recursos y cursos. cursos, ver métricas de su contenido.
+   271→   271→   271→Moderador Miembro con permisos de moderación Todos los permisos de Miembro más: ocultar posts, suspender
+   272→   272→   272→comunitaria. usuarios temporalmente, marcar contenido inapropiado.
+   273→   273→   273→Administrador Acceso total al panel de administración. Todos los permisos más: gestionar usuarios y roles, gestionar
+   274→   274→   274→cursos y recursos de cualquier autor, ver métricas globales,
+   275→   275→   275→configurar plataforma.
+   276→   276→   276→2.4 Restricciones
+   277→   277→   277→El sistema está sujeto a las siguientes restricciones impuestas por el stack tecnológico y por decisiones de producto.
+   278→   278→   278→Estas restricciones son vinculantes y cualquier propuesta de cambio debe someterse a un ADR (Architecture
+   279→   279→   279→Decision Record) antes de su aprobación.
+   280→   280→   280→l El backend debe ejecutarse exclusivamente sobre Firebase (Auth, Firestore, Cloud Functions, Storage,
+   281→   281→   281→Hosting, FCM, Analytics). No se permiten servidores tradicionales provisioningados ni bases de datos
+   282→   282→   282→SQL.
+   283→   283→   283→l El frontend debe construirse con Next.js 16 y React 19, desplegado en Firebase Hosting. El renderizado
+   284→   284→   284→debe ser client-side para contenido dinámico y static generation para landing y páginas públicas.
+   285→   285→   285→l El idioma por defecto de la interfaz y del contenido generado por el sistema es español. La arquitectura
+   286→   286→   286→debe estar preparada para i18n pero el lanzamiento v1.0 es monoidioma.
+   287→   287→   287→l Todas las Cloud Functions deben estar escritas en TypeScript con tipado estricto y usar el SDK v2 de
+   288→   288→   288→Firebase Functions.
+   289→   289→   289→l Las reglas de seguridad de Firestore deben ser la única fuente de verdad para la autorización. El frontend
+   290→   290→   290→no debe confiar en su propia lógica de permisos para ocultar acciones que el backend permitiría.
+   291→   291→   291→l El diseño debe ser responsive mobile-first con soporte mínimo para viewport de 375px. WCAG 2.1 nivel
+   292→   292→   292→AA es obligatorio.
+   293→   293→   293→2.5 Suposiciones y dependencias
+   294→   294→   294→AutoDev — Especificación de Requisitos de Software v1.0 // page 10
+   295→   295→   295→
+   296→   296→   296→=== PAGE 12 ===
+   297→   297→   297→La especificación asume las siguientes suposiciones: (i) los usuarios finales disponen de un navegador moderno
+   298→   298→   298→(Chrome, Firefox, Safari o Edge en sus últimas dos versiones) con JavaScript habilitado; (ii) Firebase se encuentra
+   299→   299→   299→disponible en la región us-central1 con un SLA del 99.9% para Firestore y Cloud Functions; (iii) el servicio FCM
+   300→   300→   300→opera sin restricciones en las regiones objetivo; (iv) los usuarios aceptan recibir notificaciones por email
+   301→   301→   301→transaccional mediante el servicio configurado en Firebase (SendGrid o equivalente).
+   302→   302→   302→Las dependencias externas críticas son: Firebase Platform (sin alternativa de contingencia en esta versión), Google
+   303→   303→   303→Cloud Storage para alojamiento de imágenes de recursos y avatares, y el proveedor de email transaccional
+   304→   304→   304→configurado. Cualquier interrupción de estos servicios afecta la disponibilidad de funcionalidades específicas según
+   305→   305→   305→se documenta en el Capítulo 4 (Requisitos No Funcionales).
+   306→   306→   306→AutoDev — Especificación de Requisitos de Software v1.0 // page 11
+   307→   307→   307→
+   308→   308→   308→=== PAGE 13 ===
+   309→   309→   309→Capítulo 3 — Requisitos Funcionales
+   310→   310→   310→Este capítulo lista los requisitos funcionales del sistema AutoDev. Cada requisito recibe un identificador único
+   311→   311→   311→(RF-NNN), una descripción en una sola oración verificable, una prioridad (Alta, Media, Baja) y el módulo al que
+   312→   312→   312→pertenece. La prioridad Alta corresponde a requisitos sin los cuales el MVP no puede lanzarse; Media corresponde
+   313→   313→   313→a requisitos necesarios para la fase 2; Baja corresponde a mejoras diferibles. La trazabilidad con casos de uso,
+   314→   314→   314→criterios de aceptación y escenarios BDD se presenta en el Apéndice B.
+   315→   315→   315→3.1 Módulo de Autenticación (RF-001 a RF-008)
+   316→   316→   316→ID Descripción Prioridad
+   317→   317→   317→RF-001 El sistema debe permitir a un usuario invitado registrarse proporcionando email y contraseña con Alta
+   318→   318→   318→mínimo 8 caracteres.
+   319→   319→   319→RF-002 El sistema debe verificar unicidad de email al registrar y rechazar registros con email ya existente. Alta
+   320→   320→   320→RF-003 El sistema debe enviar un email de verificación tras el registro exitoso. Media
+   321→   321→   321→RF-004 El sistema debe permitir a un usuario iniciar sesión con email y contraseña. Alta
+   322→   322→   322→RF-005 El sistema debe permitir a un usuario cerrar sesión. Alta
+   323→   323→   323→RF-006 El sistema debe permitir recuperar contraseña mediante enlace enviado al email registrado. Alta
+   324→   324→   324→RF-007 El sistema debe bloquear temporalmente tras 5 intentos fallidos de login consecutivos durante 15 Media
+   325→   325→   325→minutos.
+   326→   326→   326→RF-008 El sistema debe persistir la sesión del usuario mediante token JWT con expiración de 30 días. Alta
+   327→   327→   327→3.2 Módulo de Onboarding y Perfil (RF-009 a RF-018)
+   328→   328→   328→ID Descripción Prioridad
+   329→   329→   329→RF-009 Tras el registro, el sistema debe redirigir al usuario al wizard de onboarding de 4 pasos. Alta
+   330→   330→   330→RF-010 El paso 1 del onboarding debe capturar el nombre para mostrar del usuario (mínimo 2 caracteres). Alta
+   331→   331→   331→RF-011 El paso 2 del onboarding debe permitir seleccionar al menos un interés entre: Automatización, IA, Alta
+   332→   332→   332→Desarrollo Web, Comunidad.
+   333→   333→   333→RF-012 El paso 3 del onboarding debe permitir seleccionar exactamente un nivel de experiencia: Alta
+   334→   334→   334→Principiante, Intermedio, Avanzado.
+   335→   335→   335→RF-013 El paso 4 del onboarding debe capturar una presentación personal de mínimo 20 caracteres. Alta
+   336→   336→   336→RF-014 El sistema debe impedir el acceso a las demás secciones hasta completar el onboarding. Alta
+   337→   337→   337→RF-015 El sistema debe permitir al usuario editar su perfil (nombre, intereses, nivel, presentación) desde la Alta
+   338→   338→   338→página de perfil.
+   339→   339→   339→AutoDev — Especificación de Requisitos de Software v1.0 // page 12
+   340→   340→   340→
+   341→   341→   341→=== PAGE 14 ===
+   342→   342→   342→ID Descripción Prioridad
+   343→   343→   343→RF-016 El sistema debe permitir al usuario subir un avatar (JPG, PNG o WebP, máximo 2MB) Media
+   344→   344→   344→almacenado en Cloud Storage.
+   345→   345→   345→RF-017 El sistema debe generar un avatar por defecto con las iniciales del usuario si no se sube uno. Media
+   346→   346→   346→RF-018 El sistema debe mostrar el nivel, XP acumulada y misiones completadas en el perfil público del Media
+   347→   347→   347→usuario.
+   348→   348→   348→3.3 Módulo de Foro (RF-019 a RF-028)
+   349→   349→   349→ID Descripción Prioridad
+   350→   350→   350→RF-019 El sistema debe permitir a un Miembro crear un post con título (máximo 100 caracteres), Alta
+   351→   351→   351→contenido (máximo 5000 caracteres) y hasta 3 etiquetas.
+   352→   352→   352→RF-020 El sistema debe permitir al autor editar su propio post dentro de los 30 minutos posteriores a la Alta
+   353→   353→   353→publicación.
+   354→   354→   354→RF-021 El sistema debe permitir al autor eliminar su propio post en cualquier momento. Alta
+   355→   355→   355→RF-022 El sistema debe permitir a un Miembro comentar en cualquier post con texto de máximo 1000 Alta
+   356→   356→   356→caracteres.
+   357→   357→   357→RF-023 El sistema debe permitir a un Miembro reaccionar (like) a un post o comentario, con toggle (un Alta
+   358→   358→   358→like por usuario).
+   359→   359→   359→RF-024 El sistema debe listar los posts en orden cronológico descendente con paginación de 20 posts por Alta
+   360→   360→   360→página.
+   361→   361→   361→RF-025 El sistema debe permitir filtrar posts por etiqueta (automatización, IA, webapps, general) y Alta
+   362→   362→   362→combinar con búsqueda de texto.
+   363→   363→   363→RF-026 El sistema debe mostrar en cada post el avatar, nombre y nivel del autor, fecha relativa y conteo de Alta
+   364→   364→   364→comentarios/likes.
+   365→   365→   365→RF-027 El sistema debe notificar al autor de un post cuando reciba un nuevo comentario o like. Media
+   366→   366→   366→RF-028 El sistema debe impedir la publicación de posts con contenido vacío o que incumpla el filtro de Media
+   367→   367→   367→palabras prohibidas.
+   368→   368→   368→3.4 Módulo de Cursos (RF-029 a RF-035)
+   369→   369→   369→ID Descripción Prioridad
+   370→   370→   370→RF-029 El sistema debe listar los cursos disponibles con título, autor, duración estimada y número de Alta
+   371→   371→   371→lecciones.
+   372→   372→   372→RF-030 El sistema debe permitir a un Miembro inscribirse en un curso (gratis). Alta
+   373→   373→   373→RF-031 El sistema debe permitir a un Miembro marcar una lección como completada. Alta
+   374→   374→   374→AutoDev — Especificación de Requisitos de Software v1.0 // page 13
+   375→   375→   375→
+   376→   376→   376→=== PAGE 15 ===
+   377→   377→   377→ID Descripción Prioridad
+   378→   378→   378→RF-032 El sistema debe mostrar el progreso del usuario por curso como porcentaje de lecciones Alta
+   379→   379→   379→completadas.
+   380→   380→   380→RF-033 El sistema debe otorgar XP al completar una lección (configurable por curso, default 50 XP). Media
+   381→   381→   381→RF-034 El sistema debe permitir a un Autor crear cursos compuestos por lecciones con título, contenido y Media
+   382→   382→   382→recursos adjuntos.
+   383→   383→   383→RF-035 El sistema debe mostrar un certificado simulado (no válido oficialmente) al completar el 100% de Baja
+   384→   384→   384→un curso.
+   385→   385→   385→3.5 Módulo de Recursos (RF-036 a RF-043)
+   386→   386→   386→ID Descripción Prioridad
+   387→   387→   387→RF-036 El sistema debe permitir a un Autor publicar un recurso con título, descripción, tipo, nivel e Alta
+   388→   388→   388→imagen destacada.
+   389→   389→   389→RF-037 El sistema debe soportar los siguientes tipos de recurso: Skill, Plugin, Subagent, MCP Server, Alta
+   390→   390→   390→Agent Team, Tutorial.
+   391→   391→   391→RF-038 El sistema debe permitir filtrar recursos por tipo, nivel (Principiante, Intermedio, Avanzado) y Alta
+   392→   392→   392→búsqueda de texto.
+   393→   393→   393→RF-039 El sistema debe mostrar cada recurso con imagen destacada, título, descripción, etiqueta de nivel y Alta
+   394→   394→   394→botón de acción (./ver).
+   395→   395→   395→RF-040 El sistema debe permitir a un Miembro descargar o enlazar al recurso externo (URL o archivo en Alta
+   396→   396→   396→Storage).
+   397→   397→   397→RF-041 El sistema debe contar el número de descargas/visitas por recurso para mostrar popularidad. Media
+   398→   398→   398→RF-042 El sistema debe permitir al Autor editar o eliminar sus propios recursos. Alta
+   399→   399→   399→RF-043 El sistema debe permitir a un Miembro marcar un recurso como favorito y ver su lista de favoritos. Media
+   400→   400→   400→3.6 Módulo de Directos (RF-044 a RF-048)
+   401→   401→   401→ID Descripción Prioridad
+   402→   402→   402→RF-044 El sistema debe mostrar un calendario de próximas sesiones en vivo con título, fecha, hora y cupo Alta
+   403→   403→   403→máximo.
+   404→   404→   404→RF-045 El sistema debe permitir a un Miembro reservar un cupo en una sesión en vivo gratuita. Alta
+   405→   405→   405→RF-046 El sistema debe impedir reservas cuando el cupo esté agotado, mostrando lista de espera. Alta
+   406→   406→   406→RF-047 El sistema debe enviar notificación push y email recordatorio 1 hora antes de la sesión. Media
+   407→   407→   407→RF-048 El sistema debe permitir al Autor o Admin cancelar una sesión, liberando los cupos y notificando a Media
+   408→   408→   408→los inscritos.
+   409→   409→   409→AutoDev — Especificación de Requisitos de Software v1.0 // page 14
+   410→   410→   410→
+   411→   411→   411→=== PAGE 16 ===
+   412→   412→   412→3.7 Módulo de Miembros (RF-049 a RF-053)
+   413→   413→   413→ID Descripción Prioridad
+   414→   414→   414→RF-049 El sistema debe mostrar un directorio de miembros con avatar, nombre, nivel, fecha de unión, Alta
+   415→   415→   415→especializaciones, última actividad y métricas (posts, comentarios).
+   416→   416→   416→RF-050 El sistema debe permitir filtrar miembros por nivel (Principiante, Intermedio, Avanzado) y Alta
+   417→   417→   417→especialización.
+   418→   418→   418→RF-051 El sistema debe permitir ordenar miembros por recientes, más activos o todos. Alta
+   419→   419→   419→RF-052 El sistema debe mostrar estadísticas globales: total de miembros, miembros activos hoy. Media
+   420→   420→   420→RF-053 El sistema debe permitir ver el perfil público de un miembro con su actividad reciente (últimos 10 Media
+   421→   421→   421→posts/comentarios).
+   422→   422→   422→3.8 Módulo de Ranking (RF-054 a RF-057)
+   423→   423→   423→ID Descripción Prioridad
+   424→   424→   424→RF-054 El sistema debe calcular semanalmente un leaderboard con los 100 miembros con mayor XP Alta
+   425→   425→   425→acumulada en la semana.
+   426→   426→   426→RF-055 El sistema debe mostrar visualmente el top 3 con medallas (oro, plata, bronce) y posiciones 4-100 Alta
+   427→   427→   427→en tabla.
+   428→   428→   428→RF-056 El sistema debe reiniciar el leaderboard cada lunes a las 00:00 UTC-4 y archivar el ranking de la Alta
+   429→   429→   429→semana anterior.
+   430→   430→   430→RF-057 El sistema debe otorgar premios XP bonus a los top 3 (500, 300, 200 XP respectivamente) el día Media
+   431→   431→   431→del reseteo.
+   432→   432→   432→3.9 Módulo de Gamificación (RF-058 a RF-062)
+   433→   433→   433→ID Descripción Prioridad
+   434→   434→   434→RF-058 El sistema debe asignar XP por acciones: 10 XP por comentario, 25 XP por post, 50 XP por Alta
+   435→   435→   435→lección completada, 5 XP por like recibido.
+   436→   436→   436→RF-059 El sistema debe definir misiones como conjunto de tareas (ej. "Completa tu perfil" requiere avatar Alta
+   437→   437→   437→+ presentación + 1 interés).
+   438→   438→   438→RF-060 El sistema debe otorgar XP bonus al completar una misión (configurable, default 100 XP). Alta
+   439→   439→   439→RF-061 El sistema debe definir logros desbloqueables por hitos (ej. "Primer post", "10 comentarios", "Top Media
+   440→   440→   440→10 semanal").
+   441→   441→   441→RF-062 El sistema debe mostrar un panel de progreso con misiones activas, logros obtenidos y XP Alta
+   442→   442→   442→actual/necesaria para subir de nivel.
+   443→   443→   443→AutoDev — Especificación de Requisitos de Software v1.0 // page 15
+   444→   444→   444→
+   445→   445→   445→=== PAGE 17 ===
+   446→   446→   446→3.10 Módulo de Notificaciones (RF-063 a RF-067)
+   447→   447→   447→ID Descripción Prioridad
+   448→   448→   448→RF-063 El sistema debe generar notificaciones in-app por eventos: nuevo comentario en post propio, Alta
+   449→   449→   449→mención, like recibido, misión completada, ranking actualizado.
+   450→   450→   450→RF-064 El sistema debe mostrar un indicador (badge) en la campana de notificaciones con el conteo de no Alta
+   451→   451→   451→leídas.
+   452→   452→   452→RF-065 El sistema debe permitir marcar notificaciones como leídas individualmente o todas a la vez. Alta
+   453→   453→   453→RF-066 El sistema debe enviar notificaciones push vía FCM cuando el usuario tenga la suscripción activa. Media
+   454→   454→   454→RF-067 El sistema debe enviar email transaccional para eventos críticos: registro, recuperación de Media
+   455→   455→   455→contraseña, directo próximo.
+   456→   456→   456→3.11 Módulo de Administración (RF-068 a RF-075)
+   457→   457→   457→ID Descripción Prioridad
+   458→   458→   458→RF-068 El sistema debe proporcionar un panel de administración accesible solo a usuarios con rol Alta
+   459→   459→   459→Administrador.
+   460→   460→   460→RF-069 El sistema debe permitir al Administrador listar y buscar usuarios, y cambiar su rol (Miembro, Alta
+   461→   461→   461→Autor, Moderador, Administrador).
+   462→   462→   462→RF-070 El sistema debe permitir al Administrador o Moderador ocultar posts o comentarios que incumplan Alta
+   463→   463→   463→las normas, registrando motivo.
+   464→   464→   464→RF-071 El sistema debe permitir al Administrador suspender temporalmente a un usuario (sin acceso a Alta
+   465→   465→   465→publicar) por un período configurable.
+   466→   466→   466→RF-072 El sistema debe permitir al Administrador gestionar cursos y recursos de cualquier Autor (editar, Media
+   467→   467→   467→eliminar).
+   468→   468→   468→RF-073 El sistema debe permitir al Administrador configurar las sesiones en vivo (crear, editar, cancelar). Media
+   469→   469→   469→RF-074 El sistema debe mostrar métricas globales en el panel: usuarios activos diarios, posts/día, recursos Media
+   470→   470→   470→descargados, retención D7/D30.
+   471→   471→   471→RF-075 El sistema debe mantener un log de auditoría inmutable (append-only) de las acciones Media
+   472→   472→   472→administrativas realizadas.
+   473→   473→   473→Resumen de cobertura: Esta especificación define 75 requisitos funcionales distribuidos en 11 módulos. La
+   474→   474→   474→prioridad Alta agrupa 51 requisitos (68%), Media 23 (31%) y Baja 1 (1%). El MVP (fase 1) implementará
+   475→   475→   475→todos los requisitos Alta; las fases 2 y 3 añadirán los Media; los Baja se diferirán al backlog.
+   476→   476→   476→AutoDev — Especificación de Requisitos de Software v1.0 // page 16
+   477→   477→   477→
+   478→   478→   478→=== PAGE 18 ===
+   479→   479→   479→Capítulo 4 — Requisitos No Funcionales
+   480→   480→   480→Los requisitos no funcionales describen atributos de calidad del sistema que deben verificarse de manera objetiva,
+   481→   481→   481→generalmente mediante instrumentación o pruebas de carga. Cada requisito incluye una métrica cuantificable y un
+   482→   482→   482→método de verificación. A diferencia de los requisitos funcionales, los no funcionales rara vez se validan con un
+   483→   483→   483→escenario BDD aislado; se validan mediante benchmarks, monitoreo continuo y auditorías periódicas.
+   484→   484→   484→4.1 Rendimiento
+   485→   485→   485→El sistema debe ofrecer tiempos de respuesta predecibles y rápidos. La paginación y la carga diferida son
+   486→   486→   486→obligatorias para cualquier listado que pueda exceder 20 elementos. Firestore está optimizado para consultas por
+   487→   487→   487→índice compuesto, por lo que cualquier consulta nueva debe revisarse contra el plan de índices (Capítulo 10).
+   488→   488→   488→ID Métrica Objetivo Verificación
+   489→   489→   489→RNF-01 Time to First Byte (TTFB) en Firebase Hosting < 500 ms (p95) Lighthouse CI en
+   490→   490→   490→pipeline
+   491→   491→   491→RNF-02 Carga inicial de la home (LCP) < 2.5 s en 4G Web Vitals en
+   492→   492→   492→producción
+   493→   493→   493→RNF-03 Latencia de Cloud Functions HTTP < 300 ms (p95) excluyendo cold start Cloud Monitoring
+   494→   494→   494→RNF-04 Cold start de Cloud Functions < 2 s en el 95% de invocaciones Cloud Monitoring
+   495→   495→   495→RNF-05 Tiempo de consulta a Firestore (lectura simple) < 100 ms (p99) Cloud Monitoring
+   496→   496→   496→RNF-06 Paginación de foro (20 posts) < 800 ms incluyendo render E2E Cypress con
+   497→   497→   497→perf hooks
+   498→   498→   498→RNF-07 Tiempo de carga de imagen de Storage (avatar < 400 ms Lighthouse
+   499→   499→   499→200KB)
+   500→   500→   500→4.2 Escalabilidad
+
+[showing lines 1-500 of 502; use offset=501 with limit to continue reading]

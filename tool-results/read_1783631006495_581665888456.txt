@@ -1,0 +1,502 @@
+     1→     1→     1→     1→=== PAGE 1 ===
+     2→     2→     2→     2→SDD
+     3→     3→     3→     3→·
+     4→     4→     4→     4→BDD
+     5→     5→     5→     5→·
+     6→     6→     6→     6→FIREBASE
+     7→     7→     7→     7→$ A D D E N D U M · V 2 . 0 · S P E C I F I C A T I O N D R I V E N
+     8→     8→     8→     8→// funcionalidades_no_contempladas.md
+     9→     9→     9→     9→AAuuttooDDeevv
+    10→    10→    10→    10→// NNooddeeWW vv22..00
+    11→    11→    11→    11→Addendum de Nuevas Funcionalidades —
+    12→    12→    12→    12→Funcionalidades No Contempladas en v1.0
+    13→    13→    13→    13→Documento técnico complementario que identifica, especifica y traza las
+    14→    14→    14→    14→9 funcionalidades marcadas como (Nuevo) en la especificación v2.0
+    15→    15→    15→    15→frente al baseline v1.0. Cubre requisitos funcionales, escenarios
+    16→    16→    16→    16→BDD/Gherkin, impacto en la arquitectura Firebase (Firestore · Cloud
+    17→    17→    17→    17→Functions · Auth · Storage) , matriz de trazabilidad y estimación
+    18→    18→    18→    18→MoSCoW para evolución v1.0 → v2.0 .
+    19→    19→    19→    19→LAND · 02 PROF · 02 GAM · 02 RES · 01 COM · 01
+    20→    20→    20→    20→// VERSIÓN // FECHA // BASE // METODOLOGÍA
+    21→    21→    21→    21→2.0 — RC Julio 2026 Firebase Stack SDD + BDD
+    22→    22→    22→    22→● READY_FOR_REVIEW// ADDENDUM_V2.0 · DOC_ID: AUTODEV.SRS.ADDENDUM.V2
+    23→    23→    23→    23→
+    24→    24→    24→    24→=== PAGE 2 ===
+    25→    25→    25→    25→// AutoDev_SRS · v2.0 · ADDENDUM funcionalidades_no_contempladas.md
+    26→    26→    26→    26→// tabla_de_contenidos
+    27→    27→    27→    27→Índice del Addendum
+    28→    28→    28→    28→1. Resumen Ejecutivo 3
+    29→    29→    29→    29→1.1 Cuadro Resumen de Funcionalidades Nuevas . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+    30→    30→    30→    30→2. Análisis Comparativo v1.0 → v2.0 5
+    31→    31→    31→    31→2.1 Tabla de Brecha (Gap Analysis) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+    32→    32→    32→    32→2.2 Lectura del Análisis . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+    33→    33→    33→    33→3. Nuevas Funcionalidades Detalladas 7
+    34→    34→    34→    34→3.1 RF-LAND-01 — Landing Page con Terminal Interactiva . . . . . . . . . . . . . . . . . . . . . . . . . 7
+    35→    35→    35→    35→3.2 RF-LAND-02 — Contadores en Tiempo Real sin Comprometer Cuota . . . . . . . . . . . . . . . . . . 7
+    36→    36→    36→    36→3.3 RF-PROF-02 — Vista Previa en Tiempo Real del Perfil . . . . . . . . . . . . . . . . . . . . . . . . . . 9
+    37→    37→    37→    37→3.4 RF-PROF-05 — Estado Vacío en Mis Estadísticas . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 9
+    38→    38→    38→    38→3.5 RF-GAM-03 — Reglas de XP y Recompensas Explícitas en el Leaderboard . . . . . . . . . . . . . . . 10
+    39→    39→    39→    39→3.6 RF-GAM-04 — Sistema de Logros (Achievements) de Primera Clase . . . . . . . . . . . . . . . . . . 10
+    40→    40→    40→    40→3.7 RF-RES-02 — Límite Estricto de 3 Adjuntos por Recurso . . . . . . . . . . . . . . . . . . . . . . . . 12
+    41→    41→    41→    41→3.8 RF-COM-03 — Estado Vacío en Sección Directos . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12
+    42→    42→    42→    42→4. Criterios de Aceptación y Escenarios BDD 14
+    43→    43→    43→    43→4.1 Escenarios — Landing Page (RF-LAND-01, RF-LAND-02) . . . . . . . . . . . . . . . . . . . . . . . 14
+    44→    44→    44→    44→4.2 Escenarios — Perfil y Estadísticas (RF-PROF-02, RF-PROF-05) . . . . . . . . . . . . . . . . . . . . 14
+    45→    45→    45→    45→4.3 Escenarios — Gamificación (RF-GAM-03, RF-GAM-04) . . . . . . . . . . . . . . . . . . . . . . . . 16
+    46→    46→    46→    46→4.4 Escenarios — Recursos y Comunidad (RF-RES-02, RF-COM-03) . . . . . . . . . . . . . . . . . . . . 17
+    47→    47→    47→    47→5. Impacto en la Arquitectura Firebase 18
+    48→    48→    48→    48→5.1 Cambios en el Modelo de Datos Firestore . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 18
+    49→    49→    49→    49→5.2 Cloud Functions — Nuevas y Modificadas . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 18
+    50→    50→    50→    50→5.3 Reglas de Seguridad Firestore . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19
+    51→    51→    51→    51→5.4 Cloud Storage — Cambios y Límites . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21
+    52→    52→    52→    52→5.5 Estimación de Cuota y Costo Mensual . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21
+    53→    53→    53→    53→6. Matriz de Trazabilidad y Priorización MoSCoW 22
+    54→    54→    54→    54→6.1 Matriz de Trazabilidad . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22
+    55→    55→    55→    55→6.2 Priorización MoSCoW y Plan de Sprint . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22
+    56→    56→    56→    56→6.3 Plan de Implementación y Definición de Hecho (DoD) . . . . . . . . . . . . . . . . . . . . . . . . . . 23
+    57→    57→    57→    57→AutoDev / NodeW v2.0 — Addendum de Nuevas Funcionalidades // page 02
+    58→    58→    58→    58→
+    59→    59→    59→    59→=== PAGE 3 ===
+    60→    60→    60→    60→// AutoDev_SRS · v2.0 · ADDENDUM funcionalidades_no_contempladas.md
+    61→    61→    61→    61→6.4 Riesgos Técnicos y Mitigaciones . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23
+    62→    62→    62→    62→AutoDev / NodeW v2.0 — Addendum de Nuevas Funcionalidades // page 03
+    63→    63→    63→    63→
+    64→    64→    64→    64→=== PAGE 4 ===
+    65→    65→    65→    65→// AutoDev_SRS · v2.0 · ADDENDUM funcionalidades_no_contempladas.md
+    66→    66→    66→    66→// capitulo_01 · resumen_ejecutivo
+    67→    67→    67→    67→1. Resumen Ejecutivo
+    68→    68→    68→    68→Este addendum complementa el Documento de Especificaciones del Sistema AutoDev / NodeW v2.0
+    69→    69→    69→    69→contrastándolo contra el baseline SRS v1.0 (fechado el 10 de Julio, 2026) y consolidando todas las
+    70→    70→    70→    70→funcionalidades marcadas explícitamente como (Nuevo) en la especificación v2.0. El objetivo es ofrecer al
+    71→    71→    71→    71→equipo de desarrollo, al equipo de QA y al equipo de producto una visión única, trazable y priorizada de los
+    72→    72→    72→    72→cambios necesarios para evolucionar la plataforma desde la versión 1.0 (Release Candidate) hasta la versión
+    73→    73→    73→    73→2.0 sin perder el contexto arquitectónico de Firebase Ecosystem (Firestore, Cloud Functions, Auth, Storage,
+    74→    74→    74→    74→FCM y Analytics) heredado del SRS original.
+    75→    75→    75→    75→Tras la lectura completa del SRS v1.0 —que contiene 75 requisitos funcionales distribuidos en 11 módulos
+    76→    76→    76→    76→(Auth, Onboarding y Perfil, Foro, Cursos, Recursos, Directos, Miembros, Ranking, Gamificación,
+    77→    77→    77→    77→Notificaciones y Administración)— se identifican 9 requisitos funcionales nuevos en v2.0, distribuidos en
+    78→    78→    78→    78→5 de los 6 módulos listados en el brief visual. Estos 9 RF se desglosan a continuación: RF-LAND-01 y
+    79→    79→    79→    79→RF-LAND-02 (Landing Page con terminal interactiva y contadores pre-agregados), RF-PROF-02 y
+    80→    80→    80→    80→RF-PROF-05 (vista previa en tiempo real del perfil y estado vacío en estadísticas), RF-GAM-03 y
+    81→    81→    81→    81→RF-GAM-04 (reglas y recompensas explícitas del leaderboard, y sistema de logros como entidad de primera
+    82→    82→    82→    82→clase), RF-RES-02 (límite estricto de 3 adjuntos por recurso), y RF-COM-03 (estado vacío en la sección de
+    83→    83→    83→    83→Directos).
+    84→    84→    84→    84→El documento se organiza en seis capítulos: este resumen ejecutivo, un análisis comparativo v1.0 vs v2.0, las
+    85→    85→    85→    85→nuevas funcionalidades detalladas (con descripción, justificación de negocio e impacto técnico), los criterios
+    86→    86→    86→    86→de aceptación y escenarios BDD/Gherkin, el impacto en la arquitectura Firebase, y finalmente una matriz de
+    87→    87→    87→    87→trazabilidad junto con la estimación MoSCoW. La metodología subyacente se mantiene fiel a la combinación
+    88→    88→    88→    88→SDD + BDD definida en v1.0, reutilizando los patrones de Cloud Functions reactivas y contadores
+    89→    89→    89→    89→desnormalizados ya probados en producción para no introducir paradigmas nuevos en la arquitectura.
+    90→    90→    90→    90→1.1 Cuadro Resumen de Funcionalidades Nuevas
+    91→    91→    91→    91→ID Módulo Descripción Prioridad Esfuerzo
+    92→    92→    92→    92→RF-LAND-0 Terminal interactiva + contadores globales (devs, posts,
+    93→    93→    93→    93→Landing Must M (5 SP)
+    94→    94→    94→    94→1 cursos, recursos)
+    95→    95→    95→    95→RF-LAND-0 Contadores en tiempo real con 1 lectura pre-agregada
+    96→    96→    96→    96→Landing Must M (5 SP)
+    97→    97→    97→    97→2 (cuota Firestore)
+    98→    98→    98→    98→RF-PROF-0 Vista previa en vivo de cambios de perfil antes de
+    99→    99→    99→    99→Perfil Should S (3 SP)
+   100→   100→   100→   100→2 guardar
+   101→   101→   101→   101→RF-PROF-0
+   102→   102→   102→   102→Perfil Estado vacío en Mis Estadísticas + CTA "+ Crear Post" Should XS (2 SP)
+   103→   103→   103→   103→5
+   104→   104→   104→   104→Reglas de XP y recompensas explícitas en UI del
+   105→   105→   105→   105→RF-GAM-03 Gamificación Must XS (2 SP)
+   106→   106→   106→   106→Leaderboard
+   107→   107→   107→   107→AutoDev / NodeW v2.0 — Addendum de Nuevas Funcionalidades // page 04
+   108→   108→   108→   108→
+   109→   109→   109→   109→=== PAGE 5 ===
+   110→   110→   110→   110→// AutoDev_SRS · v2.0 · ADDENDUM funcionalidades_no_contempladas.md
+   111→   111→   111→   111→ID Módulo Descripción Prioridad Esfuerzo
+   112→   112→   112→   112→Sistema de Logros (Achievements) como entidad de
+   113→   113→   113→   113→RF-GAM-04 Gamificación Must L (8 SP)
+   114→   114→   114→   114→primera clase
+   115→   115→   115→   115→Límite estricto de 3 archivos adjuntos por recurso,
+   116→   116→   116→   116→RF-RES-02 Recursos Must XS (2 SP)
+   117→   117→   117→   117→validación pre-publicación
+   118→   118→   118→   118→Estado vacío ("// PRÓXIMOS") cuando no hay directos
+   119→   119→   119→   119→RF-COM-03 Comunidad Should XS (1 SP)
+   120→   120→   120→   120→programados
+   121→   121→   121→   121→Tabla 1.1 — Cuadro resumen de los 8 RF nuevos identificados en v2.0.
+   122→   122→   122→   122→El conteo total es de 8 RF nuevos (no 9 como se mencionó preliminarmente; el análisis comparativo
+   123→   123→   123→   123→detallado confirma 8 tras verificar que algunas funciones como el reset semanal del leaderboard ya existían
+   124→   124→   124→   124→en v1.0 como RF-056 y RF-057). El esfuerzo total estimado asciende a aproximadamente 28 story points,
+   125→   125→   125→   125→distribuidos en 4 Must, 3 Should y 1 implícito Could si se incluye la mejora visual del leaderboard ya
+   126→   126→   126→   126→cubierta por RF-GAM-03. Este volumen de trabajo es compatible con un sprint de 2 semanas para un equipo
+   127→   127→   127→   127→de 3 desarrolladores full-stack más 1 ingeniero Firebase dedicado a las Cloud Functions y reglas de seguridad.
+   128→   128→   128→   128→AutoDev / NodeW v2.0 — Addendum de Nuevas Funcionalidades // page 05
+   129→   129→   129→   129→
+   130→   130→   130→   130→=== PAGE 6 ===
+   131→   131→   131→   131→// AutoDev_SRS · v2.0 · ADDENDUM funcionalidades_no_contempladas.md
+   132→   132→   132→   132→// capitulo_02 · analisis_comparativo
+   133→   133→   133→   133→2. Análisis Comparativo v1.0 → v2.0
+   134→   134→   134→   134→Para evitar duplicaciones y asegurar que las funcionalidades marcadas como "(Nuevo)" en v2.0
+   135→   135→   135→   135→efectivamente no existían en el SRS v1.0, se realizó un barrido módulo por módulo sobre los 75 requisitos
+   136→   136→   136→   136→funcionales del baseline. La tabla 2.1 sintetiza el resultado de ese barrido, identificando para cada módulo
+   137→   137→   137→   137→afectado: (a) el alcance original en v1.0, (b) el delta introducido en v2.0, y (c) el veredcto de novedad
+   138→   138→   138→   138→(confirmado, parcial, o ya cubierto). Esta verificación es crítica porque el SRS v1.0 ya incluía elementos
+   139→   139→   139→   139→como el leaderboard semanal (RF-054 a RF-057) y el sistema de misiones (RF-059), que podrían
+   140→   140→   140→   140→confundirse con las nuevas reglas de XP y logros.
+   141→   141→   141→   141→2.1 Tabla de Brecha (Gap Analysis)
+   142→   142→   142→   142→Módulo Cobertura v1.0 Delta v2.0 (Nuevo) Veredicto
+   143→   143→   143→   143→Landing Page No existía módulo dedicado. La home Módulo 2 nuevo completo: terminal NUEVO
+   144→   144→   144→   144→pública no estaba formalmente interactiva, contadores dinámicos
+   145→   145→   145→   145→especificada; sólo se mencionaba " globales con lectura pre-agregada.
+   146→   146→   146→   146→app instalable" como futuro alcance.
+   147→   147→   147→   147→Perfil y Estadísti RF-009 a RF-018 cubren onboarding, Vista previa en vivo (RF-PROF-02) y NUEVO
+   148→   148→   148→   148→cas edición básica (nombre, intereses, estado vacío en Mis Estadísticas con
+   149→   149→   149→   149→nivel, presentación), avatar y avatar CTA (RF-PROF-05).
+   150→   150→   150→   150→por defecto. No había panel de
+   151→   151→   151→   151→estadísticas filtrable ni vista previa.
+   152→   152→   152→   152→Gamificación RF-058 a RF-062 ya definen XP por Reglas de XP visibles en UI del PARCIAL
+   153→   153→   153→   153→acciones, misiones, logros leaderboard (RF-GAM-03) y
+   154→   154→   154→   154→desbloqueables y panel de progreso. elevación de logros a entidad de
+   155→   155→   155→   155→El leaderboard (RF-054-057) ya primera clase con CRUD
+   156→   156→   156→   156→incluye reset semanal y bonus a top 3. (RF-GAM-04).
+   157→   157→   157→   157→Recursos RF-036 a RF-043 cubren publicación, Límite estricto de 3 adjuntos con NUEVO
+   158→   158→   158→   158→tipos, filtros, descargas, popularidad, validación pre-publicación
+   159→   159→   159→   159→favoritos y edición. No había límite (RF-RES-02).
+   160→   160→   160→   160→explícito de adjuntos ni validación
+   161→   161→   161→   161→pre-publicación.
+   162→   162→   162→   162→Comunidad / RF-044 a RF-048 especifican Estado vacío "// PRÓXIMOS" NUEVO
+   163→   163→   163→   163→Directos calendario, reserva de cupos, lista de cuando no hay directos programados
+   164→   164→   164→   164→espera, recordatorios y cancelación. (RF-COM-03).
+   165→   165→   165→   165→No había estado vacío definido.
+   166→   166→   166→   166→Tabla 2.1 — Análisis comparativo por módulo entre v1.0 y v2.0.
+   167→   167→   167→   167→2.2 Lectura del Análisis
+   168→   168→   168→   168→El análisis revela tres hallazgos importantes para el equipo de producto. Primero, el módulo de Landing
+   169→   169→   169→   169→Page es completamente nuevo y representa la primera superficie pública no autenticada de la plataforma:
+   170→   170→   170→   170→hasta v1.0, AutoDev no tenía especificación formal de página de aterrizaje, lo que sugiere que el producto
+   171→   171→   171→   171→AutoDev / NodeW v2.0 — Addendum de Nuevas Funcionalidades // page 06
+   172→   172→   172→   172→
+   173→   173→   173→   173→=== PAGE 7 ===
+   174→   174→   174→   174→// AutoDev_SRS · v2.0 · ADDENDUM funcionalidades_no_contempladas.md
+   175→   175→   175→   175→evolucionó desde una aplicación puramente autenticada hacia una estrategia de captación exterior. Esto tiene
+   176→   176→   176→   176→implicaciones de costo en Firestore porque los contadores deben servirse a usuarios no autenticados sin
+   177→   177→   177→   177→consumir cuota de lectura por visita.
+   178→   178→   178→   178→Segundo, la gamificación es el módulo con mayor solapamiento: v1.0 ya contenía logros desbloqueables
+   179→   179→   179→   179→(RF-061) y un panel de progreso (RF-062), pero v2.0 eleva los logros a entidad de primera clase con CRUD
+   180→   180→   180→   180→administrativo, modelo de datos propio y visualización destacada en el perfil. Esto no es un RF nuevo desde
+   181→   181→   181→   181→cero, sino una evolución de un RF existente —el equipo debe decidir si amplía el contrato de RF-061 o si
+   182→   182→   182→   182→crea RF-GAM-04 como superconjunto y deprecia parcialmente al anterior. La recomendación técnica es la
+   183→   183→   183→   183→segunda opción, manteniendo RF-061 como caso especial del nuevo RF-GAM-04 durante un ciclo de
+   184→   184→   184→   184→deprecación.
+   185→   185→   185→   185→Tercero, los cambios en perfil, recursos y comunidad son aditivos puros y de bajo esfuerzo (≤ 3 SP cada
+   186→   186→   186→   186→uno), por lo que pueden entregarse en un mismo sprint sin riesgo arquitectónico. El RF-RES-02 (límite de 3
+   187→   187→   187→   187→adjuntos) merece atención particular: aunque su complejidad funcional es baja, requiere una Cloud Function
+   188→   188→   188→   188→de validación pre-escritura en Firestore para que el límite se aplique incluso si un cliente malicioso omite la
+   189→   189→   189→   189→validación del frontend. Esta Cloud Function debe usar el patrón de Firestore Security Rules + pre-write
+   190→   190→   190→   190→trigger ya establecido en v1.0 para otros campos validados.
+   191→   191→   191→   191→AutoDev / NodeW v2.0 — Addendum de Nuevas Funcionalidades // page 07
+   192→   192→   192→   192→
+   193→   193→   193→   193→=== PAGE 8 ===
+   194→   194→   194→   194→// AutoDev_SRS · v2.0 · ADDENDUM funcionalidades_no_contempladas.md
+   195→   195→   195→   195→// capitulo_03 · nuevas_funcionalidades
+   196→   196→   196→   196→3. Nuevas Funcionalidades Detalladas
+   197→   197→   197→   197→Cada una de las 8 funcionalidades nuevas se documenta a continuación con una estructura uniforme:
+   198→   198→   198→   198→identificador del requisito, descripción funcional, justificación de negocio, impacto técnico en la arquitectura
+   199→   199→   199→   199→Firebase, dependencias con otros RF y consideraciones de seguridad. Esta sección es la referencia canónica
+   200→   200→   200→   200→para el equipo de desarrollo durante la implementación del sprint v2.0.
+   201→   201→   201→   201→3.1 RF-LAND-01 — Landing Page con Terminal Interactiva
+   202→   202→   202→   202→// modulo_02 · landing_page · prioridad_must
+   203→   203→   203→   203→Descripción. El sistema debe mostrar una página de aterrizaje pública (no autenticada) con una terminal
+   204→   204→   204→   204→interactiva que emule el flujo de comandos $ autodev init y $ ver cursos --gratis, junto con contadores
+   205→   205→   205→   205→dinámicos globales que reflejen el número total de developers registrados, posts publicados, comentarios
+   206→   206→   206→   206→realizados, cursos disponibles y recursos compartidos en la plataforma.
+   207→   207→   207→   207→Justificación de negocio. La landing page es el primer punto de contacto para captación orgánica (SEO,
+   208→   208→   208→   208→redes sociales, enlaces externos). La terminal interactiva refuerza el posicionamiento de AutoDev como "
+   209→   209→   209→   209→aprende a automatizar como un developer de verdad", diferenciándolo de plataformas de cursos genéricas.
+   210→   210→   210→   210→Los contadores dinámicos transmiten prueba social en tiempo real y aumentan la tasa de conversión
+   211→   211→   211→   211→visitante→registro según benchmarks de comunidades técnicas similares (Dev.to, Hashnode).
+   212→   212→   212→   212→Impacto técnico Firebase. Nuevo documento app_metadata/counters en Firestore con campos
+   213→   213→   213→   213→developersCount, postsCount, commentsCount, coursesCount, resourcesCount. Las Cloud Functions existentes
+   214→   214→   214→   214→onPostCreate, onCommentCreate y onUserCreate ya actualizan contadores desnormalizados en /users/{uid} —
+   215→   215→   215→   215→deben extenderse con una transacción que también incremente el campo correspondiente en
+   216→   216→   216→   216→app_metadata/counters. La terminal interactiva se implementa en el cliente (Next.js + React) sin
+   217→   217→   217→   217→dependencias backend adicionales: usa una secuencia pre-grabada de comandos con efecto máquina de
+   218→   218→   218→   218→escribir.
+   219→   219→   219→   219→Dependencias. Ninguna hacia otros RF nuevos. Reutiliza el patrón de contadores desnormalizados ya
+   220→   220→   220→   220→probado en v1.0 (RF-041 popularidad de recursos, RF-052 estadísticas globales de miembros). Seguridad:
+   221→   221→   221→   221→las reglas de Firestore deben permitir lectura pública (allow read: if true;) exclusivamente sobre el
+   222→   222→   222→   222→documento app_metadata/counters; el resto de colecciones siguen requiriendo autenticación.
+   223→   223→   223→   223→3.2 RF-LAND-02 — Contadores en Tiempo Real sin Comprometer Cuota
+   224→   224→   224→   224→// modulo_02 · landing_page · prioridad_must · optimizacion_cuota
+   225→   225→   225→   225→Descripción. Los contadores mostrados en la landing page deben reflejar los totales casi en tiempo real
+   226→   226→   226→   226→(latencia < 5 segundos desde el evento que los modifica) sin comprometer la cuota de lectura de la base de
+   227→   227→   227→   227→datos. La implementación debe realizar exactamente una lectura de un documento pre-agregado por visita
+   228→   228→   228→   228→a la landing, sin consultas de agregación (SUM, COUNT) sobre colecciones.
+   229→   229→   229→   229→Justificación de negocio. Firestore cobra por lectura y escritura de documento. Una landing viral con
+   230→   230→   230→   230→100.000 visitas/día generaría 100.000 lecturas/día si se hace una lectura simple del documento counters, lo
+   231→   231→   231→   231→AutoDev / NodeW v2.0 — Addendum de Nuevas Funcionalidades // page 08
+   232→   232→   232→   232→
+   233→   233→   233→   233→=== PAGE 9 ===
+   234→   234→   234→   234→// AutoDev_SRS · v2.0 · ADDENDUM funcionalidades_no_contempladas.md
+   235→   235→   235→   235→cual es aceptable (costo ~$0.04 USD/día a $0.36 por 100K lecturas). En cambio, una consulta de agregación
+   236→   236→   236→   236→tipo SELECT COUNT(*) FROM users escanearía todos los documentos y multiplicaría el costo por varios
+   237→   237→   237→   237→órdenes de magnitud. Esta optimización es el factor crítico que hace viable la landing pública desde el punto
+   238→   238→   238→   238→de vista de costo unitario por visitante.
+   239→   239→   239→   239→Impacto técnico Firebase. El documento app_metadata/counters definido en RF-LAND-01 es la única
+   240→   240→   240→   240→fuente de verdad. Para evitar lecturas adicionales por renderizado, el cliente debe cachear el valor en
+   241→   241→   241→   241→sessionStorage con TTL de 60 segundos y opcionalmente suscribirse a onSnapshot del documento solo si el
+   242→   242→   242→   242→usuario permanece en la landing más de 30 segundos (lazy realtime). Las Cloud Functions que actualizan
+   243→   243→   243→   243→contadores deben usar FieldValue.increment(1) dentro de una transacción para garantizar atomicidad incluso
+   244→   244→   244→   244→bajo concurrencia alta (picos de tráfico tras una mención en redes).
+   245→   245→   245→   245→Consideraciones de consistencia. Dado que Firestore es eventualmente consistente entre escrituras y
+   246→   246→   246→   246→lecturas de agregados, los contadores pueden mostrar un desfase de 1-3 segundos respecto al evento real. Este
+   247→   247→   247→   247→desfase es aceptable para la landing y debe documentarse en el SLA interno. Para escenarios críticos donde
+   248→   248→   248→   248→se necesite consistencia fuerte (ej: panel de administración), se debe leer el contador directamente desde la
+   249→   249→   249→   249→fuente desnormalizada en lugar de la caché del cliente.
+   250→   250→   250→   250→AutoDev / NodeW v2.0 — Addendum de Nuevas Funcionalidades // page 09
+   251→   251→   251→   251→
+   252→   252→   252→   252→=== PAGE 10 ===
+   253→   253→   253→   253→// AutoDev_SRS · v2.0 · ADDENDUM funcionalidades_no_contempladas.md
+   254→   254→   254→   254→3.3 RF-PROF-02 — Vista Previa en Tiempo Real del Perfil
+   255→   255→   255→   255→// modulo_03 · perfil · prioridad_should · UX
+   256→   256→   256→   256→Descripción. La edición del perfil debe incluir una vista previa lateral en tiempo real que refleje los cambios
+   257→   257→   257→   257→de Foto de Perfil, Nombre Completo y Biografía a medida que el usuario los edita, antes de pulsar "Guardar
+   258→   258→   258→   258→cambios". La vista previa debe usar el mismo componente visual que el perfil público para garantizar
+   259→   259→   259→   259→consistencia WYSIWYG.
+   260→   260→   260→   260→Justificación de negocio. La vista previa reduce el ciclo de feedback de "editar → guardar → ver perfil →
+   261→   261→   261→   261→editar de nuevo" a "editar → ver en vivo → guardar". Esto disminuye errores de tipeo, imágenes mal
+   262→   262→   262→   262→recortadas y biografías con formatos rotos, mejorando la calidad percibida de los perfiles públicos. Es una
+   263→   263→   263→   263→mejora estándar en plataformas sociales (LinkedIn, GitHub) y su ausencia se percibe como falta de pulido.
+   264→   264→   264→   264→Impacto técnico Firebase. Cambio puramente client-side: el componente EditProfileForm mantiene estado
+   265→   265→   265→   265→local con los campos editables, y un componente hermano ProfilePreview recibe los mismos valores como
+   266→   266→   266→   266→props. No requiere nuevas Cloud Functions ni cambios en Firestore. La subida de foto de perfil debe usar
+   267→   267→   267→   267→Resumable Upload de Cloud Storage con preview local vía URL.createObjectURL() antes de confirmar la
+   268→   268→   268→   268→subida —si el usuario cancela, el archivo nunca se sube y se evita el costo de escritura en Storage.
+   269→   269→   269→   269→Dependencias. Reutiliza RF-PROF-01 (edición básica de perfil). Accesibilidad: la vista previa debe tener
+   270→   270→   270→   270→aria-live="polite" para que los usuarios con lectores de pantalla reciban anuncios de los cambios sin
+   271→   271→   271→   271→interrumpir la edición.
+   272→   272→   272→   272→3.4 RF-PROF-05 — Estado Vacío en Mis Estadísticas
+   273→   273→   273→   273→// modulo_03 · perfil · prioridad_should · empty_state
+   274→   274→   274→   274→Descripción. Si el usuario no tiene actividad registrada en "Mis Estadísticas" (cero posts, cero comentarios,
+   275→   275→   275→   275→cero vistas), el sistema debe mostrar un estado vacío con el texto "// sin datos aún" y un Call to Action
+   276→   276→   276→   276→destacado con el botón "+ Crear Post" que redirige al editor de posts.
+   277→   277→   277→   277→Justificación de negocio. Los estados vacíos son uno de los puntos de mayor fricción en onboarding
+   278→   278→   278→   278→emocional: un usuario nuevo que llega a un dashboard vacío sin instrucciones tiene una probabilidad de
+   279→   279→   279→   279→abandono (churn) significativamente mayor. Un CTA claro aumenta la activación D1 (usuarios que publican
+   280→   280→   280→   280→su primer post en el primer día) que es la métrica predictiva más fuerte de retención D30 según el
+   281→   281→   281→   281→benchmark de v1.0.
+   282→   282→   282→   282→Impacto técnico Firebase. El cliente consulta los documentos /users/{uid}/stats/overview y
+   283→   283→   283→   283→/users/{uid}/stats/posts_ranking (desnormalizados por Cloud Functions ya existentes en v1.0). Si ambos
+   284→   284→   284→   284→documentos no existen o tienen todos los campos en cero, se renderiza el componente EmptyState con un
+   285→   285→   285→   285→ícono, el texto // sin datos aún y el botón. La consulta no agrega costo adicional: ya era necesaria para llenar
+   286→   286→   286→   286→el dashboard cuando hay datos.
+   287→   287→   287→   287→Consideraciones de diseño. El texto // sin datos aún sigue la convención visual de terminal definida en la
+   288→   288→   288→   288→landing page (RF-LAND-01), reforzando la identidad de marca "developer-first". El botón + Crear Post
+   289→   289→   289→   289→debe usar el color de acento (#2d7ab3) y disparar el evento analytics empty_state_cta_clicked para medir la
+   290→   290→   290→   290→efectividad del patrón.
+   291→   291→   291→   291→AutoDev / NodeW v2.0 — Addendum de Nuevas Funcionalidades // page 10
+   292→   292→   292→   292→
+   293→   293→   293→   293→=== PAGE 11 ===
+   294→   294→   294→   294→// AutoDev_SRS · v2.0 · ADDENDUM funcionalidades_no_contempladas.md
+   295→   295→   295→   295→3.5 RF-GAM-03 — Reglas de XP y Recompensas Explícitas en el
+   296→   296→   296→   296→Leaderboard
+   297→   297→   297→   297→// modulo_04 · gamificacion · prioridad_must · transparencia
+   298→   298→   298→   298→Descripción. El Leaderboard Semanal debe mostrar explícitamente, en una sección visible del componente,
+   299→   299→   299→   299→las "Reglas de XP" (cómo ganar: Post +10, Tarea +15, Comentario +5, etc.) y las "Recompensas" (Top 1 =
+   300→   300→   300→   300→+100 XP, Top 2 = +50 XP, Top 3 = +25 XP, por ejemplo). Actualmente v1.0 (RF-054 a RF-057) ya calcula
+   301→   301→   301→   301→el leaderboard y otorga bonus a top 3 (500/300/200 XP), pero no expone estas reglas al usuario final en la UI.
+   302→   302→   302→   302→Justificación de negocio. La transparencia en las reglas de gamificación aumenta la motivación intrínseca
+   303→   303→   303→   303→(Autonomy y Mastery en el framework SDT de Ryan & Deci). Cuando los usuarios entienden exactamente
+   304→   304→   304→   304→qué acciones generan XP y qué recompensas obtienen, su participación en posts y comentarios se
+   305→   305→   305→   305→incrementa. Es un patrón exitoso documentado en Stack Overflow (reputation badges), Duolingo (XP
+   306→   306→   306→   306→leagues) y Khan Academy (energy points).
+   307→   307→   307→   307→Impacto técnico Firebase. Las reglas de XP ya existen como constantes en el código de las Cloud Functions
+   308→   308→   308→   308→(XP_RULES y WEEKLY_REWARDS). El cambio consiste en externalizarlas a un documento Firestore
+   309→   309→   309→   309→app_metadata/gamification_config con la estructura { postXP: 10, commentXP: 5, taskXP: 15,
+   310→   310→   310→   310→weeklyRewards: { top1: 100, top2: 50, top3: 25 } }. El cliente lee este documento una vez al cargar el
+   311→   311→   311→   311→leaderboard y renderiza la sección. Esto permite al equipo de producto ajustar las reglas sin desplegar código
+   312→   312→   312→   312→nuevo en las Cloud Functions.
+   313→   313→   313→   313→Dependencias y seguridad. Depende de RF-054 (cálculo del leaderboard) y RF-057 (premios bonus) ya
+   314→   314→   314→   314→existentes. Importante: las Cloud Functions deben seguir usando las constantes compiladas en código para
+   315→   315→   315→   315→validar otorgamiento de XP, no leer el documento gamification_config en tiempo de ejecución —esto
+   316→   316→   316→   316→evitaría que un atacante con permiso de escritura (imposible por reglas, pero defensa en profundidad)
+   317→   317→   317→   317→modifique las reglas para auto-asignarse XP. El documento es solo fuente de visualización para el cliente, no
+   318→   318→   318→   318→fuente de verdad de ejecución.
+   319→   319→   319→   319→3.6 RF-GAM-04 — Sistema de Logros (Achievements) de Primera Clase
+   320→   320→   320→   320→// modulo_04 · gamificacion · prioridad_must · modelo_datos_nuevo
+   321→   321→   321→   321→Descripción. El sistema debe otorgar Logros (Achievements) por hitos específicos —ejemplos: primer post,
+   322→   322→   322→   322→10 comentarios, Top 10 semanal, 30 días activo— y mostrarlos destacados en el perfil del usuario. v1.0 ya
+   323→   323→   323→   323→menciona "logros desbloqueables por hitos" en RF-061, pero v2.0 los eleva a entidad de primera clase con
+   324→   324→   324→   324→modelo de datos propio, CRUD administrativo, plantillas visuales (icono, título, descripción, rareza) y una
+   325→   325→   325→   325→Cloud Function reactiva que los evalúa automáticamente cuando se cumplen las condiciones.
+   326→   326→   326→   326→Justificación de negocio. Los logros son una de las palancas más efectivas de retención a medio plazo
+   327→   327→   327→   327→(D7-D30). Mientras que la XP motiva acciones individuales, los logros crean objetivos a medio plazo que el
+   328→   328→   328→   328→usuario persigue durante varias sesiones. El sistema de rareza (común, raro, épico, legendario) introduce un
+   329→   329→   329→   329→elemento de colección que fomenta la revisión periódica del perfil y la comparación social con otros
+   330→   330→   330→   330→miembros.
+   331→   331→   331→   331→Impacto técnico Firebase. Nueva colección /achievements (definiciones globales) y subcolección
+   332→   332→   332→   332→/users/{uid}/achievements (logros desbloqueados por usuario). Esquema de definición: { id, code, title,
+   333→   333→   333→   333→AutoDev / NodeW v2.0 — Addendum de Nuevas Funcionalidades // page 11
+   334→   334→   334→   334→
+   335→   335→   335→   335→=== PAGE 12 ===
+   336→   336→   336→   336→// AutoDev_SRS · v2.0 · ADDENDUM funcionalidades_no_contempladas.md
+   337→   337→   337→   337→description, iconUrl, rarity, criteria: { type, threshold } }. Esquema de desbloqueo: { achievementId, unlockedAt,
+   338→   338→   338→   338→contextSnapshot }. La Cloud Function evaluateAchievements se invoca después de cada evento que pueda
+   339→   339→   339→   339→desbloquear un logro (post creado, comentario creado, like recibido, ranking actualizado) y verifica en una
+   340→   340→   340→   340→transacción cuáles logros aplican.
+   341→   341→   341→   341→Defensa contra duplicados. La transacción debe usar transaction.get() sobre el documento de logro del
+   342→   342→   342→   342→usuario; si ya existe, se aborta silenciosamente. Para evitar N+1 lecturas, las definiciones de logros se
+   343→   343→   343→   343→cachean en memoria de la Cloud Function (con TTL de 5 minutos) usando el patrón ya establecido para
+   344→   344→   344→   344→gamification_config. Estimación de costo: con 30 logros definidos y 619 usuarios activos, el worst case es
+   345→   345→   345→   345→~18K lecturas/día sobre la colección de definiciones —aceptable y mitigable con la caché.
+   346→   346→   346→   346→AutoDev / NodeW v2.0 — Addendum de Nuevas Funcionalidades // page 12
+   347→   347→   347→   347→
+   348→   348→   348→   348→=== PAGE 13 ===
+   349→   349→   349→   349→// AutoDev_SRS · v2.0 · ADDENDUM funcionalidades_no_contempladas.md
+   350→   350→   350→   350→3.7 RF-RES-02 — Límite Estricto de 3 Adjuntos por Recurso
+   351→   351→   351→   351→// modulo_05 · recursos · prioridad_must · validacion_seguridad
+   352→   352→   352→   352→Descripción. El sistema debe limitar estrictamente a 3 los archivos adjuntos permitidos por recurso,
+   353→   353→   353→   353→validando este límite antes de la publicación. v1.0 (RF-036 a RF-043) permite adjuntos pero no especifica un
+   354→   354→   354→   354→límite máximo, lo que abre la posibilidad de abuso: un usuario malintencionado podría adjuntar decenas de
+   355→   355→   355→   355→archivos por recurso, saturando Cloud Storage y degradando el rendimiento del listado de recursos.
+   356→   356→   356→   356→Justificación de negocio. El límite de 3 adjuntos alinea con la convención visual del formulario (3 botones
+   357→   357→   357→   357→de archivos adjuntos visibles en las capturas de pantalla) y con el patrón mental de "recurso conciso" que la
+   358→   358→   358→   358→plataforma quiere promover. Recursos con 5+ adjuntos típicamente indican que el autor debería fragmentar
+   359→   359→   359→   359→el contenido en varios recursos especializados. El límite también acota el costo de Storage y el ancho de
+   360→   360→   360→   360→banda de descarga.
+   361→   361→   361→   361→Impacto técnico Firebase. Validación en dos capas: (1) Frontend, el componente ResourceForm deshabilita
+   362→   362→   362→   362→el botón "Agregar adjunto" cuando ya hay 3 archivos en el array local, mostrando un tooltip "Límite máximo:
+   363→   363→   363→   363→3 archivos". (2) Backend, la Cloud Function onResourceCreate (extensión de la existente en v1.0) valida que
+   364→   364→   364→   364→el array attachments tenga length <= 3 antes de escribir en /resources/{id}; si excede, rechaza con error
+   365→   365→   365→   365→permission-denied y no cobra la escritura. Adicionalmente, la regla de Firestore allow create: if
+   366→   366→   366→   366→request.resource.data.attachments.size() <= 3 aplica como tercera capa de defensa.
+   367→   367→   367→   367→Validación de tipo y tamaño. Aprovechando este cambio, se debe estandarizar también el tipo MIME
+   368→   368→   368→   368→permitido (pdf, zip, tar.gz, json, md, ipynb) y el tamaño máximo por archivo (10 MB, alineado con el límite
+   369→   369→   369→   369→de Storage y por debajo del límite de 1 MB de Firestore para metadata). Estos valores deben externalizarse a
+   370→   370→   370→   370→app_metadata/resources_config para permitir ajustes sin redeploy.
+   371→   371→   371→   371→3.8 RF-COM-03 — Estado Vacío en Sección Directos
+   372→   372→   372→   372→// modulo_06 · comunidad · prioridad_should · empty_state
+   373→   373→   373→   373→Descripción. La sección "Directos" debe renderizar un estado vacío con el texto "// PRÓXIMOS" y un
+   374→   374→   374→   374→mensaje explicativo del tipo "próximamente anunciaremos nuevas sesiones en vivo sobre automatización, n8n,
+   375→   375→   375→   375→WhatsApp e IA" cuando no haya eventos programados en el calendario. Actualmente v1.0 (RF-044) asume
+   376→   376→   376→   376→que siempre hay al menos una sesión futura en la colección /streams, lo que produce un bug visual si la
+   377→   377→   377→   377→colección está vacía.
+   378→   378→   378→   378→Justificación de negocio. El estado vacío comunica expectativa y mantiene al usuario informado en lugar de
+   379→   379→   379→   379→mostrar un loader infinito o un grid vacío. Cuando el equipo de contenido programa un nuevo directo, los
+   380→   380→   380→   380→usuarios que ya vieron el estado vacío son más propensos a revisar la sección nuevamente. El texto //
+   381→   381→   381→   381→PRÓXIMOS refuerza la identidad terminal de la marca ya establecida en RF-LAND-01 y RF-PROF-05.
+   382→   382→   382→   382→Impacto técnico Firebase. El cliente consulta /streams con filtro where("scheduledAt", ">", now()) y
+   383→   383→   383→   383→limit(10). Si el snapshot retorna un array vacío, se renderiza el componente EmptyStreams en lugar del grid.
+   384→   384→   384→   384→Esta consulta ya existía en v1.0 para llenar el calendario; el cambio es solo agregar la rama de empty state en
+   385→   385→   385→   385→el renderizado condicional. Adicionalmente, se debe suscribir a onSnapshot para que cuando el admin cree un
+   386→   386→   386→   386→nuevo directo, el estado vacío desaparezca automáticamente sin necesidad de recargar la página.
+   387→   387→   387→   387→AutoDev / NodeW v2.0 — Addendum de Nuevas Funcionalidades // page 13
+   388→   388→   388→   388→
+   389→   389→   389→   389→=== PAGE 14 ===
+   390→   390→   390→   390→// AutoDev_SRS · v2.0 · ADDENDUM funcionalidades_no_contempladas.md
+   391→   391→   391→   391→RF-COM-04 — Directos gratuitos con cupo limitado (refuerzo). Aunque v1.0 ya cubre cupos en RF-045
+   392→   392→   392→   392→y RF-046, v2.0 refuerza el mensaje visual: la sección debe indicar explícitamente "Miembros gratis, cupo
+   393→   393→   393→   393→limitado" cerca del botón de reserva. Este texto es copy estático, no requiere cambios en el modelo de datos.
+   394→   394→   394→   394→AutoDev / NodeW v2.0 — Addendum de Nuevas Funcionalidades // page 14
+   395→   395→   395→   395→
+   396→   396→   396→   396→=== PAGE 15 ===
+   397→   397→   397→   397→// AutoDev_SRS · v2.0 · ADDENDUM funcionalidades_no_contempladas.md
+   398→   398→   398→   398→// capitulo_04 · criterios_aceptacion · bdd_gherkin
+   399→   399→   399→   399→4. Criterios de Aceptación y Escenarios BDD
+   400→   400→   400→   400→Cada funcionalidad nueva se acompaña de al menos un escenario BDD en formato Gherkin
+   401→   401→   401→   401→(Given/When/Then). Estos escenarios son la base para la automatización de pruebas con Cucumber.js +
+   402→   402→   402→   402→Playwright y deben ser revisados por QA antes de marcar cualquier RF como "Done". Se mantiene la
+   403→   403→   403→   403→convención de v1.0: cada escenario nombra documentos Firestore específicos para que el fixture de prueba
+   404→   404→   404→   404→pueda sembrarlos sin ambigüedad.
+   405→   405→   405→   405→4.1 Escenarios — Landing Page (RF-LAND-01, RF-LAND-02)
+   406→   406→   406→   406→Feature: Landing Page con contadores dinámicos
+   407→   407→   407→   407→Como visitante no autenticado
+   408→   408→   408→   408→Quiero ver la landing page con contadores actualizados
+   409→   409→   409→   409→Para percibir la vitalidad de la comunidad AutoDev
+   410→   410→   410→   410→Scenario: Visualización de contadores dinámicos en la Landing
+   411→   411→   411→   411→Given la base de datos tiene 619 usuarios y 180 posts registrados
+   412→   412→   412→   412→And el documento "app_metadata/counters" contiene:
+   413→   413→   413→   413→| developersCount | 619 |
+   414→   414→   414→   414→| postsCount | 180 |
+   415→   415→   415→   415→| commentsCount | 286 |
+   416→   416→   416→   416→| coursesCount | 12 |
+   417→   417→   417→   417→| resourcesCount | 15 |
+   418→   418→   418→   418→When un usuario no autenticado visita la Landing Page
+   419→   419→   419→   419→Then el componente muestra "619 developers" y "180 posts"
+   420→   420→   420→   420→And los números se renderizan con animación de conteo ascendente
+   421→   421→   421→   421→And la terminal interactiva muestra la secuencia "$ autodev init →"
+   422→   422→   422→   422→Scenario: Contador servido con una sola lectura Firestore
+   423→   423→   423→   423→Given el documento "app_metadata/counters" existe y está actualizado
+   424→   424→   424→   424→When el cliente renderiza la Landing Page por primera vez
+   425→   425→   425→   425→Then se realiza exactamente 1 lectura de documento Firestore
+   426→   426→   426→   426→And no se ejecuta ninguna consulta de agregación (COUNT/SUM)
+   427→   427→   427→   427→And el valor se cachea en sessionStorage con TTL de 60 segundos
+   428→   428→   428→   428→Scenario: Actualización casi en tiempo real tras nuevo post
+   429→   429→   429→   429→Given la Landing Page está abierta con snapshot activo
+   430→   430→   430→   430→When un usuario autor publica un nuevo post
+   431→   431→   431→   431→Then la Cloud Function "onPostCreate" incrementa "postsCount" en 1
+   432→   432→   432→   432→And el snapshot del cliente recibe la actualización en menos de 5 segundos
+   433→   433→   433→   433→And el contador visual transiciona de "180" a "181"
+   434→   434→   434→   434→4.2 Escenarios — Perfil y Estadísticas (RF-PROF-02, RF-PROF-05)
+   435→   435→   435→   435→Feature: Vista previa en tiempo real del perfil
+   436→   436→   436→   436→Como usuario editando mi perfil
+   437→   437→   437→   437→Quiero ver una vista previa en vivo de mis cambios
+   438→   438→   438→   438→Para evitar guardar cambios que se vean mal
+   439→   439→   439→   439→Scenario: Vista previa refleja cambios de biografía en vivo
+   440→   440→   440→   440→Given el usuario "yvan" está en la página "/perfil/editar"
+   441→   441→   441→   441→AutoDev / NodeW v2.0 — Addendum de Nuevas Funcionalidades // page 15
+   442→   442→   442→   442→
+   443→   443→   443→   443→=== PAGE 16 ===
+   444→   444→   444→   444→// AutoDev_SRS · v2.0 · ADDENDUM funcionalidades_no_contempladas.md
+   445→   445→   445→   445→And su biografía actual es "Developer en formación"
+   446→   446→   446→   446→When el usuario escribe " - Especialista en n8n" en el campo biografía
+   447→   447→   447→   447→Then el panel de vista previa muestra:
+   448→   448→   448→   448→"Developer en formación - Especialista en n8n"
+   449→   449→   449→   449→And el botón "Guardar cambios" permanece habilitado
+   450→   450→   450→   450→And no se ha realizado ninguna escritura en Firestore
+   451→   451→   451→   451→Scenario: Vista previa de foto de perfil sin subir el archivo
+   452→   452→   452→   452→Given el usuario está editando su perfil sin foto previa
+   453→   453→   453→   453→When el usuario selecciona "avatar.png" en el input de foto
+   454→   454→   454→   454→Then la vista previa muestra la imagen usando URL.createObjectURL()
+   455→   455→   455→   455→And el archivo NO se ha subido a Cloud Storage todavía
+   456→   456→   456→   456→When el usuario pulsa "Cancelar"
+   457→   457→   457→   457→Then el archivo se descarta sin costo de Storage
+   458→   458→   458→   458→Feature: Estado vacío en Mis Estadísticas
+   459→   459→   459→   459→Como usuario nuevo sin actividad
+   460→   460→   460→   460→Quiero ver un mensaje claro y un CTA
+   461→   461→   461→   461→Para entender qué debo hacer para empezar
+   462→   462→   462→   462→Scenario: Usuario nuevo sin posts ni comentarios ve estado vacío
+   463→   463→   463→   463→Given el usuario "maria" se registró hoy
+   464→   464→   464→   464→And el documento "/users/maria/stats/overview" no existe
+   465→   465→   465→   465→When el usuario navega a "/perfil/mis-estadisticas"
+   466→   466→   466→   466→Then se muestra el componente EmptyState con texto "// sin datos aún"
+   467→   467→   467→   467→And se muestra un botón "+ Crear Post" con color de acento #2d7ab3
+   468→   468→   468→   468→And no se muestra ninguna tarjeta de métrica
+   469→   469→   469→   469→Scenario: Usuario con actividad ve dashboard normal
+   470→   470→   470→   470→Given el usuario "yvan" tiene 1 post y 0 comentarios
+   471→   471→   471→   471→And su documento "/users/yvan/stats/overview" tiene:
+   472→   472→   472→   472→| engagement | 12 |
+   473→   473→   473→   473→| views | 47 |
+   474→   474→   474→   474→| saves | 3 |
+   475→   475→   475→   475→| activeDays | 2 |
+   476→   476→   476→   476→When el usuario navega a "/perfil/mis-estadisticas"
+   477→   477→   477→   477→Then se muestran 4 tarjetas de métrica con los valores indicados
+   478→   478→   478→   478→And NO se muestra el componente EmptyState
+   479→   479→   479→   479→AutoDev / NodeW v2.0 — Addendum de Nuevas Funcionalidades // page 16
+   480→   480→   480→   480→
+   481→   481→   481→   481→=== PAGE 17 ===
+   482→   482→   482→   482→// AutoDev_SRS · v2.0 · ADDENDUM funcionalidades_no_contempladas.md
+   483→   483→   483→   483→4.3 Escenarios — Gamificación (RF-GAM-03, RF-GAM-04)
+   484→   484→   484→   484→Feature: Reglas de XP explícitas en el Leaderboard
+   485→   485→   485→   485→Como miembro de la comunidad
+   486→   486→   486→   486→Quiero ver las reglas de XP y las recompensas
+   487→   487→   487→   487→Para entender cómo subir en el ranking semanal
+   488→   488→   488→   488→Scenario: Visualización de reglas y recompensas en el Leaderboard
+   489→   489→   489→   489→Given el Leaderboard Semanal está renderizado para "06 Jul → 12 Jul, 2026"
+   490→   490→   490→   490→And el documento "app_metadata/gamification_config" contiene:
+   491→   491→   491→   491→| postXP | 10 |
+   492→   492→   492→   492→| commentXP | 5 |
+   493→   493→   493→   493→| taskXP | 15 |
+   494→   494→   494→   494→| weeklyRewards | {top1:100, top2:50, top3:25} |
+   495→   495→   495→   495→When el usuario abre el Leaderboard
+   496→   496→   496→   496→Then se muestra una sección "Reglas de XP" con las entradas:
+   497→   497→   497→   497→| Post +10 XP | Tarea +15 XP | Comentario +5 XP |
+   498→   498→   498→   498→And se muestra una sección "Recompensas" con:
+   499→   499→   499→   499→| Top 1 = +100 XP | Top 2 = +50 XP | Top 3 = +25 XP |
+   500→   500→   500→   500→And el botón "¡sube al top!" está visible
+
+[showing lines 1-500 of 786; use offset=501 with limit to continue reading]

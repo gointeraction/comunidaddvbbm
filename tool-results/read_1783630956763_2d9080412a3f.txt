@@ -1,0 +1,1463 @@
+   500→   500→4.2 Escalabilidad
+   501→   501→Firebase escala horizontalmente de forma nativa. Firestore distribuye automáticamente los documentos entre shards
+   502→   502→y Cloud Functions escala a cero cuando no hay tráfico. Las consideraciones de escalabilidad se centran en: (i)
+   503→   503→diseño de consultas que no requieran escaneos de colección completos, (ii) uso de subcolecciones en lugar de arrays
+   504→   504→grandes para evitar documentos que excedan 1 MB, y (iii) uso de Cloud Functions para agregaciones que no pueden
+   505→   505→resolverse con consultas directas.
+   506→   506→ID Métrica Objetivo Verificación
+   507→   507→RNF-08 Usuarios concurrentes soportados 10.000 sin degradación Prueba de carga con
+   508→   508→k6
+   509→   509→RNF-09 Documentos en colección de posts Hasta 1 millón sin paginación lenta Índices compuestos
+   510→   510→+ cursor pagination
+   511→   511→AutoDev — Especificación de Requisitos de Software v1.0 // page 17
+   512→   512→
+   513→   513→=== PAGE 19 ===
+   514→   514→ID Métrica Objetivo Verificación
+   515→   515→RNF-10 Cloud Functions concurrentes Autoescalado hasta 1000 por región Firebase Functions
+   516→   516→config
+   517→   517→RNF-11 Tamaño máximo de documento Firestore < 500 KB (límite Firestore 1 MB) Validación en Cloud
+   518→   518→Function pre-write
+   519→   519→4.3 Seguridad
+   520→   520→La seguridad se implementa en tres capas: (i) Firebase App Check para verificar que las peticiones provienen de la
+   521→   521→app legítima, (ii) reglas de Firestore como única fuente de verdad para autorización a datos, y (iii) validación de
+   522→   522→entrada en Cloud Functions para operaciones que no pasan por Firestore directamente. El frontend no implementa
+   523→   523→lógica de autorización; solo oculta acciones visualmente.
+   524→   524→ID Métrica Objetivo Verificación
+   525→   525→RNF-12 Cobertura de reglas de seguridad Firestore 100% de colecciones con reglas Audit script en CI
+   526→   526→RNF-13 Rate limiting de Cloud Functions sensibles Máx 5 llamadas/min por usuario en Cloud Functions
+   527→   527→login y registro middleware
+   528→   528→RNF-14 Cumplimiento OWASP Top 10 0 vulnerabilidades críticas o altas Snyk + ZAP scan en
+   529→   529→CI
+   530→   530→RNF-15 Sanitización de contenido HTML en posts Strip de tags <script>, <iframe>, on* DOMPurify en
+   531→   531→attributes frontend y validación
+   532→   532→en backend
+   533→   533→RNF-16 Hashing de contraseñas Firebase Auth (scrypt con sal única) Heredado de
+   534→   534→Firebase Auth
+   535→   535→RNF-17 Protección contra CSRF Token anti-CSRF en formularios Verificación en
+   536→   536→Cloud Functions
+   537→   537→4.4 Disponibilidad y observabilidad
+   538→   538→El SLA de Firebase para Firestore y Cloud Functions es del 99.95% en us-central1. No se implementa redundancia
+   539→   539→multi-región en v1.0 por costo; se contempla para la fase 3 si la base de usuarios supera 10.000 activos mensuales.
+   540→   540→La observabilidad se basa en Cloud Logging para logs estructurados, Cloud Monitoring para métricas, y Firebase
+   541→   541→Analytics para eventos de producto.
+   542→   542→ID Métrica Objetivo Verificación
+   543→   543→RNF-18 Disponibilidad mensual del sistema >= 99.9% Status page + Cloud
+   544→   544→Monitoring SLO
+   545→   545→RNF-19 Tiempo de recuperación ante incidente (RTO) < 2 horas Runbook
+   546→   546→documentado
+   547→   547→AutoDev — Especificación de Requisitos de Software v1.0 // page 18
+   548→   548→
+   549→   549→=== PAGE 20 ===
+   550→   550→ID Métrica Objetivo Verificación
+   551→   551→RNF-20 Logs estructurados en Cloud Functions 100% con trace ID y user ID Audit log sample en
+   552→   552→CI
+   553→   553→RNF-21 Alertas proactivas Latencia p95 > 1s o error rate > 1% Cloud Monitoring
+   554→   554→alerting policies
+   555→   555→4.5 Usabilidad y accesibilidad
+   556→   556→AutoDev debe ser usable por personas con discapacidades visuales, motoras y cognitivas. Se sigue WCAG 2.1 nivel
+   557→   557→AA. La interfaz responsive abarca desde 375px (móvil) hasta 1920px (desktop) con breakpoints en 768px y
+   558→   558→1280px. El contraste mínimo de texto contra fondo es 4.5:1, exceptuando texto decorativo. Todos los elementos
+   559→   559→interactivos son navegables por teclado con focus visible.
+   560→   560→ID Métrica Objetivo Verificación
+   561→   561→RNF-22 Cumplimiento WCAG 2.1 AA 100% de páginas axe-core en CI
+   562→   562→RNF-23 Contraste de color >= 4.5:1 para texto normal Lighthouse
+   563→   563→accessibility audit
+   564→   564→RNF-24 Navegación por teclado 100% de flujos críticos accesibles Prueba manual +
+   565→   565→E2E
+   566→   566→RNF-25 Soporte de lectores de pantalla ARIA labels en todos los elementos Prueba con NVDA y
+   567→   567→interactivos VoiceOver
+   568→   568→RNF-26 Responsive en 375px, 768px, 1280px, 1920px Sin scroll horizontal, sin contenido E2E en Playwright
+   569→   569→cortado con viewports
+   570→   570→4.6 Mantenibilidad y compatibilidad
+   571→   571→El código debe ser mantenible por un equipo pequeño (3-5 desarrolladores). Se exige TypeScript estricto, cobertura
+   572→   572→mínima del 80% en líneas y 70% en ramas para Cloud Functions. El frontend se organiza por features (módulos)
+   573→   573→con co-localización de componentes, hooks, tipos y pruebas. La compatibilidad aborda las últimas dos versiones de
+   574→   574→los navegadores mayoritarios; IE11 no se soporta.
+   575→   575→ID Métrica Objetivo Verificación
+   576→   576→RNF-27 Cobertura de pruebas unitarias (Cloud Functions) >= 80% líneas, 70% ramas Jest + Istanbul en CI
+   577→   577→RNF-28 Linting sin errores 0 errores ESLint, 0 errores CI gate
+   578→   578→TypeScript
+   579→   579→RNF-29 Tamaño máximo de archivo 500 líneas (excepto generados) ESLint rule
+   580→   580→max-lines
+   581→   581→RNF-30 Navegadores soportados Últimas 2 versiones de Chrome, Browserlist +
+   582→   582→Firefox, Safari, Edge Playwright
+   583→   583→AutoDev — Especificación de Requisitos de Software v1.0 // page 19
+   584→   584→
+   585→   585→=== PAGE 21 ===
+   586→   586→ID Métrica Objetivo Verificación
+   587→   587→RNF-31 i18n preparado Textos extraídos en /messages/es.json Audit script en CI
+   588→   588→AutoDev — Especificación de Requisitos de Software v1.0 // page 20
+   589→   589→
+   590→   590→=== PAGE 22 ===
+   591→   591→Capítulo 5 — Casos de Uso Detallados
+   592→   592→5.1 Diagrama de casos de uso (descripción textual)
+   593→   593→Dado que este documento se distribuye en formato PDF y la notación gráfica UML puede comprometerse al
+   594→   594→rasterizar, se presenta el modelo de casos de uso en forma tabular. La tabla lista cada actor, los casos de uso en los
+   595→   595→que participa como primario y los casos en los que participa como secundario. El detalle de cada caso de uso se
+   596→   596→encuentra en las secciones 5.3 a 5.14.
+   597→   597→Actor Casos de uso primarios Casos de uso secundarios
+   598→   598→Invitado CU-001 Registro de cuenta, CU-004 Login —
+   599→   599→Miembro CU-002 Onboarding, CU-003 Publicar post, CU-004 Comentar post, CU-011 (mencionado en
+   600→   600→CU-005 Filtrar miembros, CU-007 Inscribirse a directo, CU-008 Ver notificaciones)
+   601→   601→ranking, CU-009 Completar misión, CU-010 Recibir notificación,
+   602→   602→CU-012 Buscar recurso
+   603→   603→Autor CU-006 Publicar recurso Todos los del Miembro
+   604→   604→Moderador CU-011 Moderar contenido —
+   605→   605→Administrador CU-011 Moderar (extendido), gestión usuarios, métricas —
+   606→   606→5.2 Plantilla de caso de uso
+   607→   607→Cada caso de uso se documenta siguiendo la plantilla: identificador, nombre, actor primario, precondiciones,
+   608→   608→postcondiciones, flujo principal numerado, flujos alternativos y excepciones. Esta estructura facilita la conversión
+   609→   609→directa a escenarios BDD en el Capítulo 7.
+   610→   610→5.3 CU-001 — Registro de cuenta
+   611→   611→Campo Valor
+   612→   612→ID CU-001
+   613→   613→Nombre Registro de cuenta
+   614→   614→Actor primario Invitado
+   615→   615→Precondiciones El invitado no tiene sesión activa. El email no está registrado.
+   616→   616→Postcondiciones Se crea el documento de usuario en Firestore con estado "onboarding_pending". Se envía email de
+   617→   617→verificación. Se redirige al wizard de onboarding.
+   618→   618→Flujo principal:
+   619→   619→1 El invitado accede a la página /registro.
+   620→   620→2 El sistema muestra el formulario con campos: email, contraseña, confirmar contraseña.
+   621→   621→AutoDev — Especificación de Requisitos de Software v1.0 // page 21
+   622→   622→
+   623→   623→=== PAGE 23 ===
+   624→   624→3 El invitado completa los campos y pulsa "crear_cuenta".
+   625→   625→4 El frontend valida formato de email y longitud mínima de contraseña (8 caracteres).
+   626→   626→5 El frontend llama a Firebase Auth: createUserWithEmailAndPassword(email, password).
+   627→   627→6 Firebase Auth crea el usuario y devuelve el UID.
+   628→   628→7 Una Cloud Function onUserCreate (trigger auth.user().onCreate) crea el documento /users/{uid} con
+   629→   629→campos: email, role="member", status="onboarding_pending", createdAt.
+   630→   630→8 El sistema envía email de verificación vía Firebase Auth sendEmailVerification().
+   631→   631→9 El sistema redirige al usuario al wizard de onboarding (paso 1).
+   632→   632→Flujos alternativos:
+   633→   633→l A1 — Email ya registrado: En el paso 5, Firebase Auth devuelve error auth/email-already-in-use. El
+   634→   634→sistema muestra mensaje "Ya existe una cuenta con este email" y ofrece enlace a /login.
+   635→   635→l A2 — Contraseña débil: En el paso 5, Firebase Auth devuelve error auth/weak-password. El sistema
+   636→   636→resalta el campo contraseña con mensaje "Mínimo 8 caracteres".
+   637→   637→l A3 — Email inválido: El paso 4 rechaza antes de llamar a Firebase. El sistema muestra "Email no válido"
+   638→   638→junto al campo.
+   639→   639→Excepciones:
+   640→   640→l E1 — Firebase Auth no disponible: El sistema muestra mensaje genérico "Servicio no disponible
+   641→   641→temporalmente" y registra el error en Cloud Logging con trace ID.
+   642→   642→l E2 — Cloud Function onUserCreate falla: El usuario se crea en Auth pero no en Firestore. Una Cloud
+   643→   643→Function de reconciliación (scheduled, cada 5 min) detecta huérfanos y los corrige.
+   644→   644→5.4 CU-002 — Onboarding de perfil
+   645→   645→Campo Valor
+   646→   646→ID CU-002
+   647→   647→Nombre Onboarding de perfil
+   648→   648→Actor primario Miembro (recién registrado)
+   649→   649→Precondiciones El usuario tiene cuenta autenticada. Su documento en Firestore tiene status="onboarding_pending".
+   650→   650→Postcondiciones El documento /users/{uid} se actualiza con name, interests[], level, bio, status="active". Se otorga XP
+   651→   651→inicial (50 XP). Se publica un post automático de presentación en el foro.
+   652→   652→Flujo principal:
+   653→   653→1 El usuario es redirigido a /onboarding/paso-1 tras el registro.
+   654→   654→2 Paso 1: Captura del nombre (mínimo 2 caracteres). El usuario pulsa "continuar".
+   655→   655→AutoDev — Especificación de Requisitos de Software v1.0 // page 22
+   656→   656→
+   657→   657→=== PAGE 24 ===
+   658→   658→3 Paso 2: Selección de al menos 1 interés entre Automatización, IA, Desarrollo Web, Comunidad. Botón
+   659→   659→"continuar" habilitado solo cuando hay selección.
+   660→   660→4 Paso 3: Selección de exactamente 1 nivel (Principiante, Intermedio, Avanzado).
+   661→   661→5 Paso 4: Captura de presentación personal (mínimo 20 caracteres). El usuario pulsa "guardar_perfil &&
+   662→   662→continuar".
+   663→   663→6 El frontend valida todos los campos antes de enviar.
+   664→   664→7 El frontend llama a la Cloud Function HTTP completeOnboarding con los datos consolidados.
+   665→   665→8 La Cloud Function valida los datos, actualiza el documento /users/{uid} (status="active"), otorga 50 XP y
+   666→   666→crea un post automático en /posts con tag "presentacion".
+   667→   667→9 El sistema redirige al usuario al /foro.
+   668→   668→Flujos alternativos:
+   669→   669→l A1 — Saltar paso opcional: Si el usuario intenta cerrar la pestaña, el sistema mantiene el
+   670→   670→status="onboarding_pending" y vuelve a mostrar el wizard en el siguiente login.
+   671→   671→l A2 — Volver atrás: El usuario puede navegar entre pasos con los botones "atrás" sin perder datos en
+   672→   672→memoria.
+   673→   673→5.5 CU-003 — Publicar post en foro
+   674→   674→Campo Valor
+   675→   675→ID CU-003
+   676→   676→Nombre Publicar post en foro
+   677→   677→Actor primario Miembro
+   678→   678→Precondiciones Usuario autenticado con status="active".
+   679→   679→Postcondiciones Se crea un documento en /posts con autor, contenido, etiquetas y timestamp. Se otorgan 25 XP al autor. Se
+   680→   680→actualiza el contador postsCount del autor.
+   681→   681→Flujo principal:
+   682→   682→1 El Miembro accede a /foro y localiza el input "¿qué estás construyendo hoy?".
+   683→   683→2 El Miembro pulsa el input y se expande el formulario con título, contenido y selector de etiquetas.
+   684→   684→3 El Miembro completa título (máx 100), contenido (máx 5000) y selecciona hasta 3 etiquetas.
+   685→   685→4 El Miembro pulsa "publicar".
+   686→   686→5 El frontend valida longitudes y formato, sanitiza HTML con DOMPurify.
+   687→   687→6 El frontend escribe directamente en /posts mediante set() con uid autogenerado.
+   688→   688→7 La Cloud Function onPostCreate (trigger firestore onCreate) valida reglas, otorga 25 XP al autor e
+   689→   689→incrementa postsCount.
+   690→   690→AutoDev — Especificación de Requisitos de Software v1.0 // page 23
+   691→   691→
+   692→   692→=== PAGE 25 ===
+   693→   693→8 El post aparece en la cabecera del listado del foro.
+   694→   694→Flujos alternativos:
+   695→   695→l A1 — Contenido vacío: El paso 5 rechaza y muestra "El contenido no puede estar vacío".
+   696→   696→l A2 — Palabra prohibida: El paso 5 detecta una palabra de la lista negra y solicita revisión.
+   697→   697→l A3 — Rate limit: Si el usuario publica más de 3 posts en 10 minutos, el sistema bloquea con mensaje
+   698→   698→"Espera unos minutos antes de publicar de nuevo".
+   699→   699→5.6 CU-004 — Comentar post
+   700→   700→Campo Valor
+   701→   701→ID CU-004
+   702→   702→Nombre Comentar en un post
+   703→   703→Actor primario Miembro
+   704→   704→Precondiciones Usuario autenticado con status="active". Existe el post objetivo.
+   705→   705→Postcondiciones Se crea un documento en /posts/{postId}/comments/{commentId}. Se otorgan 10 XP al comentador. Se
+   706→   706→notifica al autor del post.
+   707→   707→Flujo principal:
+   708→   708→1 El Miembro abre la vista de detalle de un post.
+   709→   709→2 El Miembro escribe su comentario en el área inferior y pulsa "comentar".
+   710→   710→3 El frontend valida longitud (1-1000) y sanitiza.
+   711→   711→4 El frontend escribe en /posts/{postId}/comments con add().
+   712→   712→5 La Cloud Function onCommentCreate otorga 10 XP al comentador, incrementa commentsCount del post y
+   713→   713→genera una notificación in-app para el autor del post.
+   714→   714→6 El comentario aparece en la lista con animación.
+   715→   715→5.7 CU-005 — Filtrar miembros por especialidad
+   716→   716→Campo Valor
+   717→   717→ID CU-005
+   718→   718→Nombre Filtrar miembros por especialidad
+   719→   719→Actor primario Miembro
+   720→   720→Precondiciones Usuario autenticado.
+   721→   721→AutoDev — Especificación de Requisitos de Software v1.0 // page 24
+   722→   722→
+   723→   723→=== PAGE 26 ===
+   724→   724→Campo Valor
+   725→   725→Postcondiciones El sistema muestra la lista de miembros que cumplen el filtro seleccionado, ordenados según criterio.
+   726→   726→Flujo principal:
+   727→   727→1 El Miembro accede a /miembros.
+   728→   728→2 El sistema muestra la lista de miembros por defecto (recientes, todos).
+   729→   729→3 El Miembro pulsa el filtro "Automatización" en la barra de categorías.
+   730→   730→4 El frontend ejecuta una consulta Firestore: where("interests", "array-contains", "automatizacion")
+   731→   731→orderBy("createdAt", "desc").
+   732→   732→5 El sistema actualiza la lista con los miembros filtrados.
+   733→   733→6 El Miembro puede combinar el filtro de especialidad con el de nivel y el orden.
+   734→   734→5.8 CU-006 — Publicar recurso
+   735→   735→Campo Valor
+   736→   736→ID CU-006
+   737→   737→Nombre Publicar recurso
+   738→   738→Actor primario Autor
+   739→   739→Precondiciones Usuario con rol "autor" o "admin".
+   740→   740→Postcondiciones Se crea un documento en /resources con tipo, nivel, imagen destacada y contenido. Aparece en el listado
+   741→   741→público.
+   742→   742→Flujo principal:
+   743→   743→1 El Autor pulsa "+ publicar" en /recursos.
+   744→   744→2 El sistema muestra el formulario: título, descripción, tipo (Skill, Plugin, Subagent, MCP Server, Agent
+   745→   745→Team, Tutorial), nivel (Principiante, Intermedio, Avanzado), imagen destacada, contenido o URL externa.
+   746→   746→3 El Autor completa los campos y sube una imagen (JPG/PNG/WebP máx 2MB).
+   747→   747→4 El frontend sube la imagen a Storage en /resources/{resourceId}/cover.jpg y obtiene la URL firmada.
+   748→   748→5 El frontend escribe el documento en /resources con coverUrl, authorId, createdAt.
+   749→   749→6 El recurso aparece en la lista pública.
+   750→   750→5.9 CU-007 — Inscribirse a directo
+   751→   751→AutoDev — Especificación de Requisitos de Software v1.0 // page 25
+   752→   752→
+   753→   753→=== PAGE 27 ===
+   754→   754→Campo Valor
+   755→   755→ID CU-007
+   756→   756→Nombre Reservar cupo en directo
+   757→   757→Actor primario Miembro
+   758→   758→Precondiciones Existe un directo programado con cupos disponibles.
+   759→   759→Postcondiciones Se crea un documento en /lives/{liveId}/attendees/{uid}. Se programa notificación recordatorio 1h antes.
+   760→   760→5.10 CU-008 — Visualizar ranking semanal
+   761→   761→Campo Valor
+   762→   762→ID CU-008
+   763→   763→Nombre Visualizar ranking semanal
+   764→   764→Actor primario Miembro
+   765→   765→Precondiciones Existe al menos un período semanal con datos.
+   766→   766→Postcondiciones El sistema muestra el leaderboard con top 3 destacado y tabla del top 100. Muestra la posición del usuario
+   767→   767→actual si está en el top.
+   768→   768→5.11 CU-009 — Completar misión
+   769→   769→Campo Valor
+   770→   770→ID CU-009
+   771→   771→Nombre Completar misión
+   772→   772→Actor primario Miembro
+   773→   773→Precondiciones El usuario tiene una misión activa con tareas pendientes.
+   774→   774→Postcondiciones La misión se marca como completada. Se otorga XP bonus (default 100 XP). Se genera logro si aplica. Se
+   775→   775→envía notificación.
+   776→   776→5.12 CU-010 — Recibir notificación push
+   777→   777→Campo Valor
+   778→   778→ID CU-010
+   779→   779→Nombre Recibir notificación push
+   780→   780→AutoDev — Especificación de Requisitos de Software v1.0 // page 26
+   781→   781→
+   782→   782→=== PAGE 28 ===
+   783→   783→Campo Valor
+   784→   784→Actor primario Miembro (con suscripción push activa)
+   785→   785→Precondiciones El usuario ha aceptado notificaciones push en su navegador/dispositivo.
+   786→   786→Postcondiciones El dispositivo recibe la notificación push. Se registra impresión en /notifications/{uid}/items/{notifId}.
+   787→   787→5.13 CU-011 — Moderar contenido (admin/mod)
+   788→   788→Campo Valor
+   789→   789→ID CU-011
+   790→   790→Nombre Moderar contenido inapropiado
+   791→   791→Actor primario Moderador o Administrador
+   792→   792→Precondiciones Existe un post o comentario reportado o detectado.
+   793→   793→Postcondiciones El contenido se marca como hidden=true. Se registra entrada en /audit_logs con motivo, moderatorId y
+   794→   794→timestamp. Se notifica al autor.
+   795→   795→5.14 CU-012 — Buscar recurso por tipo
+   796→   796→Campo Valor
+   797→   797→ID CU-012
+   798→   798→Nombre Buscar recurso por tipo
+   799→   799→Actor primario Miembro
+   800→   800→Precondiciones Existen recursos publicados.
+   801→   801→Postcondiciones El sistema muestra los recursos del tipo seleccionado, ordenados por recientes o popularidad.
+   802→   802→AutoDev — Especificación de Requisitos de Software v1.0 // page 27
+   803→   803→
+   804→   804→=== PAGE 29 ===
+   805→   805→Capítulo 6 — Criterios de Aceptación
+   806→   806→Los criterios de aceptación (CA-NNN) traducen cada requisito funcional a una condición verificable. Un criterio es
+   807→   807→aceptable cuando puede responder de forma binaria (sí/no) a la pregunta "¿el sistema cumple este comportamiento
+   808→   808→bajo estas condiciones?". Cada criterio se asocia a un requisito funcional y a un método de verificación: manual
+   809→   809→(prueba exploratoria), E2E (Cypress/Playwright) o unit (Jest sobre Cloud Functions).
+   810→   810→6.1 Criterios de aceptación por módulo
+   811→   811→ID RF Criterio Verificación
+   812→   812→CA-001 RF-00 Dado un invitado en /registro, cuando completa email válido y contraseña de 8+ E2E
+   813→   813→1 caracteres y pulsa crear_cuenta, entonces se crea el usuario y se redirige a /onboarding.
+   814→   814→CA-002 RF-00 Dado un email ya registrado, cuando el invitado intenta registrarse, entonces el sistema E2E
+   815→   815→2 muestra "Ya existe una cuenta con este email".
+   816→   816→CA-003 RF-00 Dado credenciales válidas, cuando el usuario pulsa iniciar_sesión, entonces se establece E2E
+   817→   817→4 la sesión y se redirige a /foro.
+   818→   818→CA-004 RF-00 Dado un email registrado, cuando el usuario solicita recuperar contraseña, entonces se Manual
+   819→   819→6 envía un email con enlace de reseteo.
+   820→   820→CA-005 RF-00 Dado 5 intentos fallidos consecutivos, cuando el usuario intenta un 6º login, entonces el Unit
+   821→   821→7 sistema bloquea por 15 minutos.
+   822→   822→CA-006 RF-00 Dado un usuario recién registrado, cuando accede a cualquier ruta protegida, entonces E2E
+   823→   823→9 es redirigido a /onboarding.
+   824→   824→CA-007 RF-01 Dado el paso 1 del onboarding, cuando el usuario ingresa nombre de 1 carácter, Unit
+   825→   825→0 entonces el sistema impide continuar.
+   826→   826→CA-008 RF-01 Dado el paso 2 del onboarding, cuando el usuario no selecciona ningún interés, entonces E2E
+   827→   827→1 el botón continuar está deshabilitado.
+   828→   828→CA-009 RF-01 Dado el paso 4 del onboarding, cuando el usuario ingresa presentación de menos de 20 E2E
+   829→   829→3 caracteres, entonces se muestra error.
+   830→   830→CA-010 RF-01 Dado un usuario con status=onboarding_pending, cuando intenta acceder a /foro, E2E
+   831→   831→4 entonces es redirigido a /onboarding.
+   832→   832→CA-011 RF-01 Dado un Miembro activo, cuando publica un post con título y contenido válidos, E2E
+   833→   833→9 entonces el post aparece en /foro.
+   834→   834→CA-012 RF-02 Dado un post creado hace menos de 30 min, cuando el autor pulsa editar, entonces E2E
+   835→   835→0 puede modificar el contenido.
+   836→   836→CA-013 RF-02 Dado un post del usuario, cuando el autor pulsa eliminar, entonces el post desaparece E2E
+   837→   837→1 del listado.
+   838→   838→CA-014 RF-02 Dado un post, cuando un Miembro comenta, entonces el comentario aparece bajo el E2E
+   839→   839→2 post.
+   840→   840→CA-015 RF-02 Dado un post, cuando un Miembro pulsa like, entonces el contador incrementa y el E2E
+   841→   841→3 botón cambia de estado.
+   842→   842→AutoDev — Especificación de Requisitos de Software v1.0 // page 28
+   843→   843→
+   844→   844→=== PAGE 30 ===
+   845→   845→ID RF Criterio Verificación
+   846→   846→CA-016 RF-02 Dado el foro con más de 20 posts, cuando el usuario navega a la página 2, entonces se E2E
+   847→   847→4 muestran los posts 21-40 sin recargar.
+   848→   848→CA-017 RF-02 Dado el foro, cuando el usuario filtra por etiqueta IA, entonces solo se muestran posts E2E
+   849→   849→5 con esa etiqueta.
+   850→   850→CA-018 RF-02 Dado cualquier post en el listado, entonces se muestra avatar, nombre, nivel, fecha Manual
+   851→   851→6 relativa y conteos.
+   852→   852→CA-019 RF-02 Dado el catálogo de cursos, cuando el usuario accede, entonces se listan todos los cursos E2E
+   853→   853→9 con metadatos.
+   854→   854→CA-020 RF-03 Dado un usuario inscrito en un curso, cuando marca una lección como completada, E2E
+   855→   855→1 entonces el progreso del curso se actualiza.
+   856→   856→CA-021 RF-03 Dado un Autor, cuando completa el formulario de recurso y sube imagen, entonces el E2E
+   857→   857→6 recurso se publica.
+   858→   858→CA-022 RF-03 Dado el listado de recursos, cuando el usuario filtra por tipo MCP Server, entonces solo E2E
+   859→   859→8 se muestran recursos de ese tipo.
+   860→   860→CA-023 RF-04 Dado el calendario de directos, cuando el usuario accede, entonces ve los directos E2E
+   861→   861→4 programados con cupo.
+   862→   862→CA-024 RF-04 Dado un directo con cupos, cuando un Miembro reserva, entonces se confirma y E2E
+   863→   863→5 aparece en su lista.
+   864→   864→CA-025 RF-04 Dado un directo sin cupos, cuando un Miembro intenta reservar, entonces se le ofrece E2E
+   865→   865→6 lista de espera.
+   866→   866→CA-026 RF-04 Dado el directorio de miembros, cuando el usuario accede, entonces se muestran los E2E
+   867→   867→9 miembros con sus metadatos.
+   868→   868→CA-027 RF-05 Dado el directorio, cuando el usuario filtra por nivel Avanzado, entonces solo se E2E
+   869→   869→0 muestran miembros avanzados.
+   870→   870→CA-028 RF-05 Dado un período semanal cerrado, cuando el sistema calcula el leaderboard, entonces se Unit
+   871→   871→4 muestran los 100 miembros con más XP.
+   872→   872→CA-029 RF-05 Dado el leaderboard, cuando se visualiza, entonces el top 3 se muestra con medallas Manual
+   873→   873→5 oro/plata/bronce.
+   874→   874→CA-030 RF-05 Dado lunes 00:00 UTC-4, cuando se ejecuta la Cloud Function scheduled, entonces el Unit
+   875→   875→6 leaderboard se reinicia y se archiva el anterior.
+   876→   876→CA-031 RF-05 Dado un Miembro que publica un post, cuando la Cloud Function onPostCreate se Unit
+   877→   877→8 ejecuta, entonces se otorgan 25 XP.
+   878→   878→CA-032 RF-05 Dado un usuario con avatar + presentación + 1 interés, cuando se completa el perfil, Unit
+   879→   879→9 entonces la misión "Completa tu perfil" se marca como completada.
+   880→   880→CA-033 RF-06 Dado un post con nuevo comentario, cuando la Cloud Function onCommentCreate se Unit
+   881→   881→3 ejecuta, entonces se genera una notificación in-app para el autor.
+   882→   882→CA-034 RF-06 Dado notificaciones no leídas, cuando el usuario abre la app, entonces la campana E2E
+   883→   883→4 muestra un badge con el conteo.
+   884→   884→AutoDev — Especificación de Requisitos de Software v1.0 // page 29
+   885→   885→
+   886→   886→=== PAGE 31 ===
+   887→   887→ID RF Criterio Verificación
+   888→   888→CA-035 RF-06 Dado notificaciones no leídas, cuando el usuario pulsa "marcar todas como leídas", E2E
+   889→   889→5 entonces el badge desaparece.
+   890→   890→CA-036 RF-06 Dado un usuario con suscripción push activa, cuando ocurre un evento notificable, Manual
+   891→   891→6 entonces recibe push vía FCM.
+   892→   892→CA-037 RF-06 Dado un Miembro sin rol admin, cuando intenta acceder a /admin, entonces es E2E
+   893→   893→8 redirigido a /foro.
+   894→   894→CA-038 RF-06 Dado un Admin, cuando cambia el rol de un usuario a Moderador, entonces el usuario E2E
+   895→   895→9 afectado gana permisos de moderación.
+   896→   896→CA-039 RF-07 Dado un Moderador, cuando oculta un post, entonces el post desaparece del foro E2E
+   897→   897→0 público y se registra en audit_logs.
+   898→   898→CA-040 RF-07 Dado un Admin, cuando suspende a un usuario por 7 días, entonces el usuario no puede E2E
+   899→   899→1 publicar durante ese período.
+   900→   900→Cobertura: Se definen 40 criterios de aceptación clave que cubren los 11 módulos. El método de
+   901→   901→verificación E2E cubre 26 criterios, Unit cubre 9 y Manual cubre 5. La matriz de trazabilidad completa (RF
+   902→   902→→ CU → CA → Escenario BDD) se encuentra en el Apéndice B.
+   903→   903→AutoDev — Especificación de Requisitos de Software v1.0 // page 30
+   904→   904→
+   905→   905→=== PAGE 32 ===
+   906→   906→Capítulo 7 — Escenarios de Prueba
+   907→   907→Automatizables (BDD)
+   908→   908→Este capítulo presenta los escenarios BDD escritos en lenguaje Gherkin (Given/When/Then) que automatizan la
+   909→   909→verificación de los criterios de aceptación definidos en el Capítulo 6. Cada escenario es ejecutable con Cucumber.js
+   910→   910→sobre Node.js usando el Firebase Emulator Suite como entorno de pruebas. Los tags @smoke, @regression y
+   911→   911→@critical permiten segmentar la ejecución en el pipeline CI/CD: @smoke corre en cada push, @regression corre en
+   912→   912→cada pull request y @critical corre antes de cada despliegue a producción.
+   913→   913→7.1 Feature: Autenticación
+   914→   914→AutoDev — Especificación de Requisitos de Software v1.0 // page 31
+   915→   915→
+   916→   916→=== PAGE 33 ===
+   917→   917→@smoke @critical
+   918→   918→Feature: Autenticación de usuarios
+   919→   919→Como usuario invitado
+   920→   920→Quiero poder registrarme e iniciar sesión
+   921→   921→Para participar en la comunidad AutoDev
+   922→   922→Scenario: Registro exitoso con email y contraseña válidos
+   923→   923→Given un invitado en la página "/registro"
+   924→   924→And no existe una cuenta con email "ana@dev.com"
+   925→   925→When completa el email "ana@dev.com"
+   926→   926→And completa la contraseña "SecurePass123"
+   927→   927→And confirma la contraseña "SecurePass123"
+   928→   928→And pulsa el botón "crear_cuenta"
+   929→   929→Then se crea una cuenta en Firebase Auth con email "ana@dev.com"
+   930→   930→And se crea un documento en /users con status "onboarding_pending"
+   931→   931→And se envía un email de verificación
+   932→   932→And el usuario es redirigido a "/onboarding/paso-1"
+   933→   933→Scenario: Registro fallido por email duplicado
+   934→   934→Given un invitado en la página "/registro"
+   935→   935→And ya existe una cuenta con email "ana@dev.com"
+   936→   936→When completa el email "ana@dev.com"
+   937→   937→And completa la contraseña "SecurePass123"
+   938→   938→And confirma la contraseña "SecurePass123"
+   939→   939→And pulsa el botón "crear_cuenta"
+   940→   940→Then se muestra el mensaje "Ya existe una cuenta con este email"
+   941→   941→And se muestra un enlace a "/login"
+   942→   942→Scenario: Registro fallido por contraseña corta
+   943→   943→Given un invitado en la página "/registro"
+   944→   944→When completa el email "ana@dev.com"
+   945→   945→And completa la contraseña "abc"
+   946→   946→And pulsa el botón "crear_cuenta"
+   947→   947→Then se muestra el mensaje "Mínimo 8 caracteres" junto al campo contraseña
+   948→   948→And no se crea ninguna cuenta en Firebase Auth
+   949→   949→@regression
+   950→   950→Scenario: Login exitoso con credenciales válidas
+   951→   951→Given un usuario con email "ana@dev.com" y contraseña "SecurePass123"
+   952→   952→When el usuario navega a "/login"
+   953→   953→And completa el email "ana@dev.com"
+   954→   954→And completa la contraseña "SecurePass123"
+   955→   955→And pulsa el botón "iniciar_sesion"
+   956→   956→Then se establece la sesión del usuario
+   957→   957→And se redirige a "/foro"
+   958→   958→Scenario: Bloqueo tras 5 intentos fallidos de login
+   959→   959→Given un usuario con email "ana@dev.com" y contraseña "SecurePass123"
+   960→   960→When el usuario intenta iniciar sesión 5 veces con contraseña incorrecta "WrongPass"
+   961→   961→Then la cuenta se bloquea por 15 minutos
+   962→   962→And se muestra el mensaje "Demasiados intentos. Intenta nuevamente en 15 minutos"
+   963→   963→7.2 Feature: Onboarding
+   964→   964→AutoDev — Especificación de Requisitos de Software v1.0 // page 32
+   965→   965→
+   966→   966→=== PAGE 34 ===
+   967→   967→@smoke
+   968→   968→Feature: Onboarding de perfil
+   969→   969→Como nuevo miembro
+   970→   970→Quiero completar mi perfil guiadamente
+   971→   971→Para personalizar mi experiencia y presentarme a la comunidad
+   972→   972→Scenario: Onboarding completo en 4 pasos
+   973→   973→Given un usuario recién registrado con status "onboarding_pending"
+   974→   974→When el usuario es redirigido a "/onboarding/paso-1"
+   975→   975→And completa el nombre "Ana Martínez"
+   976→   976→And pulsa "continuar"
+   977→   977→Then avanza al paso 2
+   978→   978→When selecciona los intereses "Automatización" e "IA"
+   979→   979→And pulsa "continuar"
+   980→   980→Then avanza al paso 3
+   981→   981→When selecciona el nivel "Intermedio"
+   982→   982→And pulsa "continuar"
+   983→   983→Then avanza al paso 4
+   984→   984→When escribe la presentación "Soy Ana, llevo una tienda online y quiero automatizar con IA"
+   985→   985→And pulsa "guardar_perfil && continuar"
+   986→   986→Then se actualiza el documento /users/{uid} con status "active"
+   987→   987→And se otorgan 50 XP al usuario
+   988→   988→And se publica un post automático en /posts con tag "presentacion"
+   989→   989→And el usuario es redirigido a "/foro"
+   990→   990→Scenario: Validación de nombre corto en paso 1
+   991→   991→Given un usuario en "/onboarding/paso-1"
+   992→   992→When completa el nombre "A"
+   993→   993→Then el botón "continuar" está deshabilitado
+   994→   994→And se muestra "Mínimo 2 caracteres"
+   995→   995→Scenario: Validación de presentación corta en paso 4
+   996→   996→Given un usuario en "/onboarding/paso-4"
+   997→   997→When escribe la presentación "Hola"
+   998→   998→And pulsa "guardar_perfil && continuar"
+   999→   999→Then se muestra "La presentación debe tener al menos 20 caracteres"
+  1000→  1000→And no se actualiza el documento /users/{uid}
+  1001→  1001→7.3 Feature: Foro
+  1002→  1002→AutoDev — Especificación de Requisitos de Software v1.0 // page 33
+  1003→  1003→
+  1004→  1004→=== PAGE 35 ===
+  1005→  1005→@smoke @critical
+  1006→  1006→Feature: Foro comunitario
+  1007→  1007→Como miembro activo
+  1008→  1008→Quiero publicar, comentar y reaccionar a posts
+  1009→  1009→Para compartir conocimiento con la comunidad
+  1010→  1010→Scenario: Publicar un post válido
+  1011→  1011→Given un miembro autenticado con status "active"
+  1012→  1012→When navega a "/foro"
+  1013→  1013→And pulsa el input "¿qué estás construyendo hoy?"
+  1014→  1014→And completa el título "Mi primer workflow en n8n"
+  1015→  1015→And completa el contenido "Hoy automatizar mi inbox con n8n..."
+  1016→  1016→And selecciona la etiqueta "automatizacion"
+  1017→  1017→And pulsa "publicar"
+  1018→  1018→Then se crea un documento en /posts con los datos ingresados
+  1019→  1019→And se otorgan 25 XP al autor
+  1020→  1020→And el post aparece en la cabecera del listado
+  1021→  1021→Scenario: Rechazo de post con contenido vacío
+  1022→  1022→Given un miembro autenticado en "/foro"
+  1023→  1023→When pulsa el input de creación
+  1024→  1024→And completa el título "Mi post"
+  1025→  1025→And deja el contenido vacío
+  1026→  1026→And pulsa "publicar"
+  1027→  1027→Then se muestra "El contenido no puede estar vacío"
+  1028→  1028→And no se crea ningún documento en /posts
+  1029→  1029→Scenario: Rate limit al publicar más de 3 posts en 10 minutos
+  1030→  1030→Given un miembro autenticado que ha publicado 3 posts en los últimos 10 minutos
+  1031→  1031→When intenta publicar un 4º post
+  1032→  1032→Then se muestra "Espera unos minutos antes de publicar de nuevo"
+  1033→  1033→And no se crea el 4º post
+  1034→  1034→Scenario: Comentar en un post
+  1035→  1035→Given un miembro autenticado
+  1036→  1036→And un post existente con ID "post-123"
+  1037→  1037→When el miembro abre el detalle del post "post-123"
+  1038→  1038→And escribe el comentario "¡Excelente aporte, gracias!"
+  1039→  1039→And pulsa "comentar"
+  1040→  1040→Then se crea un documento en /posts/post-123/comments
+  1041→  1041→And se otorgan 10 XP al comentador
+  1042→  1042→And se genera una notificación in-app para el autor del post
+  1043→  1043→Scenario: Dar like a un post (toggle)
+  1044→  1044→Given un miembro autenticado
+  1045→  1045→And un post existente con ID "post-123" sin like del miembro
+  1046→  1046→When el miembro pulsa el botón like del post "post-123"
+  1047→  1047→Then el contador de likes del post incrementa en 1
+  1048→  1048→And el botón cambia a estado "liked"
+  1049→  1049→When el miembro pulsa nuevamente el botón like
+  1050→  1050→Then el contador de likes decrementa en 1
+  1051→  1051→And el botón cambia a estado "not-liked"
+  1052→  1052→Scenario: Filtrar foro por etiqueta IA
+  1053→  1053→Given un miembro en "/foro"
+  1054→  1054→And existen posts con etiquetas "automatizacion", "ia", "webapps"
+  1055→  1055→When el miembro pulsa el filtro "ia"
+  1056→  1056→Then solo se muestran los posts con etiqueta "ia"
+  1057→  1057→And se actualiza la URL a "/foro?tag=ia"
+  1058→  1058→7.4 Feature: Recursos
+  1059→  1059→AutoDev — Especificación de Requisitos de Software v1.0 // page 34
+  1060→  1060→
+  1061→  1061→=== PAGE 36 ===
+  1062→  1062→@regression
+  1063→  1063→Feature: Recursos comunitarios
+  1064→  1064→Como autor
+  1065→  1065→Quiero publicar recursos técnicos
+  1066→  1066→Para que otros miembros puedan aprender y reutilizarlos
+  1067→  1067→Scenario: Publicar un recurso tipo Skill
+  1068→  1068→Given un usuario autenticado con rol "autor"
+  1069→  1069→When navega a "/recursos"
+  1070→  1070→And pulsa "+ publicar"
+  1071→  1071→And completa el título "Claude Code Skill: PDF Extractor"
+  1072→  1072→And completa la descripción "Skill para extraer texto de PDFs"
+  1073→  1073→And selecciona el tipo "Skill"
+  1074→  1074→And selecciona el nivel "Principiante"
+  1075→  1075→And sube una imagen "cover.jpg" de 200KB
+  1076→  1076→And completa el contenido markdown
+  1077→  1077→And pulsa "publicar"
+  1078→  1078→Then se sube la imagen a Storage en /resources/{resourceId}/cover.jpg
+  1079→  1079→And se crea el documento en /resources con coverUrl, authorId, createdAt
+  1080→  1080→And el recurso aparece en el listado público
+  1081→  1081→Scenario: Filtrar recursos por tipo MCP Server
+  1082→  1082→Given un miembro en "/recursos"
+  1083→  1083→And existen recursos de tipos "Skill", "Plugin", "MCP Server"
+  1084→  1084→When el miembro pulsa el filtro "MCP Server"
+  1085→  1085→Then solo se muestran los recursos de tipo "MCP Server"
+  1086→  1086→7.5 Feature: Directos
+  1087→  1087→@regression
+  1088→  1088→Feature: Directos en vivo
+  1089→  1089→Como miembro
+  1090→  1090→Quiero reservar cupo en directos
+  1091→  1091→Para participar en sesiones de aprendizaje en tiempo real
+  1092→  1092→Scenario: Reservar cupo en directo con disponibilidad
+  1093→  1093→Given un miembro autenticado
+  1094→  1094→And un directo programado con ID "live-001" y 50 cupos totales
+  1095→  1095→And 30 cupos ya reservados
+  1096→  1096→When el miembro pulsa "reservar cupo" en el directo "live-001"
+  1097→  1097→Then se crea un documento en /lives/live-001/attendees/{uid}
+  1098→  1098→And el contador de cupos disponibles muestra 19
+  1099→  1099→And se programa una notificación recordatorio 1 hora antes
+  1100→  1100→Scenario: Lista de espera cuando el cupo está agotado
+  1101→  1101→Given un miembro autenticado
+  1102→  1102→And un directo "live-001" con 50/50 cupos reservados
+  1103→  1103→When el miembro pulsa "reservar cupo"
+  1104→  1104→Then se muestra "Cupo agotado"
+  1105→  1105→And se ofrece la opción "Unirse a lista de espera"
+  1106→  1106→When el miembro pulsa "Unirse a lista de espera"
+  1107→  1107→Then se crea un documento en /lives/live-001/waitlist/{uid}
+  1108→  1108→7.6 Feature: Ranking y Gamificación
+  1109→  1109→AutoDev — Especificación de Requisitos de Software v1.0 // page 35
+  1110→  1110→
+  1111→  1111→=== PAGE 37 ===
+  1112→  1112→@critical
+  1113→  1113→Feature: Ranking semanal
+  1114→  1114→Como miembro
+  1115→  1115→Quiero ver mi posición en el ranking semanal
+  1116→  1116→Para motivarme a participar más activamente
+  1117→  1117→Scenario: Cálculo automático del leaderboard semanal
+  1118→  1118→Given un período semanal del 06 al 12 de Julio 2026
+  1119→  1119→And usuarios con XP semanal acumulada:
+  1120→  1120→| uid | xp |
+  1121→  1121→| u-001 | 850 |
+  1122→  1122→| u-002 | 720 |
+  1123→  1123→| u-003 | 615 |
+  1124→  1124→| u-004 | 500 |
+  1125→  1125→When se ejecuta la Cloud Function scheduled computeWeeklyRanking
+  1126→  1126→Then se crea un documento en /rankings/2026-W28 con el top 100
+  1127→  1127→And el top 3 del leaderboard es u-001 (oro), u-002 (plata), u-003 (bronce)
+  1128→  1128→Scenario: Reseteo semanal y premiación
+  1129→  1129→Given es lunes 13 de Julio 2026 a las 00:00 UTC-4
+  1130→  1130→And el ranking de la semana 2026-W28 está cerrado
+  1131→  1131→When se ejecuta la Cloud Function scheduled resetWeeklyRanking
+  1132→  1132→Then el ranking 2026-W28 se archiva en /rankings/2026-W28
+  1133→  1133→And se otorgan 500 XP bonus a u-001
+  1134→  1134→And se otorgan 300 XP bonus a u-002
+  1135→  1135→And se otorgan 200 XP bonus a u-003
+  1136→  1136→And el ranking actual 2026-W29 se inicializa vacío
+  1137→  1137→Scenario: Completar misión tras 3 comentarios
+  1138→  1138→Given un miembro con misión activa "Comenta en 3 posts" con 2 comentarios previos
+  1139→  1139→When el miembro comenta en un 3º post
+  1140→  1140→Then la misión "Comenta en 3 posts" se marca como completada
+  1141→  1141→And se otorgan 100 XP bonus al miembro
+  1142→  1142→And se genera una notificación in-app "¡Misión completada!"
+  1143→  1143→And si el miembro no tenía el logro "Primeros 3 comentarios", se desbloquea
+  1144→  1144→7.7 Feature: Notificaciones
+  1145→  1145→@regression
+  1146→  1146→Feature: Notificaciones in-app y push
+  1147→  1147→Como miembro
+  1148→  1148→Quiero recibir notificaciones de actividad relevante
+  1149→  1149→Para estar al tanto de interacciones con mi contenido
+  1150→  1150→Scenario: Notificación al recibir comentario
+  1151→  1151→Given un post de autor "u-001" con ID "post-123"
+  1152→  1152→And un miembro "u-002" distinto del autor
+  1153→  1153→When "u-002" comenta en "post-123"
+  1154→  1154→Then se crea una notificación en /notifications/u-001/items
+  1155→  1155→And la notificación tiene tipo "new_comment"
+  1156→  1156→And la notificación tiene data.postId="post-123"
+  1157→  1157→And la notificación tiene data.fromUserId="u-002"
+  1158→  1158→And el badge de notificaciones no leídas de "u-001" incrementa en 1
+  1159→  1159→Scenario: Marcar todas las notificaciones como leídas
+  1160→  1160→Given un miembro "u-001" con 5 notificaciones no leídas
+  1161→  1161→When "u-001" pulsa "marcar todas como leídas"
+  1162→  1162→Then todas las notificaciones en /notifications/u-001/items se actualizan con read=true
+  1163→  1163→And el badge de notificaciones no leídas muestra 0
+  1164→  1164→AutoDev — Especificación de Requisitos de Software v1.0 // page 36
+  1165→  1165→
+  1166→  1166→=== PAGE 38 ===
+  1167→  1167→7.8 Feature: Administración
+  1168→  1168→@critical
+  1169→  1169→Feature: Moderación de contenido
+  1170→  1170→Como moderador
+  1171→  1171→Quiero ocultar contenido inapropiado
+  1172→  1172→Para mantener la calidad de la comunidad
+  1173→  1173→Scenario: Ocultar un post reportado
+  1174→  1174→Given un moderador autenticado
+  1175→  1175→And un post "post-999" reportado por 3 usuarios
+  1176→  1176→When el moderador abre el panel de moderación
+  1177→  1177→And selecciona el post "post-999"
+  1178→  1178→And pulsa "ocultar" con motivo "Spam"
+  1179→  1179→Then el documento /posts/post-999 se actualiza con hidden=true
+  1180→  1180→And se crea una entrada en /audit_logs con moderatorId, postId, motivo="Spam"
+  1181→  1181→And se notifica al autor del post "Tu post fue oculto por: Spam"
+  1182→  1182→Scenario: Suspender temporalmente a un usuario
+  1183→  1183→Given un administrador autenticado
+  1184→  1184→And un miembro "u-500" con publicaciones recientes de baja calidad
+  1185→  1185→When el administrador abre el perfil de "u-500"
+  1186→  1186→And pulsa "suspender" y selecciona 7 días
+  1187→  1187→Then el documento /users/u-500 se actualiza con suspendedUntil=now+7d
+  1188→  1188→And se registra en /audit_logs
+  1189→  1189→And "u-500" no puede publicar nuevos posts ni comentarios durante 7 días
+  1190→  1190→And se notifica a "u-500" por email
+  1191→  1191→Scenario: Acceso denegado a /admin para Miembro
+  1192→  1192→Given un miembro autenticado con rol "member"
+  1193→  1193→When intenta navegar a "/admin"
+  1194→  1194→Then es redirigido a "/foro"
+  1195→  1195→And se registra un evento de seguridad en Cloud Logging
+  1196→  1196→AutoDev — Especificación de Requisitos de Software v1.0 // page 37
+  1197→  1197→
+  1198→  1198→=== PAGE 39 ===
+  1199→  1199→Capítulo 8 — Estrategia de Pruebas
+  1200→  1200→La estrategia de pruebas de AutoDev sigue el modelo de pirámide invertida: una base amplia de pruebas unitarias,
+  1201→  1201→una capa intermedia de pruebas de integración y una capa superior reducida de pruebas end-to-end. Esta
+  1202→  1202→distribución maximiza la velocidad de ejecución del pipeline CI/CD mientras mantiene la confianza en el sistema.
+  1203→  1203→La filosofía general es: si un bug puede detectarse con una prueba unitaria, no debe depender de una prueba E2E
+  1204→  1204→para ser encontrado.
+  1205→  1205→8.1 Pirámide de pruebas
+  1206→  1206→Nivel Proporci Stack Cobertura objetivo Frecuencia CI
+  1207→  1207→ón
+  1208→  1208→Unitarias 70% Jest 29 + ts-jest 80% líneas, 70% ramas Cada push
+  1209→  1209→Integración 20% Jest + Firebase Emulator Suite 70% líneas Cada PR
+  1210→  1210→E2E 10% Cypress 13 + Cucumber Flujos críticos al 100% Cada PR + nightly
+  1211→  1211→8.2 Stack de pruebas detallado
+  1212→  1212→El stack de pruebas se selecciona para maximizar la productividad del equipo y la integración con el ecosistema
+  1213→  1213→Firebase. Jest cubre unitarias e integración por su velocidad, ecosistema maduro y compatibilidad nativa con
+  1214→  1214→TypeScript. Cypress se elige sobre Playwright para E2E porque su sintaxis declarativa y su panel de debug visual
+  1215→  1215→reducen la curva de aprendizaje; sin embargo, se mantiene Playwright como backup para pruebas cross-browser
+  1216→  1216→críticas. Cucumber.js ejecuta los escenarios Gherkin del Capítulo 7 sobre el Firebase Emulator Suite.
+  1217→  1217→Herramienta Uso Versión Justificación
+  1218→  1218→Jest Unit + Integration 29.x Estándar de facto, ecosistema maduro, fast watch mode.
+  1219→  1219→ts-jest Transpilación TS 29.x Compatibilidad directa con TypeScript estricto.
+  1220→  1220→Firebase Emulator Suite Entorno local latest Permite ejecutar Auth, Firestore, Functions y Storage
+  1221→  1221→localmente sin costo.
+  1222→  1222→Cypress E2E 13.x Debug visual, time-travel, grabación de video en fallos.
+  1223→  1223→Cucumber.js BDD runner 9.x Ejecuta escenarios Gherkin del Capítulo 7.
+  1224→  1224→Playwright Cross-browser E2E 1.40+ Backup para pruebas en Safari y Edge que Cypress no cubre
+  1225→  1225→nativamente.
+  1226→  1226→k6 Pruebas de carga latest Carga realista contra Cloud Functions y Firestore.
+  1227→  1227→Snyk Análisis de seguridad latest Detección de vulnerabilidades en dependencias.
+  1228→  1228→Lighthouse CI Performance web latest Auditoría de Web Vitals en cada deploy.
+  1229→  1229→AutoDev — Especificación de Requisitos de Software v1.0 // page 38
+  1230→  1230→
+  1231→  1231→=== PAGE 40 ===
+  1232→  1232→8.3 Cobertura mínima
+  1233→  1233→La cobertura mínima exigida es del 80% de líneas y 70% de ramas para Cloud Functions, donde la lógica de
+  1234→  1234→negocio se centraliza. Para el frontend, se exige 60% de líneas en utilidades y hooks críticos; los componentes
+  1235→  1235→presentacionales no requieren cobertura unitaria obligatoria siempre que estén cubiertos por E2E. La cobertura se
+  1236→  1236→mide con Istanbul (nyc) integrado en Jest. Un PR que reduzca la cobertura por debajo del umbral bloquea
+  1237→  1237→automáticamente el merge.
+  1238→  1238→8.4 CI/CD Pipeline
+  1239→  1239→El pipeline se implementa en GitHub Actions con los siguientes stages: (1) lint y typecheck en paralelo, (2) pruebas
+  1240→  1240→unitarias con Jest, (3) build de frontend y functions, (4) pruebas de integración con Emulator Suite, (5) pruebas E2E
+  1241→  1241→con Cypress, (6) análisis de seguridad con Snyk, (7) deploy a ambiente staging automático, (8) smoke tests contra
+  1242→  1242→staging, (9) deploy a producción manual con aprobación. El pipeline completo tarda aproximadamente 12 minutos
+  1243→  1243→en verde.
+  1244→  1244→8.5 Datos de prueba y seed
+  1245→  1245→El seed del Firebase Emulator Suite genera: 50 usuarios con roles variados, 200 posts distribuidos en 4 etiquetas,
+  1246→  1246→500 comentarios, 30 recursos, 5 cursos con 20 lecciones totales, 3 directos programados, 1 ranking semanal con
+  1247→  1247→datos históricos. El seed es idempotente y se ejecuta al iniciar el emulador mediante firebase emulators:exec "node
+  1248→  1248→scripts/seed.js". Los datos de prueba usan emails @example.com para evitar colisiones con usuarios reales.
+  1249→  1249→8.6 Gestión de ambientes
+  1250→  1250→Ambiente Propósito Datos Deploy
+  1251→  1251→Local (Emulator) Desarrollo y debugging Seed sintético idempotente Manual con firebase
+  1252→  1252→emulators:start
+  1253→  1253→Staging QA y validación pre-producción Seed sintético + datos anonimizados Automático en cada
+  1254→  1254→merge a main
+  1255→  1255→Production Usuarios finales Datos reales Manual con aprobación
+  1256→  1256→tras smoke tests
+  1257→  1257→AutoDev — Especificación de Requisitos de Software v1.0 // page 39
+  1258→  1258→
+  1259→  1259→=== PAGE 41 ===
+  1260→  1260→Capítulo 9 — Arquitectura del Sistema
+  1261→  1261→9.1 Vista general
+  1262→  1262→La arquitectura de AutoDev es 100% serverless sobre Firebase. No existen servidores aprovisionados ni
+  1263→  1263→contenedores gestionados manualmente. El frontend (Next.js 16) se sirve desde Firebase Hosting con CDN global.
+  1264→  1264→La autenticación delega a Firebase Auth. Los datos transaccionales viven en Firestore (NoSQL orientado a
+  1265→  1265→documentos). La lógica de negocio sensible, los triggers reactivos y las tareas programadas se ejecutan en Cloud
+  1266→  1266→Functions v2. Los archivos binarios (avatares, imágenes de recursos) se alojan en Cloud Storage for Firebase. Las
+  1267→  1267→notificaciones push se entregan vía FCM. La analítica de producto se captura con Firebase Analytics y se visualiza
+  1268→  1268→en Google Analytics 4.
+  1269→  1269→Esta elección arquitectónica permite escalar a 10.000 usuarios concurrentes sin re-arquitectura, elimina el costo de
+  1270→  1270→servidores ociosos (pay-per-use) y descarga al equipo de tareas operativas como parcheo de SO o gestión de
+  1271→  1271→certificados TLS. El compromiso es el lock-in a Google Cloud, mitigado por el patrón Repository en el frontend
+  1272→  1272→que aísla las llamadas a Firebase detrás de una interfaz intercambiable.
+  1273→  1273→9.2 Componentes y responsabilidades
+  1274→  1274→Componente Tecnología Responsabilidad
+  1275→  1275→Frontend Web Next.js 16 + React 19 + Tailwind Renderizado de UI, manejo de estado cliente, validación de formularios,
+  1276→  1276→CSS 4 + shadcn/ui llamadas a Firebase SDK.
+  1277→  1277→Firebase Hosting Firebase Hosting + CDN global Servir assets estáticos y SSR de Next.js, certificados TLS automáticos.
+  1278→  1278→Firebase Auth Email/password + Email Registro, login, sesión JWT, verificación de email, recuperación de
+  1279→  1279→verification + Reset contraseña.
+  1280→  1280→Firestore NoSQL orientado a documentos, Almacenamiento de usuarios, posts, comentarios, recursos, cursos,
+  1281→  1281→multi-región directos, notificaciones, audit_logs.
+  1282→  1282→Cloud Functions v2 TypeScript, Cloud Functions Lógica de servidor: triggers de Firestore (XP, notificaciones), HTTP
+  1283→  1283→SDK v2 endpoints, scheduled (ranking semanal).
+  1284→  1284→Cloud Storage Cloud Storage for Firebase Avatares, imágenes destacadas de recursos, adjuntos de cursos.
+  1285→  1285→Cloud Messaging Firebase Cloud Messaging Notificaciones push a usuarios suscritos.
+  1286→  1286→(FCM)
+  1287→  1287→Email Transaccional SendGrid (vía Extension de Emails de verificación, reseteo, recordatorios de directos.
+  1288→  1288→Firebase)
+  1289→  1289→App Check Firebase App Check con Protección contra abuso: solo la app legítima puede llamar a Firestore y
+  1290→  1290→reCAPTCHA Enterprise Functions.
+  1291→  1291→Analytics Firebase Analytics + GA4 Captura de eventos de producto: post_created, lesson_completed, etc.
+  1292→  1292→Cloud Logging Google Cloud Logging Logs estructurados de Cloud Functions con trace ID y user ID.
+  1293→  1293→Cloud Monitoring Google Cloud Monitoring Métricas, SLOs y alertas (latencia, error rate, cold starts).
+  1294→  1294→AutoDev — Especificación de Requisitos de Software v1.0 // page 40
+  1295→  1295→
+  1296→  1296→=== PAGE 42 ===
+  1297→  1297→9.3 Patrones arquitectónicos
+  1298→  1298→9.3.1 Repository Pattern en el frontend
+  1299→  1299→Todas las llamadas a Firebase desde el frontend se encapsulan detrás de interfaces Repository. Por ejemplo,
+  1300→  1300→PostRepository expone métodos como create(), list(), comment() y like() que internamente usan el SDK de
+  1301→  1301→Firestore. Este patrón facilita mockear Firebase en pruebas unitarias del frontend y permite, en el futuro, migrar a
+  1302→  1302→otro backend sin reescribir componentes. Los repositorios se inyectan vía React Context.
+  1303→  1303→9.3.2 Event-driven backend con triggers de Firestore
+  1304→  1304→La lógica reactiva se implementa mediante Cloud Functions reactivas a eventos de Firestore. Cuando un documento
+  1305→  1305→se crea o actualiza, Firestore emite un evento que dispara la función. Por ejemplo, onPostCreate se dispara al crear
+  1306→  1306→un documento en /posts, valida el contenido, otorga XP al autor y actualiza contadores. Este patrón desacopla la
+  1307→  1307→escritura de datos (frontend directo a Firestore) del enriquecimiento y validación de negocio (Cloud Functions).
+  1308→  1308→9.3.3 Serverless con escalado a cero
+  1309→  1309→Cloud Functions v2 escala automáticamente de 0 a N instancias según la carga. El cold start es el principal desafío;
+  1310→  1310→se mitiga configurando minInstances=1 en funciones críticas (auth, onboarding) y usando funciones más ligeras (sin
+  1311→  1311→dependencias pesadas) para triggers frecuentes. Las funciones HTTP se exponen detrás de Firebase Hosting para
+  1312→  1312→aprovechar su CDN y reducir latencia.
+  1313→  1313→9.3.4 Single source of truth en Firestore Rules
+  1314→  1314→Las reglas de seguridad de Firestore son la única fuente de verdad para autorización. El frontend puede ocultar
+  1315→  1315→botones o rutas según el rol del usuario, pero esa lógica es cosmética; el backend (Firestore Rules) rechaza cualquier
+  1316→  1316→acceso no autorizado. Esta separación evita vulnerabilidades donde un usuario malicioso podría eludir la UI para
+  1317→  1317→acceder a datos.
+  1318→  1318→9.4 Flujos de datos principales
+  1319→  1319→9.4.1 Flujo: Publicación de un post
+  1320→  1320→El Miembro completa el formulario en el frontend. El frontend valida y sanitiza localmente, luego escribe
+  1321→  1321→directamente en /posts con set() generando un ID automáticamente. La escritura pasa por las reglas de Firestore que
+  1322→  1322→validan: (i) el usuario está autenticado, (ii) tiene status="active", (iii) los campos obligatorios están presentes y
+  1323→  1323→cumplen longitud máxima. Si las reglas pasan, el documento se persiste. Inmediatamente, el trigger onPostCreate se
+  1324→  1324→dispara en Cloud Functions: la función valida nuevamente (defensa en profundidad), otorga 25 XP al autor (update
+  1325→  1325→en /users/{uid}), incrementa postsCount del autor y publica un evento en Analytics.
+  1326→  1326→9.4.2 Flujo: Cálculo del ranking semanal
+  1327→  1327→Una Cloud Function scheduled se ejecuta cada lunes a las 00:00 UTC-4. La función consulta /users ordenado por
+  1328→  1328→weeklyXP descendentemente, limit 100. Escribe el resultado en /rankings/{year-Wxx} como snapshot inmutable.
+  1329→  1329→Otorga XP bonus a los top 3 (500, 300, 200). Resetea el campo weeklyXP de todos los usuarios a 0. Genera
+  1330→  1330→notificaciones in-app para los top 100 anunciando su posición.
+  1331→  1331→9.4.3 Flujo: Notificación push tras comentario
+  1332→  1332→AutoDev — Especificación de Requisitos de Software v1.0 // page 41
+  1333→  1333→
+  1334→  1334→=== PAGE 43 ===
+  1335→  1335→El Miembro "u-002" comenta en un post de "u-001". El trigger onCommentCreate se dispara: la función crea un
+  1336→  1336→documento en /notifications/u-001/items con tipo=new_comment, postId, fromUserId=u-002 y timestamp.
+  1337→  1337→Adicionalmente, consulta el documento /users/u-001 para obtener su FCM token; si existe y el usuario tiene push
+  1338→  1338→habilitado, envía el mensaje vía FCM admin SDK. Si el envío falla, se registra el error pero la notificación in-app
+  1339→  1339→ya está persistida y será visible cuando el usuario abra la app.
+  1340→  1340→9.5 Seguridad perimetral
+  1341→  1341→La seguridad se organiza en capas concéntricas. La capa exterior es App Check: verifica que las llamadas a
+  1342→  1342→Firestore y Cloud Functions provengan de la app legítima (no de un script malicioso). La siguiente capa son las
+  1343→  1343→reglas de Firestore (detalladas en el Capítulo 10) que validan autenticación, autorización por rol y forma de los
+  1344→  1344→datos. La capa interior es la validación en Cloud Functions: incluso si un documento pasa las reglas, las funciones
+  1345→  1345→que reaccionan a su creación realizan una segunda validación de negocio (rate limits, integridad referencial,
+  1346→  1346→anti-spam). Esta defensa en profundidad sigue el principio de "never trust input".
+  1347→  1347→9.6 Estrategia multi-región y escalado
+  1348→  1348→En v1.0, Firestore se configura en modo nativo multi-región us-central (Centro de EE.UU.) que replica datos
+  1349→  1349→automáticamente entre regiones y garantiza 99.999% de disponibilidad para lecturas y escrituras. Cloud Functions
+  1350→  1350→se despliegan en us-central1. Si la base de usuarios crece significativamente en América Latina, se evaluará en la
+  1351→  1351→fase 3 una segunda despliegue en southamerica-east1 (São Paulo) con Firestore cross-region replication para
+  1352→  1352→reducir latencia. Esta decisión se documentará en un ADR específico antes de su implementación.
+  1353→  1353→AutoDev — Especificación de Requisitos de Software v1.0 // page 42
+  1354→  1354→
+  1355→  1355→=== PAGE 44 ===
+  1356→  1356→Capítulo 10 — Diseño de Base de Datos
+  1357→  1357→(Firestore)
+  1358→  1358→Firestore es una base de datos NoSQL orientada a documentos organizada en colecciones y subcolecciones. A
+  1359→  1359→diferencia de SQL, no hay joins ni esquema rígido; la desnormalización controlada es una práctica recomendada
+  1360→  1360→para optimizar lecturas. Este capítulo documenta cada colección, su esquema, índices compuestos necesarios, reglas
+  1361→  1361→de seguridad y los triggers de Cloud Functions asociados.
+  1362→  1362→10.1 Modelo de datos general
+  1363→  1363→AutoDev organiza los datos en 11 colecciones raíz: users, posts, courses, lessons, resources, lives, rankings,
+  1364→  1364→missions, achievements, notifications y audit_logs. Algunas colecciones tienen subcolecciones para datos
+  1365→  1365→jerárquicos (ej. /posts/{postId}/comments/{commentId}). La convención de nombrado es: colecciones en camelCase
+  1366→  1366→plural (posts, users), IDs de documentos como UID de Firebase Auth para usuarios o IDs auto-generados para el
+  1367→  1367→resto, campos en camelCase.
+  1368→  1368→10.2 Colección: users
+  1369→  1369→Almacena el perfil y estado de cada usuario. Se crea automáticamente por la Cloud Function onUserCreate cuando
+  1370→  1370→Firebase Auth emite el evento auth.user().onCreate.
+  1371→  1371→// /users/{uid}
+  1372→  1372→{
+  1373→  1373→uid: string, // = document ID (Firebase Auth UID)
+  1374→  1374→email: string, // email del usuario
+  1375→  1375→displayName: string, // nombre para mostrar (onboarding)
+  1376→  1376→avatarUrl: string | null, // URL firmada de Cloud Storage
+  1377→  1377→interests: string[], // ["automatizacion", "ia", "webapps", "comunidad"]
+  1378→  1378→level: "principiante" | "intermedio" | "avanzado",
+  1379→  1379→bio: string, // presentación personal
+  1380→  1380→role: "member" | "autor" | "moderador" | "admin",
+  1381→  1381→status: "onboarding_pending" | "active" | "suspended",
+  1382→  1382→suspendedUntil: Timestamp | null,
+  1383→  1383→xp: number, // XP total acumulada
+  1384→  1384→weeklyXP: number, // XP en la semana actual (reset cada lunes)
+  1385→  1385→level_number: number, // nivel calculado por XP (1, 2, 3, ...)
+  1386→  1386→postsCount: number, // contador desnormalizado
+  1387→  1387→commentsCount: number, // contador desnormalizado
+  1388→  1388→fcmToken: string | null, // token FCM para push
+  1389→  1389→pushEnabled: boolean, // preferencia de push
+  1390→  1390→emailNotifications: boolean, // preferencia de email
+  1391→  1391→createdAt: Timestamp,
+  1392→  1392→updatedAt: Timestamp,
+  1393→  1393→lastActiveAt: Timestamp,
+  1394→  1394→}
+  1395→  1395→10.3 Colección: posts y subcolección comments
+  1396→  1396→Cada post es un documento en /posts. Los comentarios viven en la subcolección /posts/{postId}/comments para
+  1397→  1397→mantenerlos junto al post padre y permitir consultas eficientes. Los likes se almacenan como mapa (map) dentro del
+  1398→  1398→documento del post para evitar una subcolección adicional y facilitar el toggle.
+  1399→  1399→AutoDev — Especificación de Requisitos de Software v1.0 // page 43
+  1400→  1400→
+  1401→  1401→=== PAGE 45 ===
+  1402→  1402→// /posts/{postId}
+  1403→  1403→{
+  1404→  1404→postId: string, // = document ID
+  1405→  1405→authorId: string, // ref a /users/{uid}
+  1406→  1406→authorName: string, // denormalizado para mostrar en lista
+  1407→  1407→authorLevel: number, // denormalizado
+  1408→  1408→title: string, // máx 100
+  1409→  1409→content: string, // máx 5000, HTML sanitized
+  1410→  1410→tags: string[], // máx 3
+  1411→  1411→likesCount: number, // contador
+  1412→  1412→likes: { [uid: string]: boolean }, // mapa para toggle O(1)
+  1413→  1413→commentsCount: number, // contador
+  1414→  1414→hidden: boolean, // moderación
+  1415→  1415→hiddenReason: string | null,
+  1416→  1416→createdAt: Timestamp,
+  1417→  1417→updatedAt: Timestamp,
+  1418→  1418→}
+  1419→  1419→// /posts/{postId}/comments/{commentId}
+  1420→  1420→{
+  1421→  1421→commentId: string,
+  1422→  1422→postId: string, // denormalizado
+  1423→  1423→authorId: string,
+  1424→  1424→authorName: string,
+  1425→  1425→authorLevel: number,
+  1426→  1426→content: string, // máx 1000
+  1427→  1427→likesCount: number,
+  1428→  1428→likes: { [uid: string]: boolean },
+  1429→  1429→hidden: boolean,
+  1430→  1430→createdAt: Timestamp,
+  1431→  1431→updatedAt: Timestamp,
+  1432→  1432→}
+  1433→  1433→10.4 Colección: resources
+  1434→  1434→// /resources/{resourceId}
+  1435→  1435→{
+  1436→  1436→resourceId: string,
+  1437→  1437→authorId: string,
+  1438→  1438→authorName: string,
+  1439→  1439→title: string,
+  1440→  1440→description: string, // máx 500
+  1441→  1441→type: "Skill" | "Plugin" | "Subagent" | "MCP Server" | "Agent Team" | "Tutorial",
+  1442→  1442→level: "Principiante" | "Intermedio" | "Avanzado",
+  1443→  1443→coverUrl: string, // Storage URL firmada
+  1444→  1444→content: string, // markdown
+  1445→  1445→externalUrl: string | null, // URL alternativa (repo, marketplace)
+  1446→  1446→downloadsCount: number, // contador
+  1447→  1447→favoritesCount: number,
+  1448→  1448→createdAt: Timestamp,
+  1449→  1449→updatedAt: Timestamp,
+  1450→  1450→}
+  1451→  1451→10.5 Colección: courses y subcolección lessons
+  1452→  1452→AutoDev — Especificación de Requisitos de Software v1.0 // page 44
+  1453→  1453→
+  1454→  1454→=== PAGE 46 ===
+  1455→  1455→// /courses/{courseId}
+  1456→  1456→{
+  1457→  1457→courseId: string,
+  1458→  1458→authorId: string,
+  1459→  1459→title: string,
+  1460→  1460→description: string,
+  1461→  1461→coverUrl: string,
+  1462→  1462→durationMinutes: number,
+  1463→  1463→lessonsCount: number, // denormalizado
+  1464→  1464→enrolledCount: number, // denormalizado
+  1465→  1465→createdAt: Timestamp,
+  1466→  1466→}
+  1467→  1467→// /courses/{courseId}/lessons/{lessonId}
+  1468→  1468→{
+  1469→  1469→lessonId: string,
+  1470→  1470→courseId: string,
+  1471→  1471→title: string,
+  1472→  1472→content: string, // markdown
+  1473→  1473→order: number, // 1, 2, 3...
+  1474→  1474→xpReward: number, // default 50
+  1475→  1475→createdAt: Timestamp,
+  1476→  1476→}
+  1477→  1477→// /courses/{courseId}/progress/{uid} -- progreso por usuario
+  1478→  1478→{
+  1479→  1479→uid: string,
+  1480→  1480→courseId: string,
+  1481→  1481→completedLessons: string[], // lessonIds
+  1482→  1482→progress: number, // 0-100
+  1483→  1483→completedAt: Timestamp | null,
+  1484→  1484→}
+  1485→  1485→10.6 Colección: lives y subcolecciones
+  1486→  1486→AutoDev — Especificación de Requisitos de Software v1.0 // page 45
+  1487→  1487→
+  1488→  1488→=== PAGE 47 ===
+  1489→  1489→// /lives/{liveId}
+  1490→  1490→{
+  1491→  1491→liveId: string,
+  1492→  1492→title: string,
+  1493→  1493→description: string,
+  1494→  1494→hostId: string,
+  1495→  1495→hostName: string,
+  1496→  1496→scheduledAt: Timestamp,
+  1497→  1497→durationMinutes: number,
+  1498→  1498→maxAttendees: number,
+  1499→  1499→attendeesCount: number, // denormalizado
+  1500→  1500→status: "scheduled" | "live" | "ended" | "cancelled",
+  1501→  1501→streamUrl: string | null, // se carga al iniciar
+  1502→  1502→createdAt: Timestamp,
+  1503→  1503→}
+  1504→  1504→// /lives/{liveId}/attendees/{uid}
+  1505→  1505→{
+  1506→  1506→uid: string,
+  1507→  1507→liveId: string,
+  1508→  1508→registeredAt: Timestamp,
+  1509→  1509→attended: boolean,
+  1510→  1510→}
+  1511→  1511→// /lives/{liveId}/waitlist/{uid}
+  1512→  1512→{
+  1513→  1513→uid: string,
+  1514→  1514→joinedAt: Timestamp,
+  1515→  1515→}
+  1516→  1516→10.7 Colección: rankings (histórico)
+  1517→  1517→// /rankings/{periodId} -- periodId = "2026-W28"
+  1518→  1518→{
+  1519→  1519→periodId: string,
+  1520→  1520→startDate: Timestamp,
+  1521→  1521→endDate: Timestamp,
+  1522→  1522→computedAt: Timestamp,
+  1523→  1523→top100: [
+  1524→  1524→{ uid: string, displayName: string, avatarUrl: string, xp: number, rank: number }
+  1525→  1525→],
+  1526→  1526→rewards: [
+  1527→  1527→{ uid: string, rank: number, xpBonus: number }
+  1528→  1528→],
+  1529→  1529→}
+  1530→  1530→10.8 Colecciones: missions, achievements, notifications,
+  1531→  1531→audit_logs
+  1532→  1532→AutoDev — Especificación de Requisitos de Software v1.0 // page 46
+  1533→  1533→
+  1534→  1534→=== PAGE 48 ===
+  1535→  1535→// /missions/{missionId} -- definición de misión
+  1536→  1536→{
+  1537→  1537→missionId: string,
+  1538→  1538→title: string,
+  1539→  1539→description: string,
+  1540→  1540→xpReward: number,
+  1541→  1541→tasks: [{ id: string, type: string, target: number }],
+  1542→  1542→}
+  1543→  1543→// /users/{uid}/missions/{userMissionId} -- progreso por usuario
+  1544→  1544→{
+  1545→  1545→missionId: string,
+  1546→  1546→uid: string,
+  1547→  1547→progress: { [taskId: string]: number },
+  1548→  1548→completed: boolean,
+  1549→  1549→completedAt: Timestamp | null,
+  1550→  1550→}
+  1551→  1551→// /achievements/{achievementId}
+  1552→  1552→{
+  1553→  1553→achievementId: string,
+  1554→  1554→title: string,
+  1555→  1555→description: string,
+  1556→  1556→iconUrl: string,
+  1557→  1557→criteria: string, // descripción legible del criterio
+  1558→  1558→}
+  1559→  1559→// /users/{uid}/achievements/{achievementId} -- desbloqueos
+  1560→  1560→{
+  1561→  1561→achievementId: string,
+  1562→  1562→uid: string,
+  1563→  1563→unlockedAt: Timestamp,
+  1564→  1564→}
+  1565→  1565→// /notifications/{uid}/items/{notifId}
+  1566→  1566→{
+  1567→  1567→notifId: string,
+  1568→  1568→uid: string,
+  1569→  1569→type: "new_comment" | "new_like" | "mention" | "mission_completed" |
+  1570→  1570→"rank_update" | "directo_reminder",
+  1571→  1571→data: { [key: string]: any },
+  1572→  1572→read: boolean,
+  1573→  1573→createdAt: Timestamp,
+  1574→  1574→}
+  1575→  1575→// /audit_logs/{logId} -- append-only, inmutable
+  1576→  1576→{
+  1577→  1577→logId: string,
+  1578→  1578→actorId: string, // admin/mod que ejecutó la acción
+  1579→  1579→action: "hide_post" | "suspend_user" | "change_role" | ...,
+  1580→  1580→targetType: string, // "post", "user", "resource"
+  1581→  1581→targetId: string,
+  1582→  1582→motivo: string,
+  1583→  1583→metadata: { [key: string]: any },
+  1584→  1584→timestamp: Timestamp,
+  1585→  1585→}
+  1586→  1586→10.9 Índices compuestos necesarios
+  1587→  1587→Firestore requiere índices compuestos para consultas que combinan filtros y orderBy en campos diferentes. Los
+  1588→  1588→índices siguientes se configuran en firestore.indexes.json y se despliegan con firebase deploy --only
+  1589→  1589→firestore:indexes.
+  1590→  1590→AutoDev — Especificación de Requisitos de Software v1.0 // page 47
+  1591→  1591→
+  1592→  1592→=== PAGE 49 ===
+  1593→  1593→Colección Campos indexados Consulta que lo usa
+  1594→  1594→posts tags (array) + createdAt (desc) Listado de foro filtrado por etiqueta
+  1595→  1595→posts hidden=false + createdAt (desc) Foro público sin posts ocultos
+  1596→  1596→posts authorId + createdAt (desc) Posts de un usuario en su perfil
+  1597→  1597→users level + createdAt (desc) Directorio de miembros filtrado por nivel
+  1598→  1598→users interests (array) + createdAt (desc) Miembros filtrados por especialidad
+  1599→  1599→users weeklyXP (desc) Leaderboard semanal top 100
+  1600→  1600→users status=active + lastActiveAt (desc) Miembros activos hoy
+  1601→  1601→resources type + createdAt (desc) Recursos filtrados por tipo
+  1602→  1602→resources level + createdAt (desc) Recursos filtrados por nivel
+  1603→  1603→lives status=scheduled + scheduledAt (asc) Próximos directos
+  1604→  1604→notifications/{uid}/items read=false + createdAt (desc) Notificaciones no leídas
+  1605→  1605→audit_logs timestamp (desc) Log de auditoría ordenado
+  1606→  1606→10.10 Reglas de seguridad Firestore
+  1607→  1607→Las reglas de seguridad son la única fuente de verdad para autorización. Se despliegan con firebase deploy --only
+  1608→  1608→firestore:rules. A continuación se muestran las reglas principales simplificadas y divididas en bloques para facilitar
+  1609→  1609→su lectura.
+  1610→  1610→rules_version = '2';
+  1611→  1611→service cloud.firestore {
+  1612→  1612→match /databases/{database}/documents {
+  1613→  1613→// Helper: usuario autenticado y activo
+  1614→  1614→function isAuthActive() {
+  1615→  1615→return request.auth != null
+  1616→  1616→&& get(/databases/$(database)/documents/users/$(request.auth.uid))
+  1617→  1617→.data.status == 'active';
+  1618→  1618→}
+  1619→  1619→function isAuthAdmin() {
+  1620→  1620→return request.auth != null
+  1621→  1621→&& get(/databases/$(database)/documents/users/$(request.auth.uid))
+  1622→  1622→.data.role == 'admin';
+  1623→  1623→}
+  1624→  1624→function isAuthModerator() {
+  1625→  1625→return request.auth != null
+  1626→  1626→&& get(/databases/$(database)/documents/users/$(request.auth.uid))
+  1627→  1627→.data.role in ['moderador', 'admin'];
+  1628→  1628→}
+  1629→  1629→}
+  1630→  1630→}
+  1631→  1631→AutoDev — Especificación de Requisitos de Software v1.0 // page 48
+  1632→  1632→
+  1633→  1633→=== PAGE 50 ===
+  1634→  1634→Bloque 2 — Colección users:
+  1635→  1635→// users: lectura pública del perfil (sin campos sensibles)
+  1636→  1636→// escritura solo del propio usuario (campos limitados)
+  1637→  1637→match /users/{uid} {
+  1638→  1638→allow read: if request.auth != null;
+  1639→  1639→allow create: if false; // solo via Cloud Function onUserCreate
+  1640→  1640→allow update: if request.auth.uid == uid
+  1641→  1641→&& request.resource.data.role == resource.data.role // no cambiar rol
+  1642→  1642→&& request.resource.data.xp == resource.data.xp; // no cambiar XP
+  1643→  1643→allow delete: if isAuthAdmin();
+  1644→  1644→}
+  1645→  1645→Bloque 3 — Colección posts y subcolección comments:
+  1646→  1646→match /posts/{postId} {
+  1647→  1647→allow read: if resource.data.hidden == false || isAuthModerator();
+  1648→  1648→allow create: if isAuthActive()
+  1649→  1649→&& request.resource.data.authorId == request.auth.uid
+  1650→  1650→&& request.resource.data.title.size() <= 100
+  1651→  1651→&& request.resource.data.content.size() <= 5000
+  1652→  1652→&& request.resource.data.tags.size() <= 3;
+  1653→  1653→allow update: if isAuthModerator()
+  1654→  1654→|| (resource.data.authorId == request.auth.uid
+  1655→  1655→&& request.time.toMillis() < resource.data.createdAt.toMillis() + 1800000);
+  1656→  1656→allow delete: if resource.data.authorId == request.auth.uid || isAuthAdmin();
+  1657→  1657→match /comments/{commentId} {
+  1658→  1658→allow read: if resource.data.hidden == false || isAuthModerator();
+  1659→  1659→allow create: if isAuthActive()
+  1660→  1660→&& request.resource.data.authorId == request.auth.uid
+  1661→  1661→&& request.resource.data.content.size() <= 1000;
+  1662→  1662→allow update: if isAuthModerator();
+  1663→  1663→allow delete: if resource.data.authorId == request.auth.uid || isAuthAdmin();
+  1664→  1664→}
+  1665→  1665→}
+  1666→  1666→Bloque 4 — Colecciones resources, notifications, audit_logs:
+  1667→  1667→match /resources/{resourceId} {
+  1668→  1668→allow read: if true;
+  1669→  1669→allow create: if isAuthActive()
+  1670→  1670→&& get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['autor', 'admin'];
+  1671→  1671→allow update, delete: if resource.data.authorId == request.auth.uid || isAuthAdmin();
+  1672→  1672→}
+  1673→  1673→// notifications: solo el propietario puede leer/escribir sus notifs
+  1674→  1674→match /notifications/{uid}/items/{notifId} {
+  1675→  1675→allow read, update: if request.auth.uid == uid;
+  1676→  1676→allow create: if false; // solo Cloud Functions con admin SDK
+  1677→  1677→allow delete: if false;
+  1678→  1678→}
+  1679→  1679→// audit_logs: solo admin lee, solo Cloud Functions escribe
+  1680→  1680→match /audit_logs/{logId} {
+  1681→  1681→allow read: if isAuthAdmin();
+  1682→  1682→allow write: if false; // solo admin SDK desde Cloud Functions
+  1683→  1683→}
+  1684→  1684→10.11 Triggers de Cloud Functions
+  1685→  1685→AutoDev — Especificación de Requisitos de Software v1.0 // page 49
+  1686→  1686→
+  1687→  1687→=== PAGE 51 ===
+  1688→  1688→Los triggers son Cloud Functions v2 que reaccionan a eventos de Firestore o a programaciones cron. Implementan
+  1689→  1689→la lógica reactiva del sistema: gamificación, notificaciones, contadores desnormalizados, ranking semanal y
+  1690→  1690→reconciliación.
+  1691→  1691→Trigger Evento Acción
+  1692→  1692→onUserCreate auth.user().onCreate Crea /users/{uid} con status="onboarding_pending",
+  1693→  1693→role="member", xp=0.
+  1694→  1694→onPostCreate firestore /posts onCreate Valida contenido, otorga 25 XP al autor, incrementa
+  1695→  1695→postsCount, publica evento Analytics.
+  1696→  1696→onPostUpdate firestore /posts onUpdate Si hidden cambia a true, notifica al autor.
+  1697→  1697→onCommentCreate firestore /posts/{postId}/comments Otorga 10 XP al comentador, incrementa commentsCount del
+  1698→  1698→onCreate post, genera notificación in-app para el autor del post.
+  1699→  1699→onLikeToggle firestore /posts onUpdate (likes field) Otorga 5 XP al autor del post cuando recibe un like nuevo,
+  1700→  1700→genera notificación.
+  1701→  1701→onLessonComplete firestore /courses/{courseId}/progress Otorga XP (default 50) al usuario cuando marca una lección
+  1702→  1702→onUpdate como completada.
+  1703→  1703→onResourceView https onRequest Incrementa downloadsCount/visitas del recurso.
+  1704→  1704→onLiveRegistration firestore /lives/{liveId}/attendees Actualiza attendeesCount, programa notificación recordatorio
+  1705→  1705→onCreate 1h antes.
+  1706→  1706→computeWeeklyRanking schedule 0 0 * * 1 (lunes 00:00 Calcula top 100, archiva en /rankings/{periodId}, otorga XP
+  1707→  1707→UTC-4) bonus a top 3, resetea weeklyXP.
+  1708→  1708→resetDailyActive schedule 0 0 * * * (diario) Marca lastActiveAt daily para métricas DAU.
+  1709→  1709→reconcileOrphanUsers schedule */5 * * * * (cada 5 min) Detecta usuarios en Auth sin documento en Firestore y los
+  1710→  1710→crea.
+  1711→  1711→10.12 Snippet de Cloud Function: onPostCreate
+  1712→  1712→A modo de ejemplo, se muestra la implementación del trigger onPostCreate que otorga XP al autor tras publicar un
+  1713→  1713→post. La función usa el SDK v2 de Firebase Functions con tipado TypeScript estricto.
+  1714→  1714→AutoDev — Especificación de Requisitos de Software v1.0 // page 50
+  1715→  1715→
+  1716→  1716→=== PAGE 52 ===
+  1717→  1717→import { onDocumentCreated } from "firebase-functions/v2/firestore";
+  1718→  1718→import { getFirestore, FieldValue } from "firebase-admin/firestore";
+  1719→  1719→import { initializeApp } from "firebase-admin/app";
+  1720→  1720→initializeApp();
+  1721→  1721→const db = getFirestore();
+  1722→  1722→export const onPostCreate = onDocumentCreated(
+  1723→  1723→{
+  1724→  1724→document: "posts/{postId}",
+  1725→  1725→region: "us-central1",
+  1726→  1726→minInstances: 1,
+  1727→  1727→},
+  1728→  1728→async (event) => {
+  1729→  1729→const snapshot = event.data;
+  1730→  1730→if (!snapshot) return;
+  1731→  1731→const post = snapshot.data();
+  1732→  1732→const authorId = post.authorId;
+  1733→  1733→// 1. Validar (defensa en profundidad)
+  1734→  1734→if (!post.title || !post.content || post.content.length > 5000) {
+  1735→  1735→console.warn("Invalid post content, skipping XP");
+  1736→  1736→return;
+  1737→  1737→}
+  1738→  1738→// 2. Otorgar 25 XP al autor e incrementar postsCount
+  1739→  1739→const userRef = db.collection("users").doc(authorId);
+  1740→  1740→await userRef.update({
+  1741→  1741→xp: FieldValue.increment(25),
+  1742→  1742→weeklyXP: FieldValue.increment(25),
+  1743→  1743→postsCount: FieldValue.increment(1),
+  1744→  1744→lastActiveAt: FieldValue.serverTimestamp(),
+  1745→  1745→});
+  1746→  1746→// 3. Publicar evento Analytics
+  1747→  1747→console.log(JSON.stringify({
+  1748→  1748→type: "post_created",
+  1749→  1749→authorId,
+  1750→  1750→postId: snapshot.id,
+  1751→  1751→xpAwarded: 25,
+  1752→  1752→traceId: event.id,
+  1753→  1753→}));
+  1754→  1754→// 4. Verificar misiones (delegado a otra función)
+  1755→  1755→await db.collection("tasks").add({
+  1756→  1756→type: "check_missions",
+  1757→  1757→uid: authorId,
+  1758→  1758→event: "post_created",
+  1759→  1759→createdAt: FieldValue.serverTimestamp(),
+  1760→  1760→});
+  1761→  1761→}
+  1762→  1762→);
+  1763→  1763→AutoDev — Especificación de Requisitos de Software v1.0 // page 51
+  1764→  1764→
+  1765→  1765→=== PAGE 53 ===
+  1766→  1766→Capítulo 11 — Roadmap y Entregables
+  1767→  1767→El roadmap de AutoDev se organiza en cuatro fases incrementales, cada una con criterios de salida verificables. La
+  1768→  1768→filosofía es entregar valor temprano: el MVP (fase 1) ofrece una comunidad funcional mínima que permite validar
+  1769→  1769→la propuesta de valor con usuarios reales antes de invertir en funcionalidades avanzadas. Cada fase se planifica con
+  1770→  1770→un horizonte de 6 a 10 semanas de desarrollo por un equipo de 3-5 ingenieros.
+  1771→  1771→11.1 Fases del roadmap
+  1772→  1772→Fase Duración Módulos incluidos Criterio de salida
+  1773→  1773→Fase 1 — MVP 8 semanas Auth, Onboarding, Foro, Miembros 100 usuarios beta activos, NPS > 30, 0
+  1774→  1774→bugs críticos
+  1775→  1775→Fase 2 — Contenido 6 semanas Recursos, Cursos, Gamificación (misiones, 50 recursos publicados, 5 cursos activos,
+  1776→  1776→XP) retención D7 > 40%
+  1777→  1777→Fase 3 — Engagement 6 semanas Directos, Ranking, Notificaciones push Leaderboard operativo, 1000 push
+  1778→  1778→enviadas, retención D30 > 25%
+  1779→  1779→Fase 4 — Escala 8 semanas Panel Admin, Analytics avanzado, Stripe Admin operativo, dashboard métricas,
+  1780→  1780→10 pagos procesados
+  1781→  1781→11.2 Criterios de salida por fase
+  1782→  1782→Cada fase tiene criterios de salida objetivos y medibles. Ninguna fase puede considerarse completada hasta que
+  1783→  1783→todos sus criterios estén verificados. Esto evita la deuda técnica acumulada por "lo arreglamos en la siguiente fase".
+  1784→  1784→l Fase 1 MVP: 100 usuarios beta registrados con onboarding completo; al menos 1 post y 1 comentario por
+  1785→  1785→usuario en promedio; NPS superior a 30; 0 bugs críticos abiertos; Lighthouse Performance > 80; cobertura
+  1786→  1786→de pruebas > 70%.
+  1787→  1787→l Fase 2 Contenido: 50 recursos publicados por al menos 5 autores distintos; 5 cursos activos con 20
+  1788→  1788→lecciones totales; retención D7 superior al 40%; sistema de XP operativo y verificado por pruebas de carga.
+  1789→  1789→l Fase 3 Engagement: Leaderboard semanal operativo con 4 semanas de histórico; 1000 notificaciones
+  1790→  1790→push entregadas con tasa de apertura > 20%; retención D30 superior al 25%; al menos 3 directos realizados
+  1791→  1791→con 50 asistentes promedio.
+  1792→  1792→l Fase 4 Escala: Panel de admin usado semanalmente por al menos 2 administradores; dashboard de
+  1793→  1793→métricas con 10 KPIs en tiempo real; 10 pagos procesados con Stripe sin discrepancias; documentación
+  1794→  1794→runbooks completa para incidentes.
+  1795→  1795→11.3 Riesgos y mitigaciones
+  1796→  1796→AutoDev — Especificación de Requisitos de Software v1.0 // page 52
+  1797→  1797→
+  1798→  1798→=== PAGE 54 ===
+  1799→  1799→Riesgo Probabilid Impacto Mitigación
+  1800→  1800→ad
+  1801→  1801→Costo de Firestore escalando con Media Alto Cotizar plan Blaze con forecast de lecturas/escrituras;
+  1802→  1802→usuarios cache en frontend para lecturas frecuentes;
+  1803→  1803→denormalización para evitar lecturas múltiples.
+  1804→  1804→Abuso de gamificación (XP farming) Alta Medio Rate limiting en Cloud Functions; detección de patrones
+  1805→  1805→anómalos (logs en audit_logs); tope diario de XP por
+  1806→  1806→acción.
+  1807→  1807→Contenido inapropiado en foro Alta Alto Filtro de palabras prohibidas en pre-write; reporte de
+  1808→  1808→usuarios; moderación proactiva; logs de auditoría
+  1809→  1809→inmutables.
+  1810→  1810→Cold start de Cloud Functions críticas Media Medio minInstances=1 en auth y onboarding; separar funciones
+  1811→  1811→frecuentes (ligeras) de funciones pesadas.
+  1812→  1812→Lock-in a Firebase Baja Medio Patrón Repository en frontend; ADR documentado antes
+  1813→  1813→de migrar; mantener un módulo de abstracción de auth.
+  1814→  1814→Indisponibilidad de Firebase Baja Alto Status page monitoring; runbooks para incidentes;
+  1815→  1815→comunicación proactiva a usuarios vía Twitter/email.
+  1816→  1816→Adopción insuficiente de usuarios Media Alto Validar MVP con beta privada antes de invertir en fases
+  1817→  1817→2-4; encuestas NPS semanales; canal directo de
+  1818→  1818→feedback.
+  1819→  1819→AutoDev — Especificación de Requisitos de Software v1.0 // page 53
+  1820→  1820→
+  1821→  1821→=== PAGE 55 ===
+  1822→  1822→Capítulo 12 — Apéndices
+  1823→  1823→Apendice A — Glosario completo
+  1824→  1824→El glosario recopila los términos técnicos utilizados a lo largo del documento. Cualquier término no listado conserva
+  1825→  1825→su significado estándar en la literatura de ingeniería de software y plataformas Firebase.
+  1826→  1826→Término Definición
+  1827→  1827→App Check Servicio Firebase que protege backends contra abuso verificando la identidad de la app cliente.
+  1828→  1828→BDD Behavior Driven Development. Práctica que expresa requisitos como comportamientos en Gherkin.
+  1829→  1829→Cloud Functions Funciones serverless de Firebase ejecutadas en respuesta a eventos HTTP, Firestore o scheduled.
+  1830→  1830→FCM Firebase Cloud Messaging. Servicio de notificaciones push.
+  1831→  1831→Firestore Base de datos NoSQL orientada a documentos, en tiempo real.
+  1832→  1832→Gamificación Aplicación de mecánicas de juego (XP, niveles, logros) en contextos no lúdicos.
+  1833→  1833→Gherkin Lenguaje estructurado (Given/When/Then) para describir escenarios de prueba.
+  1834→  1834→Leaderboard Tabla de clasificación semanal de usuarios ordenada por XP.
+  1835→  1835→MCP Server Model Context Protocol Server. Recurso tipificado en AutoDev.
+  1836→  1836→Misión Conjunto de tareas que otorgan XP bonus al completarse.
+  1837→  1837→Onboarding Proceso guiado de registro y configuración inicial de un nuevo usuario.
+  1838→  1838→Repository Pattern Patrón de diseño que aísla el acceso a datos detrás de una interfaz.
+  1839→  1839→SDD Specification Driven Development. Metodología que prioriza la especificación formal de requisitos.
+  1840→  1840→SRS Software Requirements Specification. Documento que describe requisitos del sistema.
+  1841→  1841→XP Experience Points. Unidad de puntaje en el sistema de gamificación.
+  1842→  1842→Apendice B — Matriz de trazabilidad
+  1843→  1843→La matriz de trazabilidad vincula cada requisito funcional con su caso de uso, criterio de aceptación y escenario
+  1844→  1844→BDD. Esta matriz es la fuente de verdad para auditar la cobertura: cualquier requisito sin trazabilidad completa
+  1845→  1845→debe completarse antes del cierre de la fase correspondiente.
+  1846→  1846→RF CU CA Escenario BDD Módulo
+  1847→  1847→RF-001 CU-00 CA-001 7.1 Registro exitoso Auth
+  1848→  1848→1
+  1849→  1849→RF-002 CU-00 CA-002 7.1 Email duplicado Auth
+  1850→  1850→1
+  1851→  1851→AutoDev — Especificación de Requisitos de Software v1.0 // page 54
+  1852→  1852→
+  1853→  1853→=== PAGE 56 ===
+  1854→  1854→RF CU CA Escenario BDD Módulo
+  1855→  1855→RF-004 CU-00 CA-003 7.1 Login exitoso Auth
+  1856→  1856→1
+  1857→  1857→RF-007 — CA-005 7.1 Bloqueo tras 5 intentos Auth
+  1858→  1858→RF-009 CU-00 CA-006 7.2 Onboarding completo Onboarding
+  1859→  1859→2
+  1860→  1860→RF-010 CU-00 CA-007 7.2 Nombre corto Onboarding
+  1861→  1861→2
+  1862→  1862→RF-013 CU-00 CA-009 7.2 Presentación corta Onboarding
+  1863→  1863→2
+  1864→  1864→RF-014 — CA-010 7.2 Redirección onboarding Onboarding
+  1865→  1865→RF-019 CU-00 CA-011 7.3 Publicar post válido Foro
+  1866→  1866→3
+  1867→  1867→RF-020 CU-00 CA-012 — Foro
+  1868→  1868→3
+  1869→  1869→RF-021 CU-00 CA-013 — Foro
+  1870→  1870→3
+  1871→  1871→RF-022 CU-00 CA-014 7.3 Comentar en un post Foro
+  1872→  1872→4
+  1873→  1873→RF-023 CU-00 CA-015 7.3 Dar like a un post Foro
+  1874→  1874→4
+  1875→  1875→RF-024 — CA-016 — Foro
+  1876→  1876→RF-025 — CA-017 7.3 Filtrar foro por IA Foro
+  1877→  1877→RF-029 — CA-019 — Cursos
+  1878→  1878→RF-031 — CA-020 — Cursos
+  1879→  1879→RF-036 CU-00 CA-021 7.4 Publicar Skill Recursos
+  1880→  1880→6
+  1881→  1881→RF-038 CU-01 CA-022 7.4 Filtrar MCP Server Recursos
+  1882→  1882→2
+  1883→  1883→RF-044 — CA-023 — Directos
+  1884→  1884→RF-045 CU-00 CA-024 7.5 Reservar cupo Directos
+  1885→  1885→7
+  1886→  1886→RF-046 CU-00 CA-025 7.5 Lista de espera Directos
+  1887→  1887→7
+  1888→  1888→RF-049 — CA-026 — Miembros
+  1889→  1889→AutoDev — Especificación de Requisitos de Software v1.0 // page 55
+  1890→  1890→
+  1891→  1891→=== PAGE 57 ===
+  1892→  1892→RF CU CA Escenario BDD Módulo
+  1893→  1893→RF-050 CU-00 CA-027 — Miembros
+  1894→  1894→5
+  1895→  1895→RF-054 CU-00 CA-028 7.6 Cálculo leaderboard Ranking
+  1896→  1896→8
+  1897→  1897→RF-055 CU-00 CA-029 — Ranking
+  1898→  1898→8
+  1899→  1899→RF-056 — CA-030 7.6 Reseteo semanal Ranking
+  1900→  1900→RF-058 — CA-031 — Gamificación
+  1901→  1901→RF-059 CU-00 CA-032 7.6 Completar misión Gamificación
+  1902→  1902→9
+  1903→  1903→RF-063 — CA-033 7.7 Notificación al recibir comentario Notificaciones
+  1904→  1904→RF-064 CU-01 CA-034 — Notificaciones
+  1905→  1905→0
+  1906→  1906→RF-065 — CA-035 7.7 Marcar todas como leídas Notificaciones
+  1907→  1907→RF-066 CU-01 CA-036 — Notificaciones
+  1908→  1908→0
+  1909→  1909→RF-068 — CA-037 7.8 Acceso denegado a /admin Admin
+  1910→  1910→RF-069 — CA-038 — Admin
+  1911→  1911→RF-070 CU-01 CA-039 7.8 Ocultar post reportado Admin
+  1912→  1912→1
+  1913→  1913→RF-071 CU-01 CA-040 7.8 Suspender usuario Admin
+  1914→  1914→1
+  1915→  1915→Apendice C — Convenciones de nombrado
+  1916→  1916→Las convenciones de nombrado aseguran consistencia entre el código frontend, las Cloud Functions y los
+  1917→  1917→documentos de Firestore. Cualquier desviación debe justificarse en un ADR.
+  1918→  1918→Recurso Convención Ejemplo
+  1919→  1919→Colecciones Firestore camelCase plural posts, users, auditLogs, notifications
+  1920→  1920→IDs de documentos UID de Auth para usuarios; auto-ID para el users/{uid}, posts/{postId}
+  1921→  1921→resto
+  1922→  1922→Campos de documentos camelCase displayName, createdAt, weeklyXP
+  1923→  1923→Timestamps Tipo Timestamp de Firestore createdAt: Timestamp
+  1924→  1924→Booleans prefijo is/has cuando aplica isActive, hasAvatar
+  1925→  1925→AutoDev — Especificación de Requisitos de Software v1.0 // page 56
+  1926→  1926→
+  1927→  1927→=== PAGE 58 ===
+  1928→  1928→Recurso Convención Ejemplo
+  1929→  1929→Contadores sufijo Count postsCount, commentsCount, attendeesCount
+  1930→  1930→Cloud Functions camelCase, prefijo on para triggers onPostCreate, computeWeeklyRanking
+  1931→  1931→Rutas frontend kebab-case /onboarding/paso-1, /recursos
+  1932→  1932→Constantes TypeScript UPPER_SNAKE_CASE MAX_POST_LENGTH, XP_PER_POST
+  1933→  1933→Interfaces TypeScript PascalCase, sufijo Repository para repos PostRepository, UserService
+  1934→  1934→Archivos de prueba *.test.ts (unit) / *.spec.ts (E2E) onPostCreate.test.ts, login.spec.ts
+  1935→  1935→Apendice D — Documentos relacionados
+  1936→  1936→Esta especificación se complementa con los siguientes artefactos que se mantienen en el repositorio del proyecto.
+  1937→  1937→Cada artefacto tiene un responsable y una cadencia de actualización. La versión de cada documento se incrementa
+  1938→  1938→cuando se aprueba un cambio que afecta la especificación.
+  1939→  1939→l README.md — Setup del proyecto, comandos de desarrollo y estructura de carpetas. Responsable: Tech
+  1940→  1940→Lead. Actualización: por cambio.
+  1941→  1941→l ADR/001-firebase-stack.md — Architecture Decision Record justificando la elección de Firebase como
+  1942→  1942→stack backend. Responsable: Arquitecto. Actualización: por revisión anual.
+  1943→  1943→l RUNBOOK/incident-response.md — Procedimiento paso a paso para incidentes de producción.
+  1944→  1944→Responsable: SRE. Actualización: tras cada incidente postmortem.
+  1945→  1945→l firestore.rules — Reglas de seguridad desplegadas. Responsable: Backend Lead. Actualización: por
+  1946→  1946→cambio de permisos.
+  1947→  1947→l firestore.indexes.json — Índices compuestos desplegados. Responsable: Backend Lead. Actualización:
+  1948→  1948→por nueva consulta frecuente.
+  1949→  1949→l /functions/src/ — Código TypeScript de Cloud Functions. Responsable: Backend. Actualización:
+  1950→  1950→continua.
+  1951→  1951→l /e2e/features/ — Escenarios Gherkin del Capítulo 7. Responsable: QA. Actualización: por nuevo criterio
+  1952→  1952→de aceptación.
+  1953→  1953→AutoDev — Especificación de Requisitos de Software v1.0 // page 57
+  1954→  1954→
+  1955→  1955→stderr:
+  1956→  1956→Could not get FontBBox from font descriptor because None cannot be parsed as 4 floats
+  1957→  1957→Could not get FontBBox from font descriptor because None cannot be parsed as 4 floats
+  1958→  1958→Could not get FontBBox from font descriptor because None cannot be parsed as 4 floats
+  1959→  1959→Could not get FontBBox from font descriptor because None cannot be parsed as 4 floats
+  1960→  1960→Could not get FontBBox from font descriptor because None cannot be parsed as 4 floats
+  1961→  1961→Could not get FontBBox from font descriptor because None cannot be parsed as 4 floats
+  1962→  1962→Could not get FontBBox from font descriptor because None cannot be parsed as 4 floats

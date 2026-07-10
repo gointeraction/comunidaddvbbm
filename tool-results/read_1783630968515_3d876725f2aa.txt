@@ -1,0 +1,502 @@
+     1→   500→   500→4.2 Escalabilidad
+     2→   501→   501→Firebase escala horizontalmente de forma nativa. Firestore distribuye automáticamente los documentos entre shards
+     3→   502→   502→y Cloud Functions escala a cero cuando no hay tráfico. Las consideraciones de escalabilidad se centran en: (i)
+     4→   503→   503→diseño de consultas que no requieran escaneos de colección completos, (ii) uso de subcolecciones en lugar de arrays
+     5→   504→   504→grandes para evitar documentos que excedan 1 MB, y (iii) uso de Cloud Functions para agregaciones que no pueden
+     6→   505→   505→resolverse con consultas directas.
+     7→   506→   506→ID Métrica Objetivo Verificación
+     8→   507→   507→RNF-08 Usuarios concurrentes soportados 10.000 sin degradación Prueba de carga con
+     9→   508→   508→k6
+    10→   509→   509→RNF-09 Documentos en colección de posts Hasta 1 millón sin paginación lenta Índices compuestos
+    11→   510→   510→+ cursor pagination
+    12→   511→   511→AutoDev — Especificación de Requisitos de Software v1.0 // page 17
+    13→   512→   512→
+    14→   513→   513→=== PAGE 19 ===
+    15→   514→   514→ID Métrica Objetivo Verificación
+    16→   515→   515→RNF-10 Cloud Functions concurrentes Autoescalado hasta 1000 por región Firebase Functions
+    17→   516→   516→config
+    18→   517→   517→RNF-11 Tamaño máximo de documento Firestore < 500 KB (límite Firestore 1 MB) Validación en Cloud
+    19→   518→   518→Function pre-write
+    20→   519→   519→4.3 Seguridad
+    21→   520→   520→La seguridad se implementa en tres capas: (i) Firebase App Check para verificar que las peticiones provienen de la
+    22→   521→   521→app legítima, (ii) reglas de Firestore como única fuente de verdad para autorización a datos, y (iii) validación de
+    23→   522→   522→entrada en Cloud Functions para operaciones que no pasan por Firestore directamente. El frontend no implementa
+    24→   523→   523→lógica de autorización; solo oculta acciones visualmente.
+    25→   524→   524→ID Métrica Objetivo Verificación
+    26→   525→   525→RNF-12 Cobertura de reglas de seguridad Firestore 100% de colecciones con reglas Audit script en CI
+    27→   526→   526→RNF-13 Rate limiting de Cloud Functions sensibles Máx 5 llamadas/min por usuario en Cloud Functions
+    28→   527→   527→login y registro middleware
+    29→   528→   528→RNF-14 Cumplimiento OWASP Top 10 0 vulnerabilidades críticas o altas Snyk + ZAP scan en
+    30→   529→   529→CI
+    31→   530→   530→RNF-15 Sanitización de contenido HTML en posts Strip de tags <script>, <iframe>, on* DOMPurify en
+    32→   531→   531→attributes frontend y validación
+    33→   532→   532→en backend
+    34→   533→   533→RNF-16 Hashing de contraseñas Firebase Auth (scrypt con sal única) Heredado de
+    35→   534→   534→Firebase Auth
+    36→   535→   535→RNF-17 Protección contra CSRF Token anti-CSRF en formularios Verificación en
+    37→   536→   536→Cloud Functions
+    38→   537→   537→4.4 Disponibilidad y observabilidad
+    39→   538→   538→El SLA de Firebase para Firestore y Cloud Functions es del 99.95% en us-central1. No se implementa redundancia
+    40→   539→   539→multi-región en v1.0 por costo; se contempla para la fase 3 si la base de usuarios supera 10.000 activos mensuales.
+    41→   540→   540→La observabilidad se basa en Cloud Logging para logs estructurados, Cloud Monitoring para métricas, y Firebase
+    42→   541→   541→Analytics para eventos de producto.
+    43→   542→   542→ID Métrica Objetivo Verificación
+    44→   543→   543→RNF-18 Disponibilidad mensual del sistema >= 99.9% Status page + Cloud
+    45→   544→   544→Monitoring SLO
+    46→   545→   545→RNF-19 Tiempo de recuperación ante incidente (RTO) < 2 horas Runbook
+    47→   546→   546→documentado
+    48→   547→   547→AutoDev — Especificación de Requisitos de Software v1.0 // page 18
+    49→   548→   548→
+    50→   549→   549→=== PAGE 20 ===
+    51→   550→   550→ID Métrica Objetivo Verificación
+    52→   551→   551→RNF-20 Logs estructurados en Cloud Functions 100% con trace ID y user ID Audit log sample en
+    53→   552→   552→CI
+    54→   553→   553→RNF-21 Alertas proactivas Latencia p95 > 1s o error rate > 1% Cloud Monitoring
+    55→   554→   554→alerting policies
+    56→   555→   555→4.5 Usabilidad y accesibilidad
+    57→   556→   556→AutoDev debe ser usable por personas con discapacidades visuales, motoras y cognitivas. Se sigue WCAG 2.1 nivel
+    58→   557→   557→AA. La interfaz responsive abarca desde 375px (móvil) hasta 1920px (desktop) con breakpoints en 768px y
+    59→   558→   558→1280px. El contraste mínimo de texto contra fondo es 4.5:1, exceptuando texto decorativo. Todos los elementos
+    60→   559→   559→interactivos son navegables por teclado con focus visible.
+    61→   560→   560→ID Métrica Objetivo Verificación
+    62→   561→   561→RNF-22 Cumplimiento WCAG 2.1 AA 100% de páginas axe-core en CI
+    63→   562→   562→RNF-23 Contraste de color >= 4.5:1 para texto normal Lighthouse
+    64→   563→   563→accessibility audit
+    65→   564→   564→RNF-24 Navegación por teclado 100% de flujos críticos accesibles Prueba manual +
+    66→   565→   565→E2E
+    67→   566→   566→RNF-25 Soporte de lectores de pantalla ARIA labels en todos los elementos Prueba con NVDA y
+    68→   567→   567→interactivos VoiceOver
+    69→   568→   568→RNF-26 Responsive en 375px, 768px, 1280px, 1920px Sin scroll horizontal, sin contenido E2E en Playwright
+    70→   569→   569→cortado con viewports
+    71→   570→   570→4.6 Mantenibilidad y compatibilidad
+    72→   571→   571→El código debe ser mantenible por un equipo pequeño (3-5 desarrolladores). Se exige TypeScript estricto, cobertura
+    73→   572→   572→mínima del 80% en líneas y 70% en ramas para Cloud Functions. El frontend se organiza por features (módulos)
+    74→   573→   573→con co-localización de componentes, hooks, tipos y pruebas. La compatibilidad aborda las últimas dos versiones de
+    75→   574→   574→los navegadores mayoritarios; IE11 no se soporta.
+    76→   575→   575→ID Métrica Objetivo Verificación
+    77→   576→   576→RNF-27 Cobertura de pruebas unitarias (Cloud Functions) >= 80% líneas, 70% ramas Jest + Istanbul en CI
+    78→   577→   577→RNF-28 Linting sin errores 0 errores ESLint, 0 errores CI gate
+    79→   578→   578→TypeScript
+    80→   579→   579→RNF-29 Tamaño máximo de archivo 500 líneas (excepto generados) ESLint rule
+    81→   580→   580→max-lines
+    82→   581→   581→RNF-30 Navegadores soportados Últimas 2 versiones de Chrome, Browserlist +
+    83→   582→   582→Firefox, Safari, Edge Playwright
+    84→   583→   583→AutoDev — Especificación de Requisitos de Software v1.0 // page 19
+    85→   584→   584→
+    86→   585→   585→=== PAGE 21 ===
+    87→   586→   586→ID Métrica Objetivo Verificación
+    88→   587→   587→RNF-31 i18n preparado Textos extraídos en /messages/es.json Audit script en CI
+    89→   588→   588→AutoDev — Especificación de Requisitos de Software v1.0 // page 20
+    90→   589→   589→
+    91→   590→   590→=== PAGE 22 ===
+    92→   591→   591→Capítulo 5 — Casos de Uso Detallados
+    93→   592→   592→5.1 Diagrama de casos de uso (descripción textual)
+    94→   593→   593→Dado que este documento se distribuye en formato PDF y la notación gráfica UML puede comprometerse al
+    95→   594→   594→rasterizar, se presenta el modelo de casos de uso en forma tabular. La tabla lista cada actor, los casos de uso en los
+    96→   595→   595→que participa como primario y los casos en los que participa como secundario. El detalle de cada caso de uso se
+    97→   596→   596→encuentra en las secciones 5.3 a 5.14.
+    98→   597→   597→Actor Casos de uso primarios Casos de uso secundarios
+    99→   598→   598→Invitado CU-001 Registro de cuenta, CU-004 Login —
+   100→   599→   599→Miembro CU-002 Onboarding, CU-003 Publicar post, CU-004 Comentar post, CU-011 (mencionado en
+   101→   600→   600→CU-005 Filtrar miembros, CU-007 Inscribirse a directo, CU-008 Ver notificaciones)
+   102→   601→   601→ranking, CU-009 Completar misión, CU-010 Recibir notificación,
+   103→   602→   602→CU-012 Buscar recurso
+   104→   603→   603→Autor CU-006 Publicar recurso Todos los del Miembro
+   105→   604→   604→Moderador CU-011 Moderar contenido —
+   106→   605→   605→Administrador CU-011 Moderar (extendido), gestión usuarios, métricas —
+   107→   606→   606→5.2 Plantilla de caso de uso
+   108→   607→   607→Cada caso de uso se documenta siguiendo la plantilla: identificador, nombre, actor primario, precondiciones,
+   109→   608→   608→postcondiciones, flujo principal numerado, flujos alternativos y excepciones. Esta estructura facilita la conversión
+   110→   609→   609→directa a escenarios BDD en el Capítulo 7.
+   111→   610→   610→5.3 CU-001 — Registro de cuenta
+   112→   611→   611→Campo Valor
+   113→   612→   612→ID CU-001
+   114→   613→   613→Nombre Registro de cuenta
+   115→   614→   614→Actor primario Invitado
+   116→   615→   615→Precondiciones El invitado no tiene sesión activa. El email no está registrado.
+   117→   616→   616→Postcondiciones Se crea el documento de usuario en Firestore con estado "onboarding_pending". Se envía email de
+   118→   617→   617→verificación. Se redirige al wizard de onboarding.
+   119→   618→   618→Flujo principal:
+   120→   619→   619→1 El invitado accede a la página /registro.
+   121→   620→   620→2 El sistema muestra el formulario con campos: email, contraseña, confirmar contraseña.
+   122→   621→   621→AutoDev — Especificación de Requisitos de Software v1.0 // page 21
+   123→   622→   622→
+   124→   623→   623→=== PAGE 23 ===
+   125→   624→   624→3 El invitado completa los campos y pulsa "crear_cuenta".
+   126→   625→   625→4 El frontend valida formato de email y longitud mínima de contraseña (8 caracteres).
+   127→   626→   626→5 El frontend llama a Firebase Auth: createUserWithEmailAndPassword(email, password).
+   128→   627→   627→6 Firebase Auth crea el usuario y devuelve el UID.
+   129→   628→   628→7 Una Cloud Function onUserCreate (trigger auth.user().onCreate) crea el documento /users/{uid} con
+   130→   629→   629→campos: email, role="member", status="onboarding_pending", createdAt.
+   131→   630→   630→8 El sistema envía email de verificación vía Firebase Auth sendEmailVerification().
+   132→   631→   631→9 El sistema redirige al usuario al wizard de onboarding (paso 1).
+   133→   632→   632→Flujos alternativos:
+   134→   633→   633→l A1 — Email ya registrado: En el paso 5, Firebase Auth devuelve error auth/email-already-in-use. El
+   135→   634→   634→sistema muestra mensaje "Ya existe una cuenta con este email" y ofrece enlace a /login.
+   136→   635→   635→l A2 — Contraseña débil: En el paso 5, Firebase Auth devuelve error auth/weak-password. El sistema
+   137→   636→   636→resalta el campo contraseña con mensaje "Mínimo 8 caracteres".
+   138→   637→   637→l A3 — Email inválido: El paso 4 rechaza antes de llamar a Firebase. El sistema muestra "Email no válido"
+   139→   638→   638→junto al campo.
+   140→   639→   639→Excepciones:
+   141→   640→   640→l E1 — Firebase Auth no disponible: El sistema muestra mensaje genérico "Servicio no disponible
+   142→   641→   641→temporalmente" y registra el error en Cloud Logging con trace ID.
+   143→   642→   642→l E2 — Cloud Function onUserCreate falla: El usuario se crea en Auth pero no en Firestore. Una Cloud
+   144→   643→   643→Function de reconciliación (scheduled, cada 5 min) detecta huérfanos y los corrige.
+   145→   644→   644→5.4 CU-002 — Onboarding de perfil
+   146→   645→   645→Campo Valor
+   147→   646→   646→ID CU-002
+   148→   647→   647→Nombre Onboarding de perfil
+   149→   648→   648→Actor primario Miembro (recién registrado)
+   150→   649→   649→Precondiciones El usuario tiene cuenta autenticada. Su documento en Firestore tiene status="onboarding_pending".
+   151→   650→   650→Postcondiciones El documento /users/{uid} se actualiza con name, interests[], level, bio, status="active". Se otorga XP
+   152→   651→   651→inicial (50 XP). Se publica un post automático de presentación en el foro.
+   153→   652→   652→Flujo principal:
+   154→   653→   653→1 El usuario es redirigido a /onboarding/paso-1 tras el registro.
+   155→   654→   654→2 Paso 1: Captura del nombre (mínimo 2 caracteres). El usuario pulsa "continuar".
+   156→   655→   655→AutoDev — Especificación de Requisitos de Software v1.0 // page 22
+   157→   656→   656→
+   158→   657→   657→=== PAGE 24 ===
+   159→   658→   658→3 Paso 2: Selección de al menos 1 interés entre Automatización, IA, Desarrollo Web, Comunidad. Botón
+   160→   659→   659→"continuar" habilitado solo cuando hay selección.
+   161→   660→   660→4 Paso 3: Selección de exactamente 1 nivel (Principiante, Intermedio, Avanzado).
+   162→   661→   661→5 Paso 4: Captura de presentación personal (mínimo 20 caracteres). El usuario pulsa "guardar_perfil &&
+   163→   662→   662→continuar".
+   164→   663→   663→6 El frontend valida todos los campos antes de enviar.
+   165→   664→   664→7 El frontend llama a la Cloud Function HTTP completeOnboarding con los datos consolidados.
+   166→   665→   665→8 La Cloud Function valida los datos, actualiza el documento /users/{uid} (status="active"), otorga 50 XP y
+   167→   666→   666→crea un post automático en /posts con tag "presentacion".
+   168→   667→   667→9 El sistema redirige al usuario al /foro.
+   169→   668→   668→Flujos alternativos:
+   170→   669→   669→l A1 — Saltar paso opcional: Si el usuario intenta cerrar la pestaña, el sistema mantiene el
+   171→   670→   670→status="onboarding_pending" y vuelve a mostrar el wizard en el siguiente login.
+   172→   671→   671→l A2 — Volver atrás: El usuario puede navegar entre pasos con los botones "atrás" sin perder datos en
+   173→   672→   672→memoria.
+   174→   673→   673→5.5 CU-003 — Publicar post en foro
+   175→   674→   674→Campo Valor
+   176→   675→   675→ID CU-003
+   177→   676→   676→Nombre Publicar post en foro
+   178→   677→   677→Actor primario Miembro
+   179→   678→   678→Precondiciones Usuario autenticado con status="active".
+   180→   679→   679→Postcondiciones Se crea un documento en /posts con autor, contenido, etiquetas y timestamp. Se otorgan 25 XP al autor. Se
+   181→   680→   680→actualiza el contador postsCount del autor.
+   182→   681→   681→Flujo principal:
+   183→   682→   682→1 El Miembro accede a /foro y localiza el input "¿qué estás construyendo hoy?".
+   184→   683→   683→2 El Miembro pulsa el input y se expande el formulario con título, contenido y selector de etiquetas.
+   185→   684→   684→3 El Miembro completa título (máx 100), contenido (máx 5000) y selecciona hasta 3 etiquetas.
+   186→   685→   685→4 El Miembro pulsa "publicar".
+   187→   686→   686→5 El frontend valida longitudes y formato, sanitiza HTML con DOMPurify.
+   188→   687→   687→6 El frontend escribe directamente en /posts mediante set() con uid autogenerado.
+   189→   688→   688→7 La Cloud Function onPostCreate (trigger firestore onCreate) valida reglas, otorga 25 XP al autor e
+   190→   689→   689→incrementa postsCount.
+   191→   690→   690→AutoDev — Especificación de Requisitos de Software v1.0 // page 23
+   192→   691→   691→
+   193→   692→   692→=== PAGE 25 ===
+   194→   693→   693→8 El post aparece en la cabecera del listado del foro.
+   195→   694→   694→Flujos alternativos:
+   196→   695→   695→l A1 — Contenido vacío: El paso 5 rechaza y muestra "El contenido no puede estar vacío".
+   197→   696→   696→l A2 — Palabra prohibida: El paso 5 detecta una palabra de la lista negra y solicita revisión.
+   198→   697→   697→l A3 — Rate limit: Si el usuario publica más de 3 posts en 10 minutos, el sistema bloquea con mensaje
+   199→   698→   698→"Espera unos minutos antes de publicar de nuevo".
+   200→   699→   699→5.6 CU-004 — Comentar post
+   201→   700→   700→Campo Valor
+   202→   701→   701→ID CU-004
+   203→   702→   702→Nombre Comentar en un post
+   204→   703→   703→Actor primario Miembro
+   205→   704→   704→Precondiciones Usuario autenticado con status="active". Existe el post objetivo.
+   206→   705→   705→Postcondiciones Se crea un documento en /posts/{postId}/comments/{commentId}. Se otorgan 10 XP al comentador. Se
+   207→   706→   706→notifica al autor del post.
+   208→   707→   707→Flujo principal:
+   209→   708→   708→1 El Miembro abre la vista de detalle de un post.
+   210→   709→   709→2 El Miembro escribe su comentario en el área inferior y pulsa "comentar".
+   211→   710→   710→3 El frontend valida longitud (1-1000) y sanitiza.
+   212→   711→   711→4 El frontend escribe en /posts/{postId}/comments con add().
+   213→   712→   712→5 La Cloud Function onCommentCreate otorga 10 XP al comentador, incrementa commentsCount del post y
+   214→   713→   713→genera una notificación in-app para el autor del post.
+   215→   714→   714→6 El comentario aparece en la lista con animación.
+   216→   715→   715→5.7 CU-005 — Filtrar miembros por especialidad
+   217→   716→   716→Campo Valor
+   218→   717→   717→ID CU-005
+   219→   718→   718→Nombre Filtrar miembros por especialidad
+   220→   719→   719→Actor primario Miembro
+   221→   720→   720→Precondiciones Usuario autenticado.
+   222→   721→   721→AutoDev — Especificación de Requisitos de Software v1.0 // page 24
+   223→   722→   722→
+   224→   723→   723→=== PAGE 26 ===
+   225→   724→   724→Campo Valor
+   226→   725→   725→Postcondiciones El sistema muestra la lista de miembros que cumplen el filtro seleccionado, ordenados según criterio.
+   227→   726→   726→Flujo principal:
+   228→   727→   727→1 El Miembro accede a /miembros.
+   229→   728→   728→2 El sistema muestra la lista de miembros por defecto (recientes, todos).
+   230→   729→   729→3 El Miembro pulsa el filtro "Automatización" en la barra de categorías.
+   231→   730→   730→4 El frontend ejecuta una consulta Firestore: where("interests", "array-contains", "automatizacion")
+   232→   731→   731→orderBy("createdAt", "desc").
+   233→   732→   732→5 El sistema actualiza la lista con los miembros filtrados.
+   234→   733→   733→6 El Miembro puede combinar el filtro de especialidad con el de nivel y el orden.
+   235→   734→   734→5.8 CU-006 — Publicar recurso
+   236→   735→   735→Campo Valor
+   237→   736→   736→ID CU-006
+   238→   737→   737→Nombre Publicar recurso
+   239→   738→   738→Actor primario Autor
+   240→   739→   739→Precondiciones Usuario con rol "autor" o "admin".
+   241→   740→   740→Postcondiciones Se crea un documento en /resources con tipo, nivel, imagen destacada y contenido. Aparece en el listado
+   242→   741→   741→público.
+   243→   742→   742→Flujo principal:
+   244→   743→   743→1 El Autor pulsa "+ publicar" en /recursos.
+   245→   744→   744→2 El sistema muestra el formulario: título, descripción, tipo (Skill, Plugin, Subagent, MCP Server, Agent
+   246→   745→   745→Team, Tutorial), nivel (Principiante, Intermedio, Avanzado), imagen destacada, contenido o URL externa.
+   247→   746→   746→3 El Autor completa los campos y sube una imagen (JPG/PNG/WebP máx 2MB).
+   248→   747→   747→4 El frontend sube la imagen a Storage en /resources/{resourceId}/cover.jpg y obtiene la URL firmada.
+   249→   748→   748→5 El frontend escribe el documento en /resources con coverUrl, authorId, createdAt.
+   250→   749→   749→6 El recurso aparece en la lista pública.
+   251→   750→   750→5.9 CU-007 — Inscribirse a directo
+   252→   751→   751→AutoDev — Especificación de Requisitos de Software v1.0 // page 25
+   253→   752→   752→
+   254→   753→   753→=== PAGE 27 ===
+   255→   754→   754→Campo Valor
+   256→   755→   755→ID CU-007
+   257→   756→   756→Nombre Reservar cupo en directo
+   258→   757→   757→Actor primario Miembro
+   259→   758→   758→Precondiciones Existe un directo programado con cupos disponibles.
+   260→   759→   759→Postcondiciones Se crea un documento en /lives/{liveId}/attendees/{uid}. Se programa notificación recordatorio 1h antes.
+   261→   760→   760→5.10 CU-008 — Visualizar ranking semanal
+   262→   761→   761→Campo Valor
+   263→   762→   762→ID CU-008
+   264→   763→   763→Nombre Visualizar ranking semanal
+   265→   764→   764→Actor primario Miembro
+   266→   765→   765→Precondiciones Existe al menos un período semanal con datos.
+   267→   766→   766→Postcondiciones El sistema muestra el leaderboard con top 3 destacado y tabla del top 100. Muestra la posición del usuario
+   268→   767→   767→actual si está en el top.
+   269→   768→   768→5.11 CU-009 — Completar misión
+   270→   769→   769→Campo Valor
+   271→   770→   770→ID CU-009
+   272→   771→   771→Nombre Completar misión
+   273→   772→   772→Actor primario Miembro
+   274→   773→   773→Precondiciones El usuario tiene una misión activa con tareas pendientes.
+   275→   774→   774→Postcondiciones La misión se marca como completada. Se otorga XP bonus (default 100 XP). Se genera logro si aplica. Se
+   276→   775→   775→envía notificación.
+   277→   776→   776→5.12 CU-010 — Recibir notificación push
+   278→   777→   777→Campo Valor
+   279→   778→   778→ID CU-010
+   280→   779→   779→Nombre Recibir notificación push
+   281→   780→   780→AutoDev — Especificación de Requisitos de Software v1.0 // page 26
+   282→   781→   781→
+   283→   782→   782→=== PAGE 28 ===
+   284→   783→   783→Campo Valor
+   285→   784→   784→Actor primario Miembro (con suscripción push activa)
+   286→   785→   785→Precondiciones El usuario ha aceptado notificaciones push en su navegador/dispositivo.
+   287→   786→   786→Postcondiciones El dispositivo recibe la notificación push. Se registra impresión en /notifications/{uid}/items/{notifId}.
+   288→   787→   787→5.13 CU-011 — Moderar contenido (admin/mod)
+   289→   788→   788→Campo Valor
+   290→   789→   789→ID CU-011
+   291→   790→   790→Nombre Moderar contenido inapropiado
+   292→   791→   791→Actor primario Moderador o Administrador
+   293→   792→   792→Precondiciones Existe un post o comentario reportado o detectado.
+   294→   793→   793→Postcondiciones El contenido se marca como hidden=true. Se registra entrada en /audit_logs con motivo, moderatorId y
+   295→   794→   794→timestamp. Se notifica al autor.
+   296→   795→   795→5.14 CU-012 — Buscar recurso por tipo
+   297→   796→   796→Campo Valor
+   298→   797→   797→ID CU-012
+   299→   798→   798→Nombre Buscar recurso por tipo
+   300→   799→   799→Actor primario Miembro
+   301→   800→   800→Precondiciones Existen recursos publicados.
+   302→   801→   801→Postcondiciones El sistema muestra los recursos del tipo seleccionado, ordenados por recientes o popularidad.
+   303→   802→   802→AutoDev — Especificación de Requisitos de Software v1.0 // page 27
+   304→   803→   803→
+   305→   804→   804→=== PAGE 29 ===
+   306→   805→   805→Capítulo 6 — Criterios de Aceptación
+   307→   806→   806→Los criterios de aceptación (CA-NNN) traducen cada requisito funcional a una condición verificable. Un criterio es
+   308→   807→   807→aceptable cuando puede responder de forma binaria (sí/no) a la pregunta "¿el sistema cumple este comportamiento
+   309→   808→   808→bajo estas condiciones?". Cada criterio se asocia a un requisito funcional y a un método de verificación: manual
+   310→   809→   809→(prueba exploratoria), E2E (Cypress/Playwright) o unit (Jest sobre Cloud Functions).
+   311→   810→   810→6.1 Criterios de aceptación por módulo
+   312→   811→   811→ID RF Criterio Verificación
+   313→   812→   812→CA-001 RF-00 Dado un invitado en /registro, cuando completa email válido y contraseña de 8+ E2E
+   314→   813→   813→1 caracteres y pulsa crear_cuenta, entonces se crea el usuario y se redirige a /onboarding.
+   315→   814→   814→CA-002 RF-00 Dado un email ya registrado, cuando el invitado intenta registrarse, entonces el sistema E2E
+   316→   815→   815→2 muestra "Ya existe una cuenta con este email".
+   317→   816→   816→CA-003 RF-00 Dado credenciales válidas, cuando el usuario pulsa iniciar_sesión, entonces se establece E2E
+   318→   817→   817→4 la sesión y se redirige a /foro.
+   319→   818→   818→CA-004 RF-00 Dado un email registrado, cuando el usuario solicita recuperar contraseña, entonces se Manual
+   320→   819→   819→6 envía un email con enlace de reseteo.
+   321→   820→   820→CA-005 RF-00 Dado 5 intentos fallidos consecutivos, cuando el usuario intenta un 6º login, entonces el Unit
+   322→   821→   821→7 sistema bloquea por 15 minutos.
+   323→   822→   822→CA-006 RF-00 Dado un usuario recién registrado, cuando accede a cualquier ruta protegida, entonces E2E
+   324→   823→   823→9 es redirigido a /onboarding.
+   325→   824→   824→CA-007 RF-01 Dado el paso 1 del onboarding, cuando el usuario ingresa nombre de 1 carácter, Unit
+   326→   825→   825→0 entonces el sistema impide continuar.
+   327→   826→   826→CA-008 RF-01 Dado el paso 2 del onboarding, cuando el usuario no selecciona ningún interés, entonces E2E
+   328→   827→   827→1 el botón continuar está deshabilitado.
+   329→   828→   828→CA-009 RF-01 Dado el paso 4 del onboarding, cuando el usuario ingresa presentación de menos de 20 E2E
+   330→   829→   829→3 caracteres, entonces se muestra error.
+   331→   830→   830→CA-010 RF-01 Dado un usuario con status=onboarding_pending, cuando intenta acceder a /foro, E2E
+   332→   831→   831→4 entonces es redirigido a /onboarding.
+   333→   832→   832→CA-011 RF-01 Dado un Miembro activo, cuando publica un post con título y contenido válidos, E2E
+   334→   833→   833→9 entonces el post aparece en /foro.
+   335→   834→   834→CA-012 RF-02 Dado un post creado hace menos de 30 min, cuando el autor pulsa editar, entonces E2E
+   336→   835→   835→0 puede modificar el contenido.
+   337→   836→   836→CA-013 RF-02 Dado un post del usuario, cuando el autor pulsa eliminar, entonces el post desaparece E2E
+   338→   837→   837→1 del listado.
+   339→   838→   838→CA-014 RF-02 Dado un post, cuando un Miembro comenta, entonces el comentario aparece bajo el E2E
+   340→   839→   839→2 post.
+   341→   840→   840→CA-015 RF-02 Dado un post, cuando un Miembro pulsa like, entonces el contador incrementa y el E2E
+   342→   841→   841→3 botón cambia de estado.
+   343→   842→   842→AutoDev — Especificación de Requisitos de Software v1.0 // page 28
+   344→   843→   843→
+   345→   844→   844→=== PAGE 30 ===
+   346→   845→   845→ID RF Criterio Verificación
+   347→   846→   846→CA-016 RF-02 Dado el foro con más de 20 posts, cuando el usuario navega a la página 2, entonces se E2E
+   348→   847→   847→4 muestran los posts 21-40 sin recargar.
+   349→   848→   848→CA-017 RF-02 Dado el foro, cuando el usuario filtra por etiqueta IA, entonces solo se muestran posts E2E
+   350→   849→   849→5 con esa etiqueta.
+   351→   850→   850→CA-018 RF-02 Dado cualquier post en el listado, entonces se muestra avatar, nombre, nivel, fecha Manual
+   352→   851→   851→6 relativa y conteos.
+   353→   852→   852→CA-019 RF-02 Dado el catálogo de cursos, cuando el usuario accede, entonces se listan todos los cursos E2E
+   354→   853→   853→9 con metadatos.
+   355→   854→   854→CA-020 RF-03 Dado un usuario inscrito en un curso, cuando marca una lección como completada, E2E
+   356→   855→   855→1 entonces el progreso del curso se actualiza.
+   357→   856→   856→CA-021 RF-03 Dado un Autor, cuando completa el formulario de recurso y sube imagen, entonces el E2E
+   358→   857→   857→6 recurso se publica.
+   359→   858→   858→CA-022 RF-03 Dado el listado de recursos, cuando el usuario filtra por tipo MCP Server, entonces solo E2E
+   360→   859→   859→8 se muestran recursos de ese tipo.
+   361→   860→   860→CA-023 RF-04 Dado el calendario de directos, cuando el usuario accede, entonces ve los directos E2E
+   362→   861→   861→4 programados con cupo.
+   363→   862→   862→CA-024 RF-04 Dado un directo con cupos, cuando un Miembro reserva, entonces se confirma y E2E
+   364→   863→   863→5 aparece en su lista.
+   365→   864→   864→CA-025 RF-04 Dado un directo sin cupos, cuando un Miembro intenta reservar, entonces se le ofrece E2E
+   366→   865→   865→6 lista de espera.
+   367→   866→   866→CA-026 RF-04 Dado el directorio de miembros, cuando el usuario accede, entonces se muestran los E2E
+   368→   867→   867→9 miembros con sus metadatos.
+   369→   868→   868→CA-027 RF-05 Dado el directorio, cuando el usuario filtra por nivel Avanzado, entonces solo se E2E
+   370→   869→   869→0 muestran miembros avanzados.
+   371→   870→   870→CA-028 RF-05 Dado un período semanal cerrado, cuando el sistema calcula el leaderboard, entonces se Unit
+   372→   871→   871→4 muestran los 100 miembros con más XP.
+   373→   872→   872→CA-029 RF-05 Dado el leaderboard, cuando se visualiza, entonces el top 3 se muestra con medallas Manual
+   374→   873→   873→5 oro/plata/bronce.
+   375→   874→   874→CA-030 RF-05 Dado lunes 00:00 UTC-4, cuando se ejecuta la Cloud Function scheduled, entonces el Unit
+   376→   875→   875→6 leaderboard se reinicia y se archiva el anterior.
+   377→   876→   876→CA-031 RF-05 Dado un Miembro que publica un post, cuando la Cloud Function onPostCreate se Unit
+   378→   877→   877→8 ejecuta, entonces se otorgan 25 XP.
+   379→   878→   878→CA-032 RF-05 Dado un usuario con avatar + presentación + 1 interés, cuando se completa el perfil, Unit
+   380→   879→   879→9 entonces la misión "Completa tu perfil" se marca como completada.
+   381→   880→   880→CA-033 RF-06 Dado un post con nuevo comentario, cuando la Cloud Function onCommentCreate se Unit
+   382→   881→   881→3 ejecuta, entonces se genera una notificación in-app para el autor.
+   383→   882→   882→CA-034 RF-06 Dado notificaciones no leídas, cuando el usuario abre la app, entonces la campana E2E
+   384→   883→   883→4 muestra un badge con el conteo.
+   385→   884→   884→AutoDev — Especificación de Requisitos de Software v1.0 // page 29
+   386→   885→   885→
+   387→   886→   886→=== PAGE 31 ===
+   388→   887→   887→ID RF Criterio Verificación
+   389→   888→   888→CA-035 RF-06 Dado notificaciones no leídas, cuando el usuario pulsa "marcar todas como leídas", E2E
+   390→   889→   889→5 entonces el badge desaparece.
+   391→   890→   890→CA-036 RF-06 Dado un usuario con suscripción push activa, cuando ocurre un evento notificable, Manual
+   392→   891→   891→6 entonces recibe push vía FCM.
+   393→   892→   892→CA-037 RF-06 Dado un Miembro sin rol admin, cuando intenta acceder a /admin, entonces es E2E
+   394→   893→   893→8 redirigido a /foro.
+   395→   894→   894→CA-038 RF-06 Dado un Admin, cuando cambia el rol de un usuario a Moderador, entonces el usuario E2E
+   396→   895→   895→9 afectado gana permisos de moderación.
+   397→   896→   896→CA-039 RF-07 Dado un Moderador, cuando oculta un post, entonces el post desaparece del foro E2E
+   398→   897→   897→0 público y se registra en audit_logs.
+   399→   898→   898→CA-040 RF-07 Dado un Admin, cuando suspende a un usuario por 7 días, entonces el usuario no puede E2E
+   400→   899→   899→1 publicar durante ese período.
+   401→   900→   900→Cobertura: Se definen 40 criterios de aceptación clave que cubren los 11 módulos. El método de
+   402→   901→   901→verificación E2E cubre 26 criterios, Unit cubre 9 y Manual cubre 5. La matriz de trazabilidad completa (RF
+   403→   902→   902→→ CU → CA → Escenario BDD) se encuentra en el Apéndice B.
+   404→   903→   903→AutoDev — Especificación de Requisitos de Software v1.0 // page 30
+   405→   904→   904→
+   406→   905→   905→=== PAGE 32 ===
+   407→   906→   906→Capítulo 7 — Escenarios de Prueba
+   408→   907→   907→Automatizables (BDD)
+   409→   908→   908→Este capítulo presenta los escenarios BDD escritos en lenguaje Gherkin (Given/When/Then) que automatizan la
+   410→   909→   909→verificación de los criterios de aceptación definidos en el Capítulo 6. Cada escenario es ejecutable con Cucumber.js
+   411→   910→   910→sobre Node.js usando el Firebase Emulator Suite como entorno de pruebas. Los tags @smoke, @regression y
+   412→   911→   911→@critical permiten segmentar la ejecución en el pipeline CI/CD: @smoke corre en cada push, @regression corre en
+   413→   912→   912→cada pull request y @critical corre antes de cada despliegue a producción.
+   414→   913→   913→7.1 Feature: Autenticación
+   415→   914→   914→AutoDev — Especificación de Requisitos de Software v1.0 // page 31
+   416→   915→   915→
+   417→   916→   916→=== PAGE 33 ===
+   418→   917→   917→@smoke @critical
+   419→   918→   918→Feature: Autenticación de usuarios
+   420→   919→   919→Como usuario invitado
+   421→   920→   920→Quiero poder registrarme e iniciar sesión
+   422→   921→   921→Para participar en la comunidad AutoDev
+   423→   922→   922→Scenario: Registro exitoso con email y contraseña válidos
+   424→   923→   923→Given un invitado en la página "/registro"
+   425→   924→   924→And no existe una cuenta con email "ana@dev.com"
+   426→   925→   925→When completa el email "ana@dev.com"
+   427→   926→   926→And completa la contraseña "SecurePass123"
+   428→   927→   927→And confirma la contraseña "SecurePass123"
+   429→   928→   928→And pulsa el botón "crear_cuenta"
+   430→   929→   929→Then se crea una cuenta en Firebase Auth con email "ana@dev.com"
+   431→   930→   930→And se crea un documento en /users con status "onboarding_pending"
+   432→   931→   931→And se envía un email de verificación
+   433→   932→   932→And el usuario es redirigido a "/onboarding/paso-1"
+   434→   933→   933→Scenario: Registro fallido por email duplicado
+   435→   934→   934→Given un invitado en la página "/registro"
+   436→   935→   935→And ya existe una cuenta con email "ana@dev.com"
+   437→   936→   936→When completa el email "ana@dev.com"
+   438→   937→   937→And completa la contraseña "SecurePass123"
+   439→   938→   938→And confirma la contraseña "SecurePass123"
+   440→   939→   939→And pulsa el botón "crear_cuenta"
+   441→   940→   940→Then se muestra el mensaje "Ya existe una cuenta con este email"
+   442→   941→   941→And se muestra un enlace a "/login"
+   443→   942→   942→Scenario: Registro fallido por contraseña corta
+   444→   943→   943→Given un invitado en la página "/registro"
+   445→   944→   944→When completa el email "ana@dev.com"
+   446→   945→   945→And completa la contraseña "abc"
+   447→   946→   946→And pulsa el botón "crear_cuenta"
+   448→   947→   947→Then se muestra el mensaje "Mínimo 8 caracteres" junto al campo contraseña
+   449→   948→   948→And no se crea ninguna cuenta en Firebase Auth
+   450→   949→   949→@regression
+   451→   950→   950→Scenario: Login exitoso con credenciales válidas
+   452→   951→   951→Given un usuario con email "ana@dev.com" y contraseña "SecurePass123"
+   453→   952→   952→When el usuario navega a "/login"
+   454→   953→   953→And completa el email "ana@dev.com"
+   455→   954→   954→And completa la contraseña "SecurePass123"
+   456→   955→   955→And pulsa el botón "iniciar_sesion"
+   457→   956→   956→Then se establece la sesión del usuario
+   458→   957→   957→And se redirige a "/foro"
+   459→   958→   958→Scenario: Bloqueo tras 5 intentos fallidos de login
+   460→   959→   959→Given un usuario con email "ana@dev.com" y contraseña "SecurePass123"
+   461→   960→   960→When el usuario intenta iniciar sesión 5 veces con contraseña incorrecta "WrongPass"
+   462→   961→   961→Then la cuenta se bloquea por 15 minutos
+   463→   962→   962→And se muestra el mensaje "Demasiados intentos. Intenta nuevamente en 15 minutos"
+   464→   963→   963→7.2 Feature: Onboarding
+   465→   964→   964→AutoDev — Especificación de Requisitos de Software v1.0 // page 32
+   466→   965→   965→
+   467→   966→   966→=== PAGE 34 ===
+   468→   967→   967→@smoke
+   469→   968→   968→Feature: Onboarding de perfil
+   470→   969→   969→Como nuevo miembro
+   471→   970→   970→Quiero completar mi perfil guiadamente
+   472→   971→   971→Para personalizar mi experiencia y presentarme a la comunidad
+   473→   972→   972→Scenario: Onboarding completo en 4 pasos
+   474→   973→   973→Given un usuario recién registrado con status "onboarding_pending"
+   475→   974→   974→When el usuario es redirigido a "/onboarding/paso-1"
+   476→   975→   975→And completa el nombre "Ana Martínez"
+   477→   976→   976→And pulsa "continuar"
+   478→   977→   977→Then avanza al paso 2
+   479→   978→   978→When selecciona los intereses "Automatización" e "IA"
+   480→   979→   979→And pulsa "continuar"
+   481→   980→   980→Then avanza al paso 3
+   482→   981→   981→When selecciona el nivel "Intermedio"
+   483→   982→   982→And pulsa "continuar"
+   484→   983→   983→Then avanza al paso 4
+   485→   984→   984→When escribe la presentación "Soy Ana, llevo una tienda online y quiero automatizar con IA"
+   486→   985→   985→And pulsa "guardar_perfil && continuar"
+   487→   986→   986→Then se actualiza el documento /users/{uid} con status "active"
+   488→   987→   987→And se otorgan 50 XP al usuario
+   489→   988→   988→And se publica un post automático en /posts con tag "presentacion"
+   490→   989→   989→And el usuario es redirigido a "/foro"
+   491→   990→   990→Scenario: Validación de nombre corto en paso 1
+   492→   991→   991→Given un usuario en "/onboarding/paso-1"
+   493→   992→   992→When completa el nombre "A"
+   494→   993→   993→Then el botón "continuar" está deshabilitado
+   495→   994→   994→And se muestra "Mínimo 2 caracteres"
+   496→   995→   995→Scenario: Validación de presentación corta en paso 4
+   497→   996→   996→Given un usuario en "/onboarding/paso-4"
+   498→   997→   997→When escribe la presentación "Hola"
+   499→   998→   998→And pulsa "guardar_perfil && continuar"
+   500→   999→   999→Then se muestra "La presentación debe tener al menos 20 caracteres"
+
+[showing lines 1-500 of 1463; use offset=501 with limit to continue reading]
