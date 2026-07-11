@@ -5,6 +5,9 @@ import { useAppStore } from '@/stores/app-store';
 import { createResourceInFirestore, incrementDownloadCountFirestore } from '@/lib/firestore-sync';
 import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import Markdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { ResourceType, ResourceLevel, Resource } from '@/types/autodev';
 
 import { Button } from '@/components/ui/button';
@@ -276,6 +279,7 @@ function CreateResourceDialog({
       coverUrl,
       externalUrl: externalUrl.trim() || null,
       downloadsCount: 0,
+      viewsCount: 0,
       favoritesCount: 0,
       upvotes: 0,
       isFavorited: false,
@@ -491,6 +495,13 @@ function ResourceDetail({ resourceId, onBack }: { resourceId: string; onBack: ()
 
   const isAuthorized = currentUser && (AUTHORIZED_EMAILS.includes(currentUser.email) || currentUser.role === 'admin');
 
+  // Increment view count on mount
+  useEffect(() => {
+    if (resource) {
+      incrementViewCount(resource.resourceId);
+    }
+  }, [resource?.resourceId]);
+
   const handleStartEdit = () => {
     if (!resource) return;
     setEditTitle(resource.title);
@@ -575,8 +586,49 @@ function ResourceDetail({ resourceId, onBack }: { resourceId: string; onBack: ()
               <span>📄</span>
               <span>$ cat ./contenido</span>
             </div>
-            <div className="prose prose-invert max-w-none">
-              <div className="text-gray-300 leading-relaxed whitespace-pre-line">{resource.content || 'Sin contenido adicional.'}</div>
+            <div className="markdown-content">
+              <Markdown
+                components={{
+                  h1: ({ children }) => <h1 className="text-2xl font-bold text-white mb-4 mt-6">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-xl font-bold text-white mb-3 mt-5">{children}</h2>,
+                  h3: ({ children }) => <h3 className="text-lg font-semibold text-white mb-2 mt-4">{children}</h3>,
+                  p: ({ children }) => <p className="text-gray-300 leading-relaxed mb-4">{children}</p>,
+                  ul: ({ children }) => <ul className="list-disc list-inside text-gray-300 mb-4 space-y-1">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal list-inside text-gray-300 mb-4 space-y-1">{children}</ol>,
+                  li: ({ children }) => <li className="text-gray-300">{children}</li>,
+                  a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#10B981] hover:underline">{children}</a>,
+                  blockquote: ({ children }) => <blockquote className="border-l-4 border-[#10B981] bg-[#10B981]/5 pl-4 py-2 my-4 text-gray-300">{children}</blockquote>,
+                  code: ({ className, children, ...props }) => {
+                    const match = /language-(\w+)/.exec(className || '');
+                    const codeString = String(children).replace(/\n$/, '');
+                    if (match) {
+                      return (
+                        <div className="my-4 rounded-lg overflow-hidden border border-white/10">
+                          <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/10">
+                            <span className="text-xs font-mono text-gray-500">{match[1]}</span>
+                          </div>
+                          <SyntaxHighlighter style={oneDark} language={match[1]} PreTag="div" className="!m-0 !bg-[#0a0f1a]">
+                            {codeString}
+                          </SyntaxHighlighter>
+                        </div>
+                      );
+                    }
+                    return <code className="bg-white/10 text-[#10B981] px-1.5 py-0.5 rounded text-sm font-mono" {...props}>{children}</code>;
+                  },
+                  pre: ({ children }) => <pre className="my-0">{children}</pre>,
+                  strong: ({ children }) => <strong className="text-white font-semibold">{children}</strong>,
+                  em: ({ children }) => <em className="text-gray-200 italic">{children}</em>,
+                  hr: () => <hr className="border-white/10 my-6" />,
+                  table: ({ children }) => <div className="overflow-x-auto my-4"><table className="w-full border-collapse">{children}</table></div>,
+                  thead: ({ children }) => <thead className="bg-white/5">{children}</thead>,
+                  tbody: ({ children }) => <tbody className="divide-y divide-white/10">{children}</tbody>,
+                  tr: ({ children }) => <tr className="border-b border-white/10">{children}</tr>,
+                  th: ({ children }) => <th className="px-4 py-2 text-left text-sm font-semibold text-white">{children}</th>,
+                  td: ({ children }) => <td className="px-4 py-2 text-sm text-gray-300">{children}</td>,
+                }}
+              >
+                {resource.content || 'Sin contenido adicional.'}
+              </Markdown>
             </div>
           </div>
 
@@ -664,11 +716,11 @@ function ResourceDetail({ resourceId, onBack }: { resourceId: string; onBack: ()
           {/* Stats */}
           <div className="grid grid-cols-2 gap-3">
             <div className="border border-white/10 rounded-xl p-4 text-center bg-white/5">
-              <p className="text-2xl font-bold text-white">{resource.downloadsCount}</p>
+              <p className="text-2xl font-bold text-white">{resource.downloadsCount || 0}</p>
               <p className="text-[10px] font-mono text-gray-500 mt-1">↓ DESCARGAS</p>
             </div>
             <div className="border border-white/10 rounded-xl p-4 text-center bg-white/5">
-              <p className="text-2xl font-bold text-white">{resource.favoritesCount || 0}</p>
+              <p className="text-2xl font-bold text-white">{resource.viewsCount || 0}</p>
               <p className="text-[10px] font-mono text-gray-500 mt-1">👁 VISTAS</p>
             </div>
           </div>

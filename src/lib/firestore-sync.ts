@@ -332,6 +332,24 @@ export async function createResourceInFirestore(resource: any) {
   }
 }
 
+export async function incrementViewCount(resourceId: string) {
+  if (!db) return;
+  try {
+    await updateDoc(doc(db, 'resources', resourceId), {
+      viewsCount: increment(1),
+    });
+  } catch (e: any) {
+    // If viewsCount field doesn't exist, initialize it
+    try {
+      await updateDoc(doc(db, 'resources', resourceId), {
+        viewsCount: 1,
+      });
+    } catch (e2: any) {
+      console.warn('Error al contar vistas:', e2?.message || e2);
+    }
+  }
+}
+
 export async function deletePostFromFirestore(postId: string) {
   if (!db) return;
   try {
