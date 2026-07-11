@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
           {
             // Allows Firebase Auth popup to communicate with parent window
             key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin-allow-popups',
+            value: 'unsafe-none',
           },
         ],
       },
