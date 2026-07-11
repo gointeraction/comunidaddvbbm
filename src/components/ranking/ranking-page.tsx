@@ -34,8 +34,24 @@ function getWeekRange() {
 
 // ── Component ────────────────────────────────────────────
 export default function RankingPage() {
-  const { currentUser, ranking, gamificationConfig } = useAppStore();
+  const { currentUser, users, gamificationConfig } = useAppStore();
   const userLevel = currentUser ? getLevelForXP(currentUser.xp) : 1;
+
+  const ranking = useMemo(() => {
+    return [...users]
+      .sort((a, b) => (b.weeklyXP || 0) - (a.weeklyXP || 0))
+      .map((user, idx) => ({
+        uid: user.uid,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+        xp: user.weeklyXP || 0,
+        rank: idx + 1,
+        level: user.level,
+        postsCount: user.postsCount || 0,
+        commentsCount: user.commentsCount || 0,
+      }));
+  }, [users]);
+
   const userRank = currentUser ? ranking.find(r => r.uid === currentUser.uid) : null;
 
   const top3 = useMemo(() => ranking.slice(0, 3), [ranking]);
@@ -81,7 +97,7 @@ export default function RankingPage() {
         {/* Left: Podium + List */}
         <div className="lg:col-span-2 space-y-6">
           {/* Podium */}
-          {podiumOrder.length >= 3 && (
+          {podiumOrder.length > 0 && (
             <div className="flex items-end justify-center gap-4 pt-4">
               {podiumOrder.map((entry) => {
                 const isCenter = entry.rank === 1;

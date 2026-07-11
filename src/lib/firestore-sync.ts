@@ -64,8 +64,9 @@ export async function initFirestoreSync() {
 
   try {
     const postsSnap = await getDocs(collection(db, 'posts'));
-    if (postsSnap.empty) {
-      console.info('>[Firestore Sync] Colección posts vacía. Sembrando datos en Firestore...');
+    const coursesSnap = await getDocs(collection(db, 'courses'));
+    if (postsSnap.empty || coursesSnap.empty) {
+      console.info('>[Firestore Sync] Colección posts o courses vacía. Sembrando datos en Firestore...');
       await seedFirestoreData();
     } else {
       console.info('>[Firestore Sync] Conectando escuchas en tiempo real con Firestore...');
