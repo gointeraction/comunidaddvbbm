@@ -208,6 +208,25 @@ function FeatureCard({
 export default function LandingPage() {
   const { navigate, counters } = useAppStore();
 
+  // Nav scroll effect
+  useEffect(() => {
+    const nav = document.getElementById('landing-nav');
+    if (!nav) return;
+
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        nav.classList.add('bg-gray-950/85', 'backdrop-blur-md', 'border-b', 'border-white/10');
+        nav.classList.remove('bg-transparent');
+      } else {
+        nav.classList.remove('bg-gray-950/85', 'backdrop-blur-md', 'border-b', 'border-white/10');
+        nav.classList.add('bg-transparent');
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const counterItems: { key: keyof Counters; label: string }[] = [
     { key: 'developersCount', label: 'developers' },
     { key: 'postsCount', label: 'posts' },
@@ -373,26 +392,6 @@ export default function LandingPage() {
           {'// BBMDev v2.0 — built for developers, by developers'}
         </p>
       </footer>
-
-      {/* Nav scroll effect */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            const nav = document.getElementById('landing-nav');
-            if (nav) {
-              window.addEventListener('scroll', () => {
-                if (window.scrollY > 20) {
-                  nav.classList.add('bg-gray-950/85', 'backdrop-blur-md', 'border-b', 'border-white/10');
-                  nav.classList.remove('bg-transparent');
-                } else {
-                  nav.classList.remove('bg-gray-950/85', 'backdrop-blur-md', 'border-b', 'border-white/10');
-                  nav.classList.add('bg-transparent');
-                }
-              });
-            }
-          `,
-        }}
-      />
     </div>
   );
 }
