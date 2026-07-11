@@ -1,21 +1,23 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { useAppStore } from '@/stores/app-store';
 import LandingPage from '@/components/landing/landing-page';
-import AuthPages from '@/components/auth/auth-pages';
-import OnboardingWizard from '@/components/onboarding/onboarding-wizard';
-import { AppHeader } from '@/components/layout/app-header';
-import ForumPage from '@/components/forum/forum-page';
-import ResourcesPage from '@/components/resources/resources-page';
-import CoursesPage from '@/components/courses/courses-page';
-import MembersPage from '@/components/members/members-page';
-import RankingPage from '@/components/ranking/ranking-page';
-import GamificationPage from '@/components/gamification/gamification-page';
-import { ProfilePage } from '@/components/profile/profile-page';
-import { DirectosPage } from '@/components/directos/directos-page';
-import { NotificationsPage } from '@/components/notifications/notifications-page';
-import { AdminPage } from '@/components/admin/admin-page';
+
+// Lazy-loaded page components (code splitting)
+const AuthPages = lazy(() => import('@/components/auth/auth-pages'));
+const OnboardingWizard = lazy(() => import('@/components/onboarding/onboarding-wizard'));
+const ForumPage = lazy(() => import('@/components/forum/forum-page'));
+const ResourcesPage = lazy(() => import('@/components/resources/resources-page'));
+const CoursesPage = lazy(() => import('@/components/courses/courses-page'));
+const MembersPage = lazy(() => import('@/components/members/members-page'));
+const RankingPage = lazy(() => import('@/components/ranking/ranking-page'));
+const GamificationPage = lazy(() => import('@/components/gamification/gamification-page'));
+const ProfilePage = lazy(() => import('@/components/profile/profile-page').then(m => ({ default: m.ProfilePage })));
+const DirectosPage = lazy(() => import('@/components/directos/directos-page').then(m => ({ default: m.DirectosPage })));
+const NotificationsPage = lazy(() => import('@/components/notifications/notifications-page').then(m => ({ default: m.NotificationsPage })));
+const AdminPage = lazy(() => import('@/components/admin/admin-page').then(m => ({ default: m.AdminPage })));
+const AppHeader = lazy(() => import('@/components/layout/app-header').then(m => ({ default: m.AppHeader })));
 
 function LoadingScreen() {
   return (
@@ -49,7 +51,7 @@ function AppRouter() {
       case 'login':
       case 'registro':
       case 'recuperar-contrasena':
-        return <AuthPages />;
+        return <Suspense fallback={<LoadingScreen />}><AuthPages /></Suspense>;
       default:
         return <LandingPage />;
     }
@@ -57,28 +59,28 @@ function AppRouter() {
 
   // Onboarding gate
   if (currentUser.status === 'onboarding_pending') {
-    return <OnboardingWizard />;
+    return <Suspense fallback={<LoadingScreen />}><OnboardingWizard /></Suspense>;
   }
 
   // Protected routes
   const routeMap: Record<string, React.ReactNode> = {
-    foro: <ForumPage />,
-    'foro-detalle': <ForumPage />,
-    recursos: <ResourcesPage />,
-    'recurso-detalle': <ResourcesPage />,
-    cursos: <CoursesPage />,
-    directos: <DirectosPage />,
-    miembros: <MembersPage />,
-    'miembro-perfil': <MembersPage />,
-    ranking: <RankingPage />,
-    gamificacion: <GamificationPage />,
-    perfil: <ProfilePage />,
-    'perfil-editar': <ProfilePage />,
-    notificaciones: <NotificationsPage />,
-    admin: currentUser.role === 'admin' ? <AdminPage /> : <ForumPage />,
+    foro: <Suspense fallback={<LoadingScreen />}><ForumPage /></Suspense>,
+    'foro-detalle': <Suspense fallback={<LoadingScreen />}><ForumPage /></Suspense>,
+    recursos: <Suspense fallback={<LoadingScreen />}><ResourcesPage /></Suspense>,
+    'recurso-detalle': <Suspense fallback={<LoadingScreen />}><ResourcesPage /></Suspense>,
+    cursos: <Suspense fallback={<LoadingScreen />}><CoursesPage /></Suspense>,
+    directos: <Suspense fallback={<LoadingScreen />}><DirectosPage /></Suspense>,
+    miembros: <Suspense fallback={<LoadingScreen />}><MembersPage /></Suspense>,
+    'miembro-perfil': <Suspense fallback={<LoadingScreen />}><MembersPage /></Suspense>,
+    ranking: <Suspense fallback={<LoadingScreen />}><RankingPage /></Suspense>,
+    gamificacion: <Suspense fallback={<LoadingScreen />}><GamificationPage /></Suspense>,
+    perfil: <Suspense fallback={<LoadingScreen />}><ProfilePage /></Suspense>,
+    'perfil-editar': <Suspense fallback={<LoadingScreen />}><ProfilePage /></Suspense>,
+    notificaciones: <Suspense fallback={<LoadingScreen />}><NotificationsPage /></Suspense>,
+    admin: currentUser.role === 'admin' ? <Suspense fallback={<LoadingScreen />}><AdminPage /></Suspense> : <Suspense fallback={<LoadingScreen />}><ForumPage /></Suspense>,
   };
 
-  const pageContent = routeMap[route] || <ForumPage />;
+  const pageContent = routeMap[route] || <Suspense fallback={<LoadingScreen />}><ForumPage /></Suspense>;
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
