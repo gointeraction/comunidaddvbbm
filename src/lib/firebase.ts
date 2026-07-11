@@ -5,12 +5,13 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, type Auth, type UserCrede
 import { getFirestore, type Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyMockKeyForDev_ChangeInProduction',
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyD4uLwlcwt2JENrN9sTgApMSJZwHpRud5k',
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'bbmdevcomunidad.firebaseapp.com',
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'bbmdevcomunidad',
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'bbmdevcomunidad.firebasestorage.app',
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '628294517431',
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:628294517431:web:bbmdevcomunidad',
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:628294517431:web:cc3d1fc2439ba2e3018332',
+  measurementId: 'G-BWM8G384VC',
 };
 
 let app: FirebaseApp;

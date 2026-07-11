@@ -47,7 +47,7 @@ interface AppState {
   currentUser: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => boolean;
-  loginWithGoogle: (googleUser?: { email: string; displayName: string; avatarUrl?: string }) => void;
+  loginWithGoogle: (googleUser?: { uid?: string; email: string; displayName: string; avatarUrl?: string }) => void;
   register: (email: string, password: string) => boolean;
   logout: () => void;
   completeOnboarding: (data: { displayName: string; interests: string[]; level: string; bio: string }) => void;
@@ -102,13 +102,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   loginWithGoogle: (googleUser) => {
     const defaultGoogleUser = {
+      uid: googleUser?.uid || ('u-google-' + Date.now()),
       email: googleUser?.email || 'dev.google@bbmdev.dev',
       displayName: googleUser?.displayName || 'Google Developer',
       avatarUrl: googleUser?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     };
     const newUser: User = {
       ...CURRENT_USER,
-      uid: 'u-google-' + Date.now(),
+      uid: defaultGoogleUser.uid,
       email: defaultGoogleUser.email,
       displayName: defaultGoogleUser.displayName,
       avatarUrl: defaultGoogleUser.avatarUrl,
