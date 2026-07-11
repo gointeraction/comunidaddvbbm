@@ -384,8 +384,8 @@ function CreateResourceDialog({
               {/* Miniatura */}
               <div className="space-y-2">
                 <label className="text-sm font-mono text-[#10B981]">Miniatura</label>
-                <input ref={coverInputRef} type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
-                <button onClick={() => coverInputRef.current?.click()} className="w-full border-2 border-dashed border-white/20 rounded-lg py-6 flex flex-col items-center gap-2 hover:border-[#10B981]/40 hover:bg-[#10B981]/5 transition-all cursor-pointer">
+                <label className="w-full border-2 border-dashed border-white/20 rounded-lg py-6 flex flex-col items-center gap-2 hover:border-[#10B981]/40 hover:bg-[#10B981]/5 transition-all cursor-pointer">
+                  <input type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
                   {coverPreview ? (
                     <img src={coverPreview} alt="Preview" className="w-full h-32 object-cover rounded-lg" />
                   ) : (
@@ -394,7 +394,7 @@ function CreateResourceDialog({
                       <span className="text-xs text-gray-400">Click para subir imagen</span>
                     </>
                   )}
-                </button>
+                </label>
               </div>
 
               {/* Tags */}
