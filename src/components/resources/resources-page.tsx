@@ -138,11 +138,14 @@ function ResourceCard({
       </div>
 
       <CardContent className="p-4">
-        {/* Title & description */}
-        <h3 className="font-semibold text-sm text-foreground mb-1.5 leading-snug line-clamp-2">
+        {/* Title (clickable link) */}
+        <h3
+          onClick={() => navigate('recurso-detalle', { resourceId: resource.resourceId })}
+          className="font-semibold text-sm text-white mb-1.5 leading-snug line-clamp-2 cursor-pointer hover:text-[#10B981] transition-colors"
+        >
           {resource.title}
         </h3>
-        <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 mb-3">
+        <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-3">
           {resource.description}
         </p>
 
@@ -154,16 +157,16 @@ function ResourceCard({
           >
             {resource.level}
           </Badge>
-          <span className="text-[10px] text-muted-foreground truncate">
+          <span className="text-[10px] text-gray-500 truncate">
             por {resource.authorName}
           </span>
         </div>
 
-        <Separator className="mb-3 bg-border/50" />
+        <Separator className="mb-3 bg-white/10" />
 
         {/* Stats & action */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 text-xs text-gray-500">
             <span className="flex items-center gap-1">
               <Download className="size-3.5" />
               {resource.downloadsCount}
@@ -174,12 +177,8 @@ function ResourceCard({
             </span>
           </div>
           <button
-            onClick={() =>
-              navigate('recurso-detalle', {
-                resourceId: resource.resourceId,
-              })
-            }
-            className="text-xs text-primary hover:underline cursor-pointer terminal-text"
+            onClick={() => navigate('recurso-detalle', { resourceId: resource.resourceId })}
+            className="text-xs text-[#10B981] hover:underline cursor-pointer font-mono"
           >
             ./ver
           </button>
