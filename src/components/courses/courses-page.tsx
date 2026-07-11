@@ -196,13 +196,8 @@ function CourseDetail({
 
   function handleEnroll() {
     if (!course) return;
-    useAppStore.setState((prev) => ({
-      courses: prev.courses.map((c) =>
-        c.courseId === courseId
-          ? { ...c, isEnrolled: true, enrolledCount: c.enrolledCount + 1 }
-          : c
-      ),
-    }));
+    // RF-030: Enroll in course via Firestore
+    useAppStore.getState().enrollInCourse(courseId);
     // Auto-select first lesson
     if (lessons.length > 0 && !selectedLessonId) {
       setSelectedLessonId(lessons[0].lessonId);
@@ -210,6 +205,8 @@ function CourseDetail({
   }
 
   function handleToggleComplete(lessonId: string) {
+      // RF-031: Mark lesson complete via Firestore
+      useAppStore.getState().markLessonCompleteInCourse(courseId, lessonId);
       useAppStore.getState().markLessonCompleted(courseId, lessonId);
       setLocalLessons((prev) => {
         const courseLessons = prev[courseId] || [];

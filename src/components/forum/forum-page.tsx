@@ -190,13 +190,16 @@ function PostCard({ post }: { post: Post }) {
 
 // ── Post Detail ────────────────────────────────────────
 function PostDetail() {
-  const { posts, routeParams, navigate, createComment, likePost, likeComment } =
+  const { posts, routeParams, navigate, createComment, likePost, likeComment, editPost, deleteOwnPost, currentUser } =
     useAppStore();
   const postId = routeParams.postId || '';
   const post = posts.find((p) => p.postId === postId);
   const [commentText, setCommentText] = useState('');
   const [localComments, setLocalComments] = useState<Comment[]>([]);
   const [localLikes, setLocalLikes] = useState<Record<string, boolean>>({});
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
 
   function handleSubmitComment() {
     if (!commentText.trim() || !postId) return;
@@ -334,7 +337,69 @@ function PostDetail() {
               <MessageSquare className="size-4" />
               {post.commentsCount}
             </span>
+
+            {/* RF-020/021: Edit/Delete buttons for author */}
+            {currentUser && currentUser.uid === post.authorId && (
+              <div className="flex items-center gap-2 ml-auto">
+                <button
+                  onClick={() => {
+                    setEditTitle(post.title);
+                    setEditContent(post.content);
+                    setIsEditing(true);
+                  }}
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm('¿Eliminar este post?')) {
+                      deleteOwnPost(post.postId);
+                      navigate('foro');
+                    }
+                  }}
+                  className="text-xs text-muted-foreground hover:text-red-400 transition-colors cursor-pointer"
+                >
+                  Eliminar
+                </button>
+              </div>
+            )}
           </div>
+
+          {/* Edit Form */}
+          {isEditing && (
+            <div className="mt-4 p-4 rounded-lg border border-primary/30 bg-primary/5 space-y-3">
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Título"
+                className="bg-secondary/50 border-border/50"
+              />
+              <Textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                placeholder="Contenido"
+                rows={4}
+                className="bg-secondary/50 border-border/50 resize-none"
+              />
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    editPost(post.postId, editTitle, editContent, post.tags);
+                    setIsEditing(false);
+                  }}
+                  disabled={!editTitle.trim() || !editContent.trim()}
+                  className="bg-primary text-primary-foreground"
+                >
+                  Guardar
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)}>
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -40,6 +40,10 @@ import {
   changeRoleInFirestore,
   claimXPInFirestore,
   markLessonCompletedInFirestore,
+  editPostInFirestore,
+  deleteOwnPostFromFirestore,
+  enrollInCourseFirestore,
+  markLessonCompleteFirestore,
   initFirestoreSync,
 } from '@/lib/firestore-sync';
 import {
@@ -79,6 +83,8 @@ interface AppState {
   posts: Post[];
   selectedPostId: string | null;
   createPost: (title: string, content: string, tags: string[]) => void;
+  editPost: (postId: string, title: string, content: string, tags: string[]) => void;
+  deleteOwnPost: (postId: string) => void;
   likePost: (postId: string) => void;
   createComment: (postId: string, content: string) => void;
   likeComment: (postId: string, commentId: string) => void;
@@ -107,6 +113,8 @@ interface AppState {
   changeUserRole: (uid: string, newRole: string) => void;
   claimMissionReward: (missionId: string, xpReward: number) => void;
   markLessonCompleted: (courseId: string, lessonId: string) => void;
+  enrollInCourse: (courseId: string) => void;
+  markLessonCompleteInCourse: (courseId: string, lessonId: string) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -287,6 +295,22 @@ export const useAppStore = create<AppState>((set, get) => ({
     createPostInFirestore(newPost);
     set({ posts: [newPost, ...get().posts] });
   },
+  // RF-020: Edit post (within 30 min)
+  editPost: (postId, title, content, tags) => {
+    editPostInFirestore(postId, { title, content, tags });
+    const posts = get().posts.map(p =>
+      p.postId === postId ? { ...p, title, content, tags, updatedAt: new Date().toISOString() } : p
+    );
+    set({ posts });
+  },
+  // RF-021: Delete own post
+  deleteOwnPost: (postId) => {
+    const user = get().currentUser;
+    const post = get().posts.find(p => p.postId === postId);
+    if (!user || !post || post.authorId !== user.uid) return;
+    deleteOwnPostFromFirestore(postId);
+    set({ posts: get().posts.filter(p => p.postId !== postId) });
+  },
   likePost: (postId) => {
     const post = get().posts.find(p => p.postId === postId);
     if (post) {
@@ -397,5 +421,23 @@ export const useAppStore = create<AppState>((set, get) => ({
     markLessonCompletedInFirestore(user.uid, newCompleted);
     const updatedUser = { ...user, completedLessons: newCompleted } as any;
     set({ currentUser: updatedUser });
+  },
+
+  // RF-030: Enroll in course (Firestore)
+  enrollInCourse: (courseId) => {
+    const user = get().currentUser;
+    if (!user) return;
+    enrollInCourseFirestore(courseId, user.uid);
+    const courses = get().courses.map(c =>
+      c.courseId === courseId ? { ...c, isEnrolled: true, enrolledCount: c.enrolledCount + 1 } : c
+    );
+    set({ courses });
+  },
+
+  // RF-031: Mark lesson complete in course (Firestore)
+  markLessonCompleteInCourse: (courseId, lessonId) => {
+    const user = get().currentUser;
+    if (!user) return;
+    markLessonCompleteFirestore(courseId, lessonId, user.uid);
   },
 }));

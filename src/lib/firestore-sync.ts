@@ -141,6 +141,20 @@ export async function initFirestoreSync() {
       },
       () => {}
     );
+
+    // RF-LAND-02: Suscribirse a counters
+    onSnapshot(
+      collection(db, 'counters'),
+      (snap) => {
+        const docs = snap.docs.map((d) => d.data() as any);
+        if (docs.length > 0) {
+          // Merge all counter documents
+          const merged = docs.reduce((acc, d) => ({ ...acc, ...d }), {});
+          useAppStore.setState({ counters: merged });
+        }
+      },
+      () => {}
+    );
   } catch (error: any) {
     console.warn('>[Firestore Sync] Aviso al conectar (usando estado local hasta reconectar):', error?.message || error);
   }
@@ -293,5 +307,77 @@ export async function markLessonCompletedInFirestore(uid: string, completedLesso
     await updateDoc(doc(db, 'users', uid), { completedLessons });
   } catch (e: any) {
     console.warn('Error al guardar lección completada en Firestore:', e?.message || e);
+  }
+}
+
+// ── RF-020: Edit Post (within 30 min) ──────────────────
+export async function editPostInFirestore(postId: string, data: { title: string; content: string; tags: string[] }) {
+  if (!db) return;
+  try {
+    await updateDoc(doc(db, 'posts', postId), {
+      ...data,
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (e: any) {
+    console.warn('Error al editar post en Firestore:', e?.message || e);
+  }
+}
+
+// ── RF-021: Delete Own Post ────────────────────────────
+export async function deleteOwnPostFromFirestore(postId: string) {
+  if (!db) return;
+  try {
+    await deleteDoc(doc(db, 'posts', postId));
+  } catch (e: any) {
+    console.warn('Error al eliminar post en Firestore:', e?.message || e);
+  }
+}
+
+// ── RF-030: Enroll in Course ───────────────────────────
+export async function enrollInCourseFirestore(courseId: string, userId: string) {
+  if (!db) return;
+  try {
+    await setDoc(doc(db, `courses/${courseId}/enrollments`, userId), {
+      userId,
+      enrolledAt: new Date().toISOString(),
+    });
+    await updateDoc(doc(db, 'courses', courseId), {
+      enrolledCount: increment(1),
+    });
+  } catch (e: any) {
+    console.warn('Error al inscribirse en curso:', e?.message || e);
+  }
+}
+
+// ── RF-031: Mark Lesson Complete ───────────────────────
+export async function markLessonCompleteFirestore(courseId: string, lessonId: string, userId: string) {
+  if (!db) return;
+  try {
+    await setDoc(doc(db, `courses/${courseId}/lessons/${lessonId}/completions`, userId), {
+      userId,
+      completedAt: new Date().toISOString(),
+    });
+  } catch (e: any) {
+    console.warn('Error al marcar lección completada:', e?.message || e);
+  }
+}
+
+// ── RF-LAND-02: Update Counters ────────────────────────
+export async function updateCountersFirestore(field: string, delta: number = 1) {
+  if (!db) return;
+  try {
+    await updateDoc(doc(db, 'counters', 'global'), {
+      [field]: increment(delta),
+    });
+  } catch (e: any) {
+    // If counters doc doesn't exist, create it
+    try {
+      await setDoc(doc(db, 'counters', 'global'), {
+        developersCount: 0, postsCount: 0, commentsCount: 0, coursesCount: 0, resourcesCount: 0,
+        [field]: increment(delta),
+      });
+    } catch (e2: any) {
+      console.warn('Error al actualizar contadores:', e2?.message || e2);
+    }
   }
 }

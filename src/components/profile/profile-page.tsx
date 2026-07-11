@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { AvatarInitials } from '@/components/autodev/avatar-initials';
 import { useAppStore } from '@/stores/app-store';
+import { uploadAvatar } from '@/lib/firebase';
 import type { Interest, ExperienceLevel } from '@/types/autodev';
 
 const ALL_INTERESTS: Interest[] = ['automatizacion', 'ia', 'webapps', 'comunidad'];
@@ -231,6 +232,8 @@ function ProfileEdit() {
   const [interests, setInterests] = useState<Interest[]>(currentUser?.interests || []);
   const [level, setLevel] = useState<ExperienceLevel>(currentUser?.level || 'principiante');
   const [avatarPreview, setAvatarPreview] = useState<string | null>(currentUser?.avatarUrl || null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const toggleInterest = (i: Interest) => {
     setInterests((prev) =>
@@ -238,24 +241,48 @@ function ProfileEdit() {
     );
   };
 
+  // RF-016: Avatar upload with Firebase Storage
   const handleAvatarChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
+        // Validate file type and size (max 2MB)
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+          alert('Solo se permiten archivos JPG, PNG o WebP');
+          return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+          alert('El archivo no puede superar 2MB');
+          return;
+        }
         const url = URL.createObjectURL(file);
         setAvatarPreview(url);
+        setAvatarFile(file);
       }
     },
     []
   );
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    let avatarUrl = avatarPreview || undefined;
+
+    // Upload avatar to Firebase Storage if a new file was selected
+    if (avatarFile && currentUser) {
+      setUploading(true);
+      try {
+        avatarUrl = await uploadAvatar(currentUser.uid, avatarFile);
+      } catch (err) {
+        console.warn('Error uploading avatar:', err);
+      }
+      setUploading(false);
+    }
+
     updateProfile({
       displayName,
       bio,
       interests,
       level,
-      avatarUrl: avatarPreview || undefined,
+      avatarUrl,
     });
     navigate('perfil');
   };
@@ -388,7 +415,8 @@ function ProfileEdit() {
 
           {/* Actions */}
           <div className="flex gap-3">
-            <Button onClick={handleSave} className="bg-[#10B981] text-background hover:bg-[#10B981]/90">
+            <Button onClick={handleSave} disabled={uploading} className="bg-[#10B981] text-background hover:bg-[#10B981]/90">
+              {uploading ? 'Subiendo...' : 'Guardar cambios'}
               <Terminal className="size-4" />
               Guardar cambios
             </Button>

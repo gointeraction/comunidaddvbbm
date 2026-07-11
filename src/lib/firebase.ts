@@ -3,6 +3,7 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, signOut, updateProfile, onAuthStateChanged, type Auth, type UserCredential } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, serverTimestamp, type Firestore } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL, type FirebaseStorage } from 'firebase/storage';
 import type { User } from '@/types/autodev';
 
 const firebaseConfig = {
@@ -18,14 +19,16 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
+let storage: FirebaseStorage;
 
 if (typeof window !== 'undefined') {
   app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
   auth = getAuth(app);
   db = getFirestore(app);
+  storage = getStorage(app);
 }
 
-export { app, auth, db };
+export { app, auth, db, storage };
 
 // ── Auth State Observer ──────────────────────────────
 export function onAuthChange(callback: (user: import('firebase/auth').User | null) => void) {
@@ -152,4 +155,12 @@ export async function resetPassword(email: string) {
 // ── Logout ────────────────────────────────────────────
 export async function logoutFirebase() {
   await signOut(auth);
+}
+
+// ── Avatar Upload ─────────────────────────────────────
+export async function uploadAvatar(uid: string, file: File): Promise<string> {
+  const storageRef = ref(storage, `avatars/${uid}/${file.name}`);
+  const snapshot = await uploadBytes(storageRef, file);
+  const downloadURL = await getDownloadURL(snapshot.ref);
+  return downloadURL;
 }
