@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Clock, Users, Video, Radio, Calendar, Send, MessageSquare, X, Lock, Plus, Edit3, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Clock, Users, Video, Radio, Calendar, Lock, Plus, Edit3, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -11,8 +11,7 @@ import { AvatarInitials } from '@/components/autodev/avatar-initials';
 import type { LiveStatus } from '@/types/autodev';
 import { useAppStore } from '@/stores/app-store';
 import { db } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc } from 'firebase/firestore';
-import { sendLiveChatMessageInFirestore } from '@/lib/firestore-sync';
+import { collection, addDoc, updateDoc, doc } from 'firebase/firestore';
 
 // ── Authorized emails ──
 const AUTHORIZED_EMAILS = ['jibohorquez@gmail.com', 'c.moreno.mvv@gmail.com'];
@@ -73,44 +72,13 @@ function YouTubePlayer({ videoId }: { videoId: string }) {
 // Live Room Modal
 // ══════════════════════════════════════════════════════════════
 function LiveRoomModal({ open, onClose, session }: { open: boolean; onClose: () => void; session: any }) {
-  const { currentUser } = useAppStore();
-  const [messages, setMessages] = useState<any[]>([]);
-  const [newMsg, setNewMsg] = useState('');
-  const chatRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open || !session?.liveId) return;
-    const q = query(collection(db, `liveSessions/${session.liveId}/chat`), orderBy('createdAt', 'asc'));
-    const unsub = onSnapshot(q, (snap) => {
-      setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
-    return () => unsub();
-  }, [open, session?.liveId]);
-
-  useEffect(() => {
-    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
-  }, [messages]);
-
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMsg.trim() || !session?.liveId) return;
-    await sendLiveChatMessageInFirestore(session.liveId, {
-      id: `msg-${Date.now()}`,
-      userId: currentUser?.uid,
-      userName: currentUser?.displayName || 'Anónimo',
-      text: newMsg.trim(),
-      createdAt: new Date().toISOString(),
-    });
-    setNewMsg('');
-  };
-
   if (!open) return null;
 
   const youTubeId = session?.streamUrl ? extractYouTubeId(session.streamUrl) : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-      <div className="w-full max-w-5xl bg-[#0a0f1a] border border-white/10 rounded-xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="w-full max-w-4xl bg-[#0a0f1a] border border-white/10 rounded-xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0f172a]">
           <div className="flex items-center gap-2">
@@ -120,48 +88,20 @@ function LiveRoomModal({ open, onClose, session }: { open: boolean; onClose: () 
           <button onClick={onClose} className="text-gray-500 hover:text-white cursor-pointer">✕</button>
         </div>
 
-        <div className="flex-1 flex overflow-hidden">
-          {/* Video/Stream */}
-          <div className="flex-1 bg-black flex items-center justify-center min-h-[300px]">
-            {youTubeId ? (
-              <YouTubePlayer videoId={youTubeId} />
-            ) : session?.streamUrl ? (
-              <a href={session.streamUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[#10B981] hover:underline">
-                <ExternalLink className="size-4" /> Abrir stream en YouTube
-              </a>
-            ) : (
-              <div className="text-center text-gray-600">
-                <Radio className="size-12 mx-auto mb-2 opacity-30" />
-                <p className="text-sm font-mono">Esperando transmisión...</p>
-              </div>
-            )}
-          </div>
-
-          {/* Chat */}
-          <div className="w-80 border-l border-white/10 flex flex-col bg-[#0a0f1a]">
-            <div className="px-3 py-2 border-b border-white/10">
-              <span className="text-xs font-mono text-gray-400">💬 Chat en vivo</span>
+        {/* Video/Stream */}
+        <div className="flex-1 bg-black flex items-center justify-center min-h-[400px]">
+          {youTubeId ? (
+            <YouTubePlayer videoId={youTubeId} />
+          ) : session?.streamUrl ? (
+            <a href={session.streamUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[#10B981] hover:underline">
+              <ExternalLink className="size-4" /> Abrir stream en YouTube
+            </a>
+          ) : (
+            <div className="text-center text-gray-600">
+              <Radio className="size-12 mx-auto mb-2 opacity-30" />
+              <p className="text-sm font-mono">Esperando transmisión...</p>
             </div>
-            <div ref={chatRef} className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
-              {messages.map((msg) => (
-                <div key={msg.id} className="text-sm">
-                  <span className="font-mono text-[#10B981] text-xs">{msg.userName}: </span>
-                  <span className="text-gray-300">{msg.text}</span>
-                </div>
-              ))}
-            </div>
-            <form onSubmit={handleSend} className="p-3 border-t border-white/10 flex gap-2">
-              <Input
-                value={newMsg}
-                onChange={(e) => setNewMsg(e.target.value)}
-                placeholder="Escribe un mensaje..."
-                className="h-9 text-xs bg-white/5 border-white/10 focus:border-[#10B981]"
-              />
-              <Button type="submit" size="icon" className="size-9 bg-[#10B981] hover:bg-[#10B981]/90 text-black shrink-0 cursor-pointer">
-                <Send className="size-4" />
-              </Button>
-            </form>
-          </div>
+          )}
         </div>
       </div>
     </div>
@@ -242,20 +182,15 @@ function SessionCard({ session, onEdit }: { session: any; onEdit: (s: any) => vo
           {/* Actions */}
           <div className="flex gap-2 pt-1">
             {session.status === 'live' ? (
-              <Button size="sm" onClick={() => setRoomOpen(true)} className="flex-1 bg-red-500 hover:bg-red-600 text-white font-mono text-xs cursor-pointer">
-                <Video className="size-3.5 mr-1 animate-pulse" /> Unirse
+              <Button size="sm" onClick={() => setRoomOpen(true)} className="w-full bg-red-500 hover:bg-red-600 text-white font-mono text-xs cursor-pointer">
+                <Video className="size-3.5 mr-1 animate-pulse" /> Unirse al directo
               </Button>
             ) : session.status === 'scheduled' ? (
-              <>
-                <Button size="sm" variant={registered ? 'outline' : 'default'} onClick={() => setRegistered(!registered)} className={`flex-1 font-mono text-xs cursor-pointer ${registered ? 'border-[#10B981]/40 text-[#10B981] bg-[#10B981]/10' : 'bg-[#10B981] text-black hover:bg-[#10B981]/90'}`}>
-                  {registered ? '✓ Registrado' : 'Registrarse'}
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => setRoomOpen(true)} className="font-mono text-xs border-white/10 text-gray-400 hover:border-[#10B981]/40 hover:text-[#10B981] cursor-pointer">
-                  <MessageSquare className="size-3.5 mr-1" /> Chat
-                </Button>
-              </>
+              <Button size="sm" variant={registered ? 'outline' : 'default'} onClick={() => setRegistered(!registered)} className={`w-full font-mono text-xs cursor-pointer ${registered ? 'border-[#10B981]/40 text-[#10B981] bg-[#10B981]/10' : 'bg-[#10B981] text-black hover:bg-[#10B981]/90'}`}>
+                {registered ? '✓ Registrado' : 'Registrarse'}
+              </Button>
             ) : (
-              <Button size="sm" disabled className="flex-1 font-mono text-xs opacity-50">Finalizada</Button>
+              <Button size="sm" disabled className="w-full font-mono text-xs opacity-50">Finalizada</Button>
             )}
           </div>
         </div>
