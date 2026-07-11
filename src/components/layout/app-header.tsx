@@ -1,57 +1,30 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Menu, Bell, Zap, ChevronRight, Terminal, PanelLeftOpen, PanelLeftClose } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Bell, MessageSquare, BookOpen, Package, Radio, Users, Trophy, Shield, Target, Settings } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { useAppStore } from '@/stores/app-store';
 import type { Route } from '@/types/autodev';
 
 /* -------------------------------------------------------------------------- */
-/*  Route → breadcrumb path mapping                                           */
+/*  Navigation links                                                          */
 /* -------------------------------------------------------------------------- */
 
-interface RoutePathEntry {
+interface NavLink {
   label: string;
-  paramKey?: string;
+  route: Route;
+  icon: React.ElementType;
 }
 
-const ROUTE_PATHS: Partial<Record<Route, RoutePathEntry[]>> = {
-  foro: [{ label: 'foro' }],
-  'foro-detalle': [
-    { label: 'foro' },
-    { label: 'post', paramKey: 'postId' },
-  ],
-  recursos: [{ label: 'recursos' }],
-  'recurso-detalle': [
-    { label: 'recursos' },
-    { label: 'recurso', paramKey: 'resourceId' },
-  ],
-  cursos: [{ label: 'cursos' }],
-  'curso-detalle': [
-    { label: 'cursos' },
-    { label: 'curso', paramKey: 'courseId' },
-  ],
-  leccion: [
-    { label: 'cursos' },
-    { label: 'leccion', paramKey: 'lessonId' },
-  ],
-  directos: [{ label: 'directos' }],
-  miembros: [{ label: 'miembros' }],
-  'miembro-perfil': [
-    { label: 'miembros' },
-    { label: 'perfil', paramKey: 'uid' },
-  ],
-  ranking: [{ label: 'ranking' }],
-  gamificacion: [{ label: 'gamificacion' }],
-  perfil: [{ label: 'perfil' }],
-  'perfil-editar': [{ label: 'perfil' }, { label: 'editar' }],
-  'mis-estadisticas': [{ label: 'perfil' }, { label: 'estadisticas' }],
-  notificaciones: [{ label: 'notificaciones' }],
-  admin: [{ label: 'admin' }],
-};
+const NAV_LINKS: NavLink[] = [
+  { label: 'foro', route: 'foro', icon: MessageSquare },
+  { label: 'cursos', route: 'cursos', icon: BookOpen },
+  { label: 'recursos', route: 'recursos', icon: Package },
+  { label: 'directos', route: 'directos', icon: Radio },
+  { label: 'miembros', route: 'miembros', icon: Users },
+  { label: 'ranking', route: 'ranking', icon: Trophy },
+];
 
 /* -------------------------------------------------------------------------- */
 /*  Helpers                                                                   */
@@ -67,6 +40,18 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
+function getLevelForXP(xp: number): number {
+  if (xp >= 5000) return 15;
+  if (xp >= 4000) return 13;
+  if (xp >= 3000) return 11;
+  if (xp >= 2000) return 9;
+  if (xp >= 1000) return 7;
+  if (xp >= 500) return 5;
+  if (xp >= 200) return 3;
+  if (xp >= 50) return 2;
+  return 1;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  AppHeader                                                                 */
 /* -------------------------------------------------------------------------- */
@@ -75,94 +60,85 @@ export function AppHeader() {
   const {
     isAuthenticated,
     route,
-    routeParams,
     currentUser,
     unreadCount,
     navigate,
-    toggleSidebar,
-    sidebarOpen,
   } = useAppStore();
 
-  const breadcrumbSegments = useMemo(() => {
-    const entries = ROUTE_PATHS[route];
-    if (!entries) return [];
-    return entries.map(entry => {
-      const suffix = entry.paramKey ? `/${routeParams[entry.paramKey] || ''}` : '';
-      return `${entry.label}${suffix}`;
-    });
-  }, [route, routeParams]);
+  const level = currentUser ? getLevelForXP(currentUser.xp) : 1;
 
   if (!isAuthenticated) return null;
 
   return (
-    <header
-      className={`
-        sticky top-0 z-30 flex h-14 items-center gap-3
-        border-b border-white/10 bg-gray-950/85 backdrop-blur-md px-4
-      `}
-    >
-      {/* ── Sidebar toggle (desktop & mobile) ── */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="size-8 text-gray-400 hover:text-gray-100 flex items-center justify-center transition-colors shrink-0"
-        onClick={toggleSidebar}
-        title={sidebarOpen ? 'Ocultar menú lateral' : 'Abrir menú lateral'}
-        aria-label={sidebarOpen ? 'Ocultar menú lateral' : 'Abrir menú lateral'}
+    <header className="sticky top-0 z-30 h-14 flex items-center gap-4 border-b border-white/10 bg-[#0a0a0a]/95 backdrop-blur-md px-4">
+      {/* ── Logo ── */}
+      <button
+        onClick={() => navigate('foro')}
+        className="flex items-center gap-2 shrink-0 cursor-pointer"
       >
-        {sidebarOpen ? (
-          <>
-            <PanelLeftClose className="size-5 hidden md:block" />
-            <Menu className="size-5 md:hidden" />
-          </>
-        ) : (
-          <PanelLeftOpen className="size-5 text-[#10B981]" />
-        )}
-      </Button>
-
-      {/* ── Logo (mobile) ── */}
-      <div className="flex items-center gap-2 md:hidden">
-        <div className="w-7 h-7 rounded-lg bg-gray-900 border border-[#10B981]/40 flex items-center justify-center shadow-[0_0_18px_rgba(16,185,129,0.25)]">
-          <Terminal className="w-3.5 h-3.5 text-[#10B981]" />
+        <div className="w-9 h-9 rounded-lg bg-[#10B981]/10 border border-[#10B981]/40 flex items-center justify-center">
+          <span className="text-[#10B981] font-bold text-sm font-mono">AD</span>
         </div>
-      </div>
+        <div className="hidden sm:flex flex-col leading-none">
+          <span className="text-white font-semibold text-sm font-mono tracking-tight">AutoDev_</span>
+          <span className="text-gray-500 text-[10px] font-mono uppercase tracking-widest">Community</span>
+        </div>
+      </button>
 
-      {/* ── Breadcrumb route path ── */}
-      <div className="terminal-text hidden md:flex items-center gap-1.5 min-w-0 flex-1">
-        <span className="text-[#10B981] font-semibold text-sm">$</span>
-        <span className="text-[#10B981] font-semibold text-sm">bbmdev</span>
-        <span className="text-gray-500">~</span>
-        <span className="text-[#34D399] text-sm truncate">
-          /{breadcrumbSegments.join('/')}
-        </span>
-        <span className="animate-blink text-[#10B981] text-sm hidden sm:inline">▊</span>
-      </div>
+      {/* ── Navigation Links ── */}
+      <nav className="hidden md:flex items-center gap-1 flex-1">
+        {NAV_LINKS.map((link) => {
+          const isActive = route === link.route || route === `${link.route}-detalle`;
+          const Icon = link.icon;
+          return (
+            <button
+              key={link.route}
+              onClick={() => navigate(link.route)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all cursor-pointer ${
+                isActive
+                  ? 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+              }`}
+            >
+              <Icon className="size-3.5" />
+              <span className="font-mono text-xs">{link.label}</span>
+            </button>
+          );
+        })}
+      </nav>
 
-      {/* ── Right section ── */}
-      <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+      {/* ── Right Section ── */}
+      <div className="flex items-center gap-3 ml-auto">
         {/* Notification bell */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative size-8 text-gray-400 hover:text-gray-100"
+        <button
           onClick={() => navigate('notificaciones')}
+          className="relative p-1.5 rounded-md text-gray-400 hover:text-gray-200 hover:bg-white/5 transition-colors cursor-pointer"
           aria-label={`Notificaciones${unreadCount > 0 ? ` (${unreadCount} sin leer)` : ''}`}
         >
-          <Bell className="size-4" />
+          <Bell className="size-4.5" />
           {unreadCount > 0 && (
-            <Badge className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] leading-none bg-terminal-red border-0 text-white rounded-full flex items-center justify-center">
+            <Badge className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 text-[9px] leading-none bg-[#EF4444] border-0 text-white rounded-full flex items-center justify-center font-bold">
               {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>
           )}
-        </Button>
+        </button>
 
-        <Separator orientation="vertical" className="h-5 bg-white/10" />
-
-        {/* XP badge */}
+        {/* Level & XP indicator */}
         {currentUser && (
-          <div className="hidden sm:flex items-center gap-1.5 text-xs text-gray-400 px-2 py-1 rounded-lg bg-gray-950/80 border border-white/10">
-            <Zap className="size-3 text-[#FBBF24]" />
-            <span className="terminal-text">{currentUser.xp.toLocaleString()} XP</span>
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+              <span className="text-xs font-mono text-gray-300">
+                Lvl {level} <span className="text-gray-500">•</span> <span className="text-[#10B981]">{currentUser.weeklyXP}xp</span>
+              </span>
+            </div>
+            {/* XP progress bar */}
+            <div className="w-16 h-1.5 rounded-full bg-gray-700 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-[#10B981] transition-all"
+                style={{ width: `${Math.min((currentUser.weeklyXP / 500) * 100, 100)}%` }}
+              />
+            </div>
           </div>
         )}
 
@@ -170,14 +146,14 @@ export function AppHeader() {
         {currentUser && (
           <button
             onClick={() => navigate('perfil')}
-            className="rounded-full transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-[#10B981] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111827]"
+            className="rounded-full transition-opacity hover:opacity-80 cursor-pointer"
             aria-label="Ir a perfil"
           >
-            <Avatar className="size-7 border border-white/10">
+            <Avatar className="size-8 border-2 border-[#10B981]">
               {currentUser.avatarUrl ? (
                 <AvatarImage src={currentUser.avatarUrl} alt={currentUser.displayName} />
               ) : null}
-              <AvatarFallback className="bg-[#10B981]/15 text-[#10B981] text-[10px] font-semibold">
+              <AvatarFallback className="bg-[#10B981] text-white text-xs font-bold font-mono">
                 {getInitials(currentUser.displayName || 'U')}
               </AvatarFallback>
             </Avatar>

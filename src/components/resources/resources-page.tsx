@@ -519,21 +519,6 @@ export default function ResourcesPage() {
     currentUser?.role === 'moderador' ||
     currentUser?.role === 'admin';
 
-  // Resource detail view
-  if (route === 'recurso-detalle') {
-    const resourceId = useAppStore.getState().routeParams.resourceId || '';
-    return (
-      <div className="space-y-1">
-        <div className="terminal-text text-xs mb-4">
-          <span className="terminal-prompt">bbmdev</span>{' '}
-          <span className="terminal-path">~/recursos</span>{' '}
-          <span className="terminal-comment">— {resourceId}</span>
-        </div>
-        <ResourceDetail resourceId={resourceId} onBack={() => navigate('recursos')} />
-      </div>
-    );
-  }
-
   const filteredResources = useMemo(() => {
     return resources.filter((r) => {
       if (activeType !== 'All' && r.type !== activeType) return false;
@@ -549,6 +534,21 @@ export default function ResourcesPage() {
       return true;
     });
   }, [resources, activeType, activeLevel, searchText]);
+
+  // Resource detail view
+  if (route === 'recurso-detalle') {
+    const resourceId = useAppStore.getState().routeParams.resourceId || '';
+    return (
+      <div className="space-y-1">
+        <div className="terminal-text text-xs mb-4">
+          <span className="terminal-prompt">bbmdev</span>{' '}
+          <span className="terminal-path">~/recursos</span>{' '}
+          <span className="terminal-comment">— {resourceId}</span>
+        </div>
+        <ResourceDetail resourceId={resourceId} onBack={() => navigate('recursos')} />
+      </div>
+    );
+  }
 
   function toggleFavorite(resourceId: string) {
     const r = resources.find(x => x.resourceId === resourceId);
