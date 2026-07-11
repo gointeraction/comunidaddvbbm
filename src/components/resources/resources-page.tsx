@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useAppStore } from '@/stores/app-store';
-import { createResourceInFirestore, incrementDownloadCountFirestore } from '@/lib/firestore-sync';
+import { createResourceInFirestore, incrementDownloadCountFirestore, incrementViewCount } from '@/lib/firestore-sync';
 import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Markdown from 'react-markdown';
