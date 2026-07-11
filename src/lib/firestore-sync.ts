@@ -81,33 +81,41 @@ export async function initFirestoreSync() {
   isSyncInitialized = true;
 
   try {
-    const postsSnap = await getDocs(query(collection(db, 'posts'), limit(100)));
-    const coursesSnap = await getDocs(query(collection(db, 'courses'), limit(100)));
-    if (postsSnap.empty || coursesSnap.empty) {
-      console.info('>[Firestore Sync] Colección posts o courses vacía. Sembrando datos en Firestore...');
+    // Quick check: just see if posts collection has any docs (minimal read)
+    const postsCheck = await getDocs(query(collection(db, 'posts'), limit(1)));
+    if (postsCheck.empty) {
+      console.info('>[Firestore Sync] Sembrando datos iniciales...');
       await seedFirestoreData();
-    } else {
-      console.info('>[Firestore Sync] Conectando escuchas en tiempo real con Firestore...');
     }
 
-    // Suscribirse a posts
-    unsubscribers.push(onSnapshot(
-      query(collection(db, 'posts'), orderBy('createdAt', 'desc')),
-      (snap) => {
-        const posts = snap.docs.map((d) => d.data() as any);
-        if (posts.length > 0) useAppStore.setState({ posts });
-      },
-      (err) => console.warn('>[Firestore Sync] Posts snapshot err:', err.message)
-    ));
+    // Only subscribe to essential collections on initial load
+    // Defer non-essential listeners (missions, achievements, counters)
+    const essentialCollections = [
+      { name: 'posts', limit: 50 },
+      { name: 'resources', limit: 50 },
+      { name: 'courses', limit: 50 },
+      { name: 'liveSessions', limit: 20 },
+      { name: 'notifications', limit: 50 },
+    ];
 
-    // Suscribirse a users
+    for (const col of essentialCollections) {
+      unsubscribers.push(onSnapshot(
+        query(collection(db, col.name), limit(col.limit)),
+        (snap) => {
+          const data = snap.docs.map((d) => d.data() as any);
+          if (data.length > 0) useAppStore.setState({ [col.name]: data });
+        },
+        () => {}
+      ));
+    }
+
+    // Users listener (lighter - only sync current user)
     unsubscribers.push(onSnapshot(
       collection(db, 'users'),
       (snap) => {
         const users = snap.docs.map((d) => d.data() as any);
         if (users.length > 0) {
           useAppStore.setState({ users });
-          // Sincronizar currentUser con datos actualizados de Firestore
           const { currentUser } = useAppStore.getState();
           if (currentUser) {
             const updated = users.find((u: any) => u.uid === currentUser.uid);
@@ -115,117 +123,44 @@ export async function initFirestoreSync() {
           }
         }
       },
-      (err) => console.warn('>[Firestore Sync] Users snapshot err:', err.message)
-    ));
-
-    // Suscribirse a courses
-    unsubscribers.push(onSnapshot(
-      collection(db, 'courses'),
-      (snap) => {
-        const courses = snap.docs.map((d) => d.data() as any);
-        if (courses.length > 0) useAppStore.setState({ courses });
-      },
-      (err) => console.warn('>[Firestore Sync] Courses err:', err.message)
-    ));
-
-    // Suscribirse a resources
-    unsubscribers.push(onSnapshot(
-      collection(db, 'resources'),
-      (snap) => {
-        const resources = snap.docs.map((d) => d.data() as any);
-        if (resources.length > 0) useAppStore.setState({ resources });
-      },
-      (err) => console.warn('>[Firestore Sync] Resources err:', err.message)
-    ));
-
-    // Suscribirse a liveSessions
-    unsubscribers.push(onSnapshot(
-      collection(db, 'liveSessions'),
-      (snap) => {
-        const liveSessions = snap.docs.map((d) => d.data() as any);
-        if (liveSessions.length > 0) useAppStore.setState({ liveSessions });
-      },
-      (err) => console.warn('>[Firestore Sync] LiveSessions err:', err.message)
-    ));
-
-    // Suscribirse a notifications
-    unsubscribers.push(onSnapshot(
-      collection(db, 'notifications'),
-      (snap) => {
-        const notifications = snap.docs.map((d) => d.data() as any);
-        if (notifications.length > 0) {
-          useAppStore.setState({
-            notifications,
-            unreadCount: notifications.filter((n: any) => !n.read).length,
-          });
-        }
-      },
-      (err) => console.warn('>[Firestore Sync] Notifications err:', err.message)
-    ));
-
-    // Suscribirse a missions & achievements
-    unsubscribers.push(onSnapshot(
-      collection(db, 'missions'),
-      (snap) => {
-        const missions = snap.docs.map((d) => d.data() as any);
-        if (missions.length > 0) useAppStore.setState({ missions });
-      },
       () => {}
     ));
 
-    unsubscribers.push(onSnapshot(
-      collection(db, 'achievements'),
-      (snap) => {
-        const achievements = snap.docs.map((d) => d.data() as any);
-        if (achievements.length > 0) useAppStore.setState({ achievements });
-      },
-      () => {}
-    ));
-
-    // RF-LAND-02: Suscribirse a counters
-    unsubscribers.push(onSnapshot(
-      collection(db, 'counters'),
-      (snap) => {
-        const docs = snap.docs.map((d) => d.data() as any);
-        if (docs.length > 0) {
-          // Merge all counter documents
-          const merged = docs.reduce((acc, d) => ({ ...acc, ...d }), {});
-          useAppStore.setState({ counters: merged });
-        }
-      },
-      () => {}
-    ));
-
-    // Suscribirse a live chat (per live session)
-    const livesSnap = await getDocs(collection(db, 'liveSessions'));
-    for (const liveDoc of livesSnap.docs) {
+    // Deferred: missions, achievements, counters (load after 2s)
+    setTimeout(() => {
       unsubscribers.push(onSnapshot(
-        collection(db, `liveSessions/${liveDoc.id}/chat`),
+        collection(db, 'missions'),
         (snap) => {
-          const messages = snap.docs.map((d) => ({ ...d.data(), liveId: liveDoc.id }));
-          if (messages.length > 0) {
-            const { chatMessages } = useAppStore.getState();
-            const others = chatMessages.filter((m: any) => m.liveId !== liveDoc.id);
-            useAppStore.setState({ chatMessages: [...others, ...messages] });
+          const missions = snap.docs.map((d) => d.data() as any);
+          if (missions.length > 0) useAppStore.setState({ missions });
+        },
+        () => {}
+      ));
+
+      unsubscribers.push(onSnapshot(
+        collection(db, 'achievements'),
+        (snap) => {
+          const achievements = snap.docs.map((d) => d.data() as any);
+          if (achievements.length > 0) useAppStore.setState({ achievements });
+        },
+        () => {}
+      ));
+
+      unsubscribers.push(onSnapshot(
+        collection(db, 'counters'),
+        (snap) => {
+          const docs = snap.docs.map((d) => d.data() as any);
+          if (docs.length > 0) {
+            const merged = docs.reduce((acc, d) => ({ ...acc, ...d }), {});
+            useAppStore.setState({ counters: merged });
           }
         },
         () => {}
       ));
-    }
+    }, 2000);
 
-    // Suscribirse a userAchievements
-    unsubscribers.push(onSnapshot(
-      collection(db, 'userAchievements'),
-      (snap) => {
-        const userAchievements = snap.docs.map((d) => d.data() as any);
-        if (userAchievements.length > 0) {
-          useAppStore.setState({ userAchievements } as any);
-        }
-      },
-      () => {}
-    ));
   } catch (error: any) {
-    console.warn('>[Firestore Sync] Aviso al conectar (usando estado local hasta reconectar):', error?.message || error);
+    console.warn('>[Firestore Sync] Error:', error?.message || error);
   }
 }
 
