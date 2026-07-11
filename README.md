@@ -2,7 +2,6 @@
 
 <div align="center">
 
-![BBMDev Logo](public/logo.svg)
 
 **Una comunidad moderna, gamificada y en tiempo real para desarrolladores de automatización, IA y desarrollo web.**
 
