@@ -488,6 +488,14 @@ function PostDetail() {
   );
 }
 
+// ── Category Config ──────────────────────────────────────
+const CATEGORIES = [
+  { id: 'automatizacion', label: 'automatizacion', icon: '🤖', color: 'bg-blue-500/20 border-blue-500/40' },
+  { id: 'ia', label: 'ia', icon: '🧠', color: 'bg-purple-500/20 border-purple-500/40' },
+  { id: 'webapps', label: 'webapps', icon: '💻', color: 'bg-cyan-500/20 border-cyan-500/40' },
+  { id: 'general', label: 'general', icon: '💬', color: 'bg-gray-500/20 border-gray-500/40' },
+];
+
 // ── Create Post Dialog ─────────────────────────────────
 function CreatePostDialog({
   open,
@@ -497,12 +505,13 @@ function CreatePostDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const createPost = useAppStore((s) => s.createPost);
+  const resources = useAppStore((s) => s.resources);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [errors, setErrors] = useState<{ title?: string; content?: string }>(
-    {}
-  );
+  const [selectedCategory, setSelectedCategory] = useState<string>('general');
+  const [showResources, setShowResources] = useState(false);
+  const [errors, setErrors] = useState<{ title?: string; content?: string }>({});
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) => {
@@ -515,15 +524,17 @@ function CreatePostDialog({
   const handlePublish = () => {
     const newErrors: { title?: string; content?: string } = {};
     if (!title.trim()) newErrors.title = 'El título es obligatorio';
-    if (!content.trim()) newErrors.content = 'El contenido es obligatorio';
+    if (!content.trim() || content.length < 20) newErrors.content = 'Mínimo 20 caracteres';
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    createPost(title.trim(), content.trim(), selectedTags);
+    const tags = selectedCategory ? [selectedCategory, ...selectedTags] : selectedTags;
+    createPost(title.trim(), content.trim(), [...new Set(tags)]);
     setTitle('');
     setContent('');
     setSelectedTags([]);
+    setSelectedCategory('general');
     setErrors({});
     onOpenChange(false);
   };
@@ -532,114 +543,189 @@ function CreatePostDialog({
     setTitle('');
     setContent('');
     setSelectedTags([]);
+    setSelectedCategory('general');
     setErrors({});
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-card border-border/50 max-h-[90vh] overflow-y-auto custom-scrollbar">
-        <DialogHeader>
-          <DialogTitle className="terminal-text text-primary">
-            ~/nuevo-post
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4 mt-2">
-          {/* Title */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-sm text-muted-foreground">Título</label>
-              <span className="text-[10px] text-muted-foreground terminal-text">
-                {title.length}/100
-              </span>
+      <DialogContent className="sm:max-w-3xl bg-[#0f172a] border-white/10 max-h-[90vh] overflow-y-auto custom-scrollbar p-0">
+        {/* Terminal header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0a0f1a]">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-red-500" />
+              <div className="w-3 h-3 rounded-full bg-yellow-500" />
+              <div className="w-3 h-3 rounded-full bg-green-500" />
             </div>
-            <Input
-              value={title}
-              onChange={(e) => {
-                if (e.target.value.length <= 100) {
-                  setTitle(e.target.value);
-                  if (errors.title) setErrors((prev) => ({ ...prev, title: undefined }));
-                }
-              }}
-              placeholder="Título de tu publicación"
-              className="bg-secondary/50 border-border/50"
-            />
-            {errors.title && (
-              <p className="text-xs text-terminal-red">{errors.title}</p>
-            )}
+            <span className="text-xs font-mono text-gray-400">
+              autodev@community: <span className="text-gray-300">~/foro/new-post.sh</span>
+            </span>
           </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-[#10B981]">$ autodev post --create</span>
+            <button
+              onClick={handleCancel}
+              className="ml-2 text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
 
-          {/* Content */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-sm text-muted-foreground">Contenido</label>
-              <span className="text-[10px] text-muted-foreground terminal-text">
-                {content.length}/5000
-              </span>
+        {/* Content */}
+        <div className="p-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left column: Title + Content */}
+            <div className="space-y-5">
+              {/* Title */}
+              <div className="space-y-2">
+                <label className="text-sm font-mono text-[#10B981]">$ titulo</label>
+                <Input
+                  value={title}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 200) {
+                      setTitle(e.target.value);
+                      if (errors.title) setErrors((prev) => ({ ...prev, title: undefined }));
+                    }
+                  }}
+                  placeholder="> escribe un titulo claro y descriptivo..."
+                  className="bg-transparent border border-white/10 text-white placeholder:text-gray-600 font-mono text-sm focus:border-[#10B981]/50"
+                />
+                <div className="flex justify-end">
+                  <span className="text-[10px] font-mono text-gray-600">{title.length}/200</span>
+                </div>
+                {errors.title && (
+                  <p className="text-xs text-red-400">{errors.title}</p>
+                )}
+              </div>
+
+              {/* Content */}
+              <div className="space-y-2">
+                <label className="text-sm font-mono text-[#10B981]">$ contenido</label>
+                <div className="border border-white/10 rounded-lg overflow-hidden">
+                  {/* Toolbar */}
+                  <div className="flex items-center gap-1 px-3 py-2 border-b border-white/10 bg-white/5">
+                    <span className="text-xs text-gray-400 px-2">Normal</span>
+                    <div className="w-px h-4 bg-white/10 mx-1" />
+                    <button className="p-1 text-gray-400 hover:text-white transition-colors"><b>B</b></button>
+                    <button className="p-1 text-gray-400 hover:text-white transition-colors"><i>I</i></button>
+                    <button className="p-1 text-gray-400 hover:text-white transition-colors font-mono text-xs">&lt;/&gt;</button>
+                    <div className="w-px h-4 bg-white/10 mx-1" />
+                    <button className="p-1 text-gray-400 hover:text-white transition-colors">≡</button>
+                    <button className="p-1 text-gray-400 hover:text-white transition-colors">☰</button>
+                    <button className="p-1 text-gray-400 hover:text-white transition-colors">🔗</button>
+                  </div>
+                  <Textarea
+                    value={content}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 5000) {
+                        setContent(e.target.value);
+                        if (errors.content) setErrors((prev) => ({ ...prev, content: undefined }));
+                      }
+                    }}
+                    placeholder="Comparte tu conocimiento..."
+                    rows={8}
+                    className="bg-transparent border-0 text-white placeholder:text-gray-600 font-mono text-sm resize-none focus-visible:ring-0"
+                  />
+                </div>
+                <span className="text-[10px] font-mono text-gray-600">minimo 20 caracteres</span>
+                {errors.content && (
+                  <p className="text-xs text-red-400">{errors.content}</p>
+                )}
+              </div>
             </div>
-            <Textarea
-              value={content}
-              onChange={(e) => {
-                if (e.target.value.length <= 5000) {
-                  setContent(e.target.value);
-                  if (errors.content) setErrors((prev) => ({ ...prev, content: undefined }));
-                }
-              }}
-              placeholder="¿Qué estás construyendo hoy?"
-              rows={6}
-              className="bg-secondary/50 border-border/50 resize-none"
-            />
-            {errors.content && (
-              <p className="text-xs text-terminal-red">{errors.content}</p>
-            )}
-          </div>
 
-          {/* Tags */}
-          <div className="space-y-2">
-            <label className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <Tag className="size-3.5" />
-              Tags (máx. 3)
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {TAG_OPTIONS.map((tag) => {
-                const isSelected = selectedTags.includes(tag);
-                const isDisabled = !isSelected && selectedTags.length >= 3;
-                return (
-                  <button
-                    key={tag}
-                    onClick={() => !isDisabled && toggleTag(tag)}
-                    disabled={isDisabled}
-                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer border ${
-                      isSelected
-                        ? 'bg-primary/20 border-primary/50 text-primary'
-                        : isDisabled
-                          ? 'bg-secondary/30 border-border/30 text-muted-foreground/40 cursor-not-allowed'
-                          : 'bg-secondary/50 border-border/50 text-muted-foreground hover:border-primary/30 hover:text-primary/80'
-                    }`}
-                  >
-                    {TAG_LABELS[tag]}
+            {/* Right column: Categories + Attachments + Resources */}
+            <div className="space-y-5">
+              {/* Categories */}
+              <div className="space-y-2">
+                <label className="text-sm font-mono text-[#10B981]">$ categoria</label>
+                <div className="space-y-2">
+                  {CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border transition-all cursor-pointer ${
+                        selectedCategory === cat.id
+                          ? `${cat.color} border-current`
+                          : 'bg-white/5 border-white/10 hover:border-white/20'
+                      }`}
+                    >
+                      <span className="text-lg">{cat.icon}</span>
+                      <span className="text-sm font-mono text-gray-200">{cat.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Attachments */}
+              <div className="space-y-2">
+                <label className="text-sm font-mono text-[#10B981]">$ adjuntos</label>
+                <div className="space-y-2">
+                  <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-dashed border-white/20 bg-white/5 hover:border-[#10B981]/40 hover:bg-[#10B981]/5 transition-all cursor-pointer">
+                    <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+                      <span className="text-lg">🖼️</span>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm text-gray-300">subir imagen</p>
+                      <p className="text-[10px] text-gray-500 font-mono">max 5MB</p>
+                    </div>
                   </button>
-                );
-              })}
+                  <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-dashed border-white/20 bg-white/5 hover:border-[#10B981]/40 hover:bg-[#10B981]/5 transition-all cursor-pointer">
+                    <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+                      <span className="text-lg">📎</span>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm text-gray-300">adjuntar archivo</p>
+                      <p className="text-[10px] text-gray-500 font-mono">pdf, code, zip (max 10MB)</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Related Resources */}
+              <div className="space-y-2">
+                <button
+                  onClick={() => setShowResources(!showResources)}
+                  className="flex items-center gap-2 text-sm font-mono text-[#10B981] hover:text-[#34D399] transition-colors cursor-pointer"
+                >
+                  <span className="text-lg">📊</span>
+                  <span>recursos relacionados</span>
+                  <span className="ml-auto text-xs">{showResources ? '▲' : '▼'}</span>
+                </button>
+                {showResources && (
+                  <div className="space-y-1 max-h-40 overflow-y-auto custom-scrollbar">
+                    {resources.slice(0, 6).map((r) => (
+                      <label
+                        key={r.resourceId}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
+                      >
+                        <input type="checkbox" className="w-3.5 h-3.5 rounded border-white/20 bg-transparent accent-[#10B981]" />
+                        <span className="text-xs text-gray-300 truncate">{r.title}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-white/10">
             <Button
               variant="ghost"
               onClick={handleCancel}
-              className="flex-1"
+              className="text-gray-400 hover:text-white font-mono text-sm"
             >
-              Cancelar
+              cancelar
             </Button>
             <Button
               onClick={handlePublish}
-              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+              className="bg-[#10B981] text-gray-950 hover:bg-[#34D399] font-mono font-semibold px-6 py-2 rounded-xl shadow-[0_0_22px_rgba(16,185,129,0.4)]"
             >
-              <Plus className="size-4 mr-1.5" />
-              Publicar
+              <span className="mr-1">{'>'}</span> publicar
             </Button>
           </div>
         </div>
@@ -674,11 +760,23 @@ function ForumList() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeTag, setActiveTag] = useState('todos');
   const [searchText, setSearchText] = useState('');
+  const [sortBy, setSortBy] = useState<'recientes' | 'populares'>('recientes');
+  const [showFilters, setShowFilters] = useState(true);
   const [visibleCount, setVisibleCount] = useState(20);
   const PER_PAGE = 20;
 
+  // Count posts per tag
+  const tagCounts = useMemo(() => {
+    const counts: Record<string, number> = { todos: 0, automatizacion: 0, ia: 0, webapps: 0, general: 0 };
+    posts.filter(p => !p.hidden).forEach(p => {
+      counts.todos++;
+      p.tags.forEach(t => { if (t in counts) counts[t]++; });
+    });
+    return counts;
+  }, [posts]);
+
   const filteredPosts = useMemo(() => {
-    return posts.filter((p) => {
+    let filtered = posts.filter((p) => {
       if (p.hidden) return false;
       if (activeTag !== 'todos' && !p.tags.includes(activeTag)) return false;
       if (searchText.trim()) {
@@ -691,40 +789,39 @@ function ForumList() {
       }
       return true;
     });
-  }, [posts, activeTag, searchText]);
+
+    if (sortBy === 'populares') {
+      filtered = [...filtered].sort((a, b) => b.likesCount - a.likesCount);
+    }
+
+    return filtered;
+  }, [posts, activeTag, searchText, sortBy]);
 
   const visiblePosts = filteredPosts.slice(0, visibleCount);
   const hasMore = visibleCount < filteredPosts.length;
 
   const filterChips = [
-    'todos',
-    'automatizacion',
-    'ia',
-    'webapps',
-    'general',
+    { id: 'todos', label: 'todos', prefix: '*' },
+    { id: 'automatizacion', label: 'automatizacion', prefix: '~/' },
+    { id: 'ia', label: 'ia', prefix: '~/' },
+    { id: 'webapps', label: 'webapps', prefix: '~/' },
+    { id: 'general', label: 'general', prefix: '~/' },
   ] as const;
 
   return (
     <div className="space-y-5">
-      {/* Terminal header */}
-      <div className="terminal-text text-xs">
-        <span className="terminal-prompt">bbmdev</span>{' '}
-        <span className="terminal-path">~/foro</span>
-        <span className="animate-blink text-foreground">▋</span>
-      </div>
-
       {/* Post creation area */}
-      <Card className="glass-card border-border/50">
+      <Card className="border border-white/10 bg-white/5">
         <CardContent className="p-4">
           <div
             onClick={() => setDialogOpen(true)}
             className="flex items-center gap-3 cursor-pointer group"
           >
-            <div className="flex-1 flex items-center gap-2 text-muted-foreground group-hover:text-primary/70 transition-colors">
-              <span className="terminal-prompt">$</span>
-              <span className="text-sm">
-                ¿Qué estás construyendo hoy?
-              </span>
+            <div className="w-8 h-8 rounded-full bg-[#10B981]/20 flex items-center justify-center shrink-0">
+              <span className="text-[#10B981] text-sm font-bold font-mono">J</span>
+            </div>
+            <div className="flex-1 flex items-center gap-2 text-gray-500 group-hover:text-gray-400 transition-colors">
+              <span className="text-sm font-mono">{'>'} ¿qué estás construyendo hoy?</span>
             </div>
             <Button
               size="sm"
@@ -732,10 +829,9 @@ function ForumList() {
                 e.stopPropagation();
                 setDialogOpen(true);
               }}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+              className="bg-[#10B981] text-gray-950 hover:bg-[#34D399] shrink-0 rounded-xl"
             >
-              <Plus className="size-4 mr-1.5" />
-              Publicar
+              <Plus className="size-4" />
             </Button>
           </div>
         </CardContent>
@@ -743,49 +839,96 @@ function ForumList() {
 
       <CreatePostDialog open={dialogOpen} onOpenChange={setDialogOpen} />
 
-      {/* Filter bar */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        {/* Tag chips */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <Filter className="size-4 text-muted-foreground mr-1 shrink-0" />
-          {filterChips.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => setActiveTag(tag)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer border whitespace-nowrap ${
-                activeTag === tag
-                  ? 'bg-primary/20 border-primary/50 text-primary'
-                  : 'bg-secondary/50 border-border/50 text-muted-foreground hover:border-primary/30 hover:text-primary/80'
-              }`}
-            >
-              {TAG_LABELS[tag]}
-            </button>
-          ))}
+      {/* Header bar */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-mono text-[#10B981]">{filteredPosts.length} posts</span>
+          <span className="text-gray-600">•</span>
+          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+            <span className="text-green-500">◉</span>
+            <span className="font-mono">--{sortBy}</span>
+          </div>
         </div>
-
-        {/* Search */}
-        <div className="relative sm:ml-auto w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input
-            value={searchText}
-            onChange={(e) => {
-              setSearchText(e.target.value);
-              setVisibleCount(PER_PAGE);
-            }}
-            placeholder="Buscar..."
-            className="pl-9 bg-secondary/50 border-border/50 text-sm"
-          />
-        </div>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer text-sm text-gray-400 hover:text-gray-300"
+        >
+          <Filter className="size-3.5" />
+          <span className="font-mono text-xs">buscar / filtrar</span>
+          <span className="text-xs">{showFilters ? '▲' : '▼'}</span>
+        </button>
       </div>
+
+      {/* Filter section */}
+      {showFilters && (
+        <div className="space-y-3">
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-gray-500" />
+            <Input
+              value={searchText}
+              onChange={(e) => {
+                setSearchText(e.target.value);
+                setVisibleCount(PER_PAGE);
+              }}
+              placeholder="grep ~/foro..."
+              className="pl-11 bg-white/5 border border-white/10 text-white placeholder:text-gray-600 font-mono text-sm focus:border-[#10B981]/50"
+            />
+          </div>
+
+          {/* Sort dropdown */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSortBy(sortBy === 'recientes' ? 'populares' : 'recientes')}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer text-sm text-gray-400"
+            >
+              <span className="text-green-500">◉</span>
+              <span className="font-mono text-xs">--{sortBy}</span>
+              <span className="text-xs">▼</span>
+            </button>
+          </div>
+
+          {/* Category chips */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {filterChips.map((chip) => {
+              const count = tagCounts[chip.id] || 0;
+              const isActive = activeTag === chip.id;
+              return (
+                <button
+                  key={chip.id}
+                  onClick={() => setActiveTag(chip.id)}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-mono transition-all cursor-pointer border ${
+                    isActive
+                      ? 'bg-[#10B981] text-gray-950 border-[#10B981] font-semibold'
+                      : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20 hover:text-gray-300'
+                  }`}
+                >
+                  {chip.id === 'todos' ? (
+                    <span className={isActive ? 'text-gray-950' : 'text-[#10B981]'}>*</span>
+                  ) : (
+                    <span className={isActive ? 'text-gray-950' : 'text-gray-500'}>~/</span>
+                  )}
+                  <span>{chip.label}</span>
+                  {count > 0 && (
+                    <span className={`text-xs ${isActive ? 'text-gray-700' : 'text-gray-600'}`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Post list */}
       <div className="space-y-3">
         {visiblePosts.length === 0 ? (
           <div className="text-center py-16">
-            <p className="terminal-text text-muted-foreground text-sm">
-              No se encontraron publicaciones
+            <p className="text-gray-500 text-sm font-mono">
+              {'// no se encontraron posts'}
             </p>
-            <p className="terminal-text text-muted-foreground/50 text-xs mt-1">
+            <p className="text-gray-600 text-xs font-mono mt-1">
               Prueba con otros filtros o crea una nueva publicación
             </p>
           </div>
@@ -799,12 +942,10 @@ function ForumList() {
               <div className="flex justify-center pt-4">
                 <Button
                   variant="outline"
-                  onClick={() =>
-                    setVisibleCount((prev) => prev + PER_PAGE)
-                  }
-                  className="border-primary/30 text-primary hover:bg-primary/10 hover:text-primary"
+                  onClick={() => setVisibleCount((prev) => prev + PER_PAGE)}
+                  className="border-white/10 text-gray-400 hover:bg-white/5 hover:text-white font-mono text-xs"
                 >
-                  Cargar más
+                  {'>'} cargar más
                 </Button>
               </div>
             )}
