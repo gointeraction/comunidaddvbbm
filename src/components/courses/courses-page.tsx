@@ -76,9 +76,11 @@ function getCourseIcon(courseId: string, size = 'size-8') {
 function CourseCard({
   course,
   onOpenCourse,
+  onEditCourse,
 }: {
   course: Course;
   onOpenCourse: (courseId: string) => void;
+  onEditCourse?: (course: any) => void;
 }) {
   const gradient = COURSE_GRADIENTS[course.courseId] || 'from-cyan-900/40 to-blue-900/30';
 
@@ -105,6 +107,17 @@ function CourseCard({
             <CheckCircle2 className="size-3 mr-1" />
             Inscrito
           </Badge>
+        )}
+        {onEditCourse && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditCourse(course);
+            }}
+            className="absolute top-2 left-2 p-1.5 rounded-full bg-card/60 backdrop-blur-sm hover:bg-card/80 transition-colors text-gray-400 hover:text-[#10B981]"
+          >
+            <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+          </button>
         )}
       </div>
 
@@ -599,6 +612,9 @@ function CourseDetail({
   );
 }
 
+// ── Authorized emails for admin ──
+const AUTHORIZED_EMAILS = ['jibohorquez@gmail.com', 'c.moreno.mvv@gmail.com'];
+
 // ── Courses Page (main export) ──────────────────────────
 export default function CoursesPage() {
   const { route, navigate, courses } = useAppStore();
@@ -608,8 +624,24 @@ export default function CoursesPage() {
   const [courseDescription, setCourseDescription] = useState('');
   const [courseDuration, setCourseDuration] = useState('');
   const [courseExternalUrl, setCourseExternalUrl] = useState('');
+  const [editCourse, setEditCourse] = useState<any>(null);
 
-  const canCreate = currentUser?.role === 'autor' || currentUser?.role === 'admin';
+  const canCreate = currentUser?.role === 'admin' || (currentUser?.role === 'autor') || (currentUser && AUTHORIZED_EMAILS.includes(currentUser.email));
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editCourse) {
+      setCourseTitle(editCourse.title || '');
+      setCourseDescription(editCourse.description || '');
+      setCourseDuration(String(editCourse.durationMinutes || 60));
+      setCourseExternalUrl(editCourse.externalUrl || '');
+    } else {
+      setCourseTitle('');
+      setCourseDescription('');
+      setCourseDuration('');
+      setCourseExternalUrl('');
+    }
+  }, [editCourse]);
 
   async function handleCreateCourse() {
     if (!courseTitle.trim() || !courseDescription.trim()) return;
@@ -644,6 +676,36 @@ export default function CoursesPage() {
     setNewCourseOpen(false);
   }
 
+  async function handleUpdateCourse() {
+    if (!editCourse || !courseTitle.trim() || !courseDescription.trim()) return;
+    const duration = parseInt(courseDuration) || 60;
+    const { updateDoc, doc } = await import('firebase/firestore');
+    try {
+      await updateDoc(doc(db, 'courses', editCourse.courseId || editCourse.id), {
+        title: courseTitle.trim(),
+        description: courseDescription.trim(),
+        durationMinutes: duration,
+        externalUrl: courseExternalUrl.trim() || null,
+        updatedAt: new Date().toISOString(),
+      });
+      useAppStore.setState((prev) => ({
+        courses: prev.courses.map(c =>
+          (c.courseId || c.id) === (editCourse.courseId || editCourse.id)
+            ? { ...c, title: courseTitle.trim(), description: courseDescription.trim(), durationMinutes: duration, externalUrl: courseExternalUrl.trim() || null }
+            : c
+        ),
+      }));
+    } catch (e) {
+      console.warn('Error updating course:', e);
+    }
+    setCourseTitle('');
+    setCourseDescription('');
+    setCourseDuration('');
+    setCourseExternalUrl('');
+    setNewCourseOpen(false);
+    setEditCourse(null);
+  }
+
   // Course detail view
   if (route === 'curso-detalle' || route === 'leccion') {
     const courseId = useAppStore.getState().routeParams.courseId || '';
@@ -673,40 +735,40 @@ export default function CoursesPage() {
           <span className="animate-blink text-foreground">▋</span>
         </div>
         {canCreate && (
-          <Button size="sm" onClick={() => setNewCourseOpen(true)} className="bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button size="sm" onClick={() => setNewCourseOpen(true)} className="bg-[#10B981] text-gray-950 hover:bg-[#34D399] font-mono font-semibold rounded-xl shadow-[0_0_22px_rgba(16,185,129,0.4)]">
             <Plus className="size-4 mr-1.5" />
             Nuevo curso
           </Button>
         )}
       </div>
 
-      {/* RF-034: Create Course Dialog */}
-      <Dialog open={newCourseOpen} onOpenChange={setNewCourseOpen}>
-        <DialogContent className="sm:max-w-lg bg-card border-border/50">
+      {/* RF-034: Create/Edit Course Dialog */}
+      <Dialog open={newCourseOpen} onOpenChange={(open) => { setNewCourseOpen(open); if (!open) setEditCourse(null); }}>
+        <DialogContent className="sm:max-w-lg bg-[#0f172a] border-white/10">
           <DialogHeader>
-            <DialogTitle className="terminal-text text-primary">~/nuevo-curso</DialogTitle>
+            <DialogTitle className="font-mono text-lg text-white">{editCourse ? 'Editar Curso' : 'Nuevo Curso'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-1.5">
-              <label className="text-sm text-muted-foreground">Título</label>
-              <Input value={courseTitle} onChange={(e) => setCourseTitle(e.target.value)} placeholder="Nombre del curso" className="bg-secondary/50 border-border/50" />
+              <label className="text-sm font-mono text-[#10B981]">Título *</label>
+              <Input value={courseTitle} onChange={(e) => setCourseTitle(e.target.value)} placeholder="Nombre del curso" className="bg-transparent border border-white/10 text-white placeholder:text-gray-600 font-mono text-sm focus:border-[#10B981]/50" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm text-muted-foreground">Descripción</label>
-              <Textarea value={courseDescription} onChange={(e) => setCourseDescription(e.target.value)} placeholder="Describe el curso..." rows={4} className="bg-secondary/50 border-border/50 resize-none" />
+              <label className="text-sm font-mono text-[#10B981]">Descripción *</label>
+              <Textarea value={courseDescription} onChange={(e) => setCourseDescription(e.target.value)} placeholder="Describe el curso..." rows={4} className="bg-transparent border border-white/10 text-white placeholder:text-gray-600 font-mono text-sm resize-none focus:border-[#10B981]/50" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm text-muted-foreground">Duración (minutos)</label>
-              <Input type="number" value={courseDuration} onChange={(e) => setCourseDuration(e.target.value)} placeholder="60" className="bg-secondary/50 border-border/50" />
+              <label className="text-sm font-mono text-[#10B981]">Duración (minutos)</label>
+              <Input type="number" value={courseDuration} onChange={(e) => setCourseDuration(e.target.value)} placeholder="60" className="bg-transparent border border-white/10 text-white placeholder:text-gray-600 font-mono text-sm focus:border-[#10B981]/50" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm text-muted-foreground">Enlace externo (opcional)</label>
-              <Input value={courseExternalUrl} onChange={(e) => setCourseExternalUrl(e.target.value)} placeholder="https://ejemplo.com/curso" className="bg-secondary/50 border-border/50" />
+              <label className="text-sm font-mono text-[#10B981]">Enlace externo (opcional)</label>
+              <Input value={courseExternalUrl} onChange={(e) => setCourseExternalUrl(e.target.value)} placeholder="https://ejemplo.com/curso" className="bg-transparent border border-white/10 text-white placeholder:text-gray-600 font-mono text-sm focus:border-[#10B981]/50" />
             </div>
             <div className="flex gap-3 pt-2">
-              <Button variant="ghost" onClick={() => setNewCourseOpen(false)} className="flex-1">Cancelar</Button>
-              <Button onClick={handleCreateCourse} disabled={!courseTitle.trim() || !courseDescription.trim()} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40">
-                <Plus className="size-4 mr-1.5" /> Crear curso
+              <Button variant="ghost" onClick={() => { setNewCourseOpen(false); setEditCourse(null); }} className="flex-1 text-gray-400 hover:text-white">Cancelar</Button>
+              <Button onClick={editCourse ? handleUpdateCourse : handleCreateCourse} disabled={!courseTitle.trim() || !courseDescription.trim()} className="flex-1 bg-[#10B981] text-gray-950 hover:bg-[#34D399] font-mono font-semibold rounded-xl shadow-[0_0_22px_rgba(16,185,129,0.4)] disabled:opacity-40">
+                {editCourse ? 'Guardar cambios' : <><Plus className="size-4 mr-1.5" /> Crear curso</>}
               </Button>
             </div>
           </div>
@@ -719,9 +781,8 @@ export default function CoursesPage() {
           <CourseCard
             key={course.courseId}
             course={course}
-            onOpenCourse={(id) =>
-              navigate('curso-detalle', { courseId: id })
-            }
+            onOpenCourse={(id) => navigate('curso-detalle', { courseId: id })}
+            onEditCourse={canCreate ? (c) => { setEditCourse(c); setNewCourseOpen(true); } : undefined}
           />
         ))}
       </div>
