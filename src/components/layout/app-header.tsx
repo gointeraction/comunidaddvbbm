@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Bell, MessageSquare, BookOpen, Package, Radio, Users, Trophy, Shield, Target, Settings } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -66,6 +66,19 @@ export function AppHeader() {
   } = useAppStore();
 
   const level = currentUser ? getLevelForXP(currentUser.xp) : 1;
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      const dropdown = document.getElementById('profile-dropdown');
+      const menu = document.getElementById('profile-menu');
+      if (dropdown && menu && !dropdown.contains(e.target as Node)) {
+        menu.classList.add('hidden');
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (!isAuthenticated) return null;
 
@@ -142,22 +155,115 @@ export function AppHeader() {
           </div>
         )}
 
-        {/* User avatar */}
+        {/* User avatar dropdown */}
         {currentUser && (
-          <button
-            onClick={() => navigate('perfil')}
-            className="rounded-full transition-opacity hover:opacity-80 cursor-pointer"
-            aria-label="Ir a perfil"
-          >
-            <Avatar className="size-8 border-2 border-[#10B981]">
-              {currentUser.avatarUrl ? (
-                <AvatarImage src={currentUser.avatarUrl} alt={currentUser.displayName} />
-              ) : null}
-              <AvatarFallback className="bg-[#10B981] text-white text-xs font-bold font-mono">
-                {getInitials(currentUser.displayName || 'U')}
-              </AvatarFallback>
-            </Avatar>
-          </button>
+          <div className="relative" id="profile-dropdown">
+            <button
+              onClick={() => {
+                const el = document.getElementById('profile-dropdown');
+                const menu = document.getElementById('profile-menu');
+                if (el && menu) {
+                  menu.classList.toggle('hidden');
+                }
+              }}
+              className="rounded-full transition-opacity hover:opacity-80 cursor-pointer"
+              aria-label="Menu de perfil"
+            >
+              <Avatar className="size-8 border-2 border-[#10B981]">
+                {currentUser.avatarUrl ? (
+                  <AvatarImage src={currentUser.avatarUrl} alt={currentUser.displayName} />
+                ) : null}
+                <AvatarFallback className="bg-[#10B981] text-white text-xs font-bold font-mono">
+                  {getInitials(currentUser.displayName || 'U')}
+                </AvatarFallback>
+              </Avatar>
+            </button>
+
+            {/* Dropdown menu */}
+            <div
+              id="profile-menu"
+              className="hidden absolute right-0 top-full mt-2 w-72 bg-[#0f172a] border border-white/10 rounded-xl shadow-2xl shadow-black/60 overflow-hidden z-50"
+            >
+              {/* User info header */}
+              <div className="px-4 py-4 border-b border-white/10">
+                <div className="flex items-center gap-3">
+                  <Avatar className="size-12 border-2 border-[#10B981]">
+                    {currentUser.avatarUrl ? (
+                      <AvatarImage src={currentUser.avatarUrl} alt={currentUser.displayName} />
+                    ) : null}
+                    <AvatarFallback className="bg-[#10B981] text-white text-sm font-bold font-mono">
+                      {getInitials(currentUser.displayName || 'U')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white truncate">{currentUser.displayName}</p>
+                    <p className="text-xs text-gray-500 truncate font-mono">{currentUser.email}</p>
+                  </div>
+                </div>
+
+                {/* Level info */}
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="text-xs font-mono text-[#10B981]">Lvl {level}</span>
+                  <span className="text-xs text-gray-600">•</span>
+                  <span className="text-xs text-gray-400">
+                    {level <= 3 ? 'Novato' : level <= 7 ? 'Explorador' : level <= 11 ? 'Experto' : 'Maestro'}
+                  </span>
+                  <span className="ml-auto text-xs text-gray-500">{currentUser.xp} XP</span>
+                </div>
+
+                {/* XP progress bar */}
+                <div className="mt-2">
+                  <div className="w-full h-1.5 rounded-full bg-gray-700 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-[#10B981] transition-all"
+                      style={{ width: `${Math.min((currentUser.xp / ((level + 1) * 500)) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-gray-600 mt-1 font-mono">
+                    {Math.max(0, ((level + 1) * 500) - currentUser.xp)} XP para Lvl {level + 1}
+                  </p>
+                </div>
+              </div>
+
+              {/* Menu items */}
+              <div className="py-2">
+                <button
+                  onClick={() => { navigate('perfil'); document.getElementById('profile-menu')?.classList.add('hidden'); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors cursor-pointer"
+                >
+                  <span className="text-gray-500">👤</span> Mi Perfil
+                </button>
+                <button
+                  onClick={() => { navigate('perfil'); document.getElementById('profile-menu')?.classList.add('hidden'); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors cursor-pointer"
+                >
+                  <span className="text-gray-500">📊</span> Mis Estadisticas
+                </button>
+                <button
+                  onClick={() => { navigate('ranking'); document.getElementById('profile-menu')?.classList.add('hidden'); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors cursor-pointer"
+                >
+                  <span className="text-gray-500">🏆</span> Ranking
+                </button>
+                <button
+                  onClick={() => { navigate('perfil-editar'); document.getElementById('profile-menu')?.classList.add('hidden'); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors cursor-pointer"
+                >
+                  <span className="text-gray-500">⚙️</span> Configuracion
+                </button>
+              </div>
+
+              {/* Logout */}
+              <div className="border-t border-white/10 py-2">
+                <button
+                  onClick={async () => { await useAppStore.getState().logout(); document.getElementById('profile-menu')?.classList.add('hidden'); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                >
+                  <span className="text-red-500">🚪</span> logout
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </header>
