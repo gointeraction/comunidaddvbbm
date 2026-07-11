@@ -16,8 +16,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AutoDev — Plataforma Comunitaria para Desarrolladores",
-  description: "Comunidad de desarrolladores enfocada en automatización, inteligencia artificial y desarrollo web. Aprende, comparte y crece con AutoDev.",
+  title: "BBMDev — Plataforma Comunitaria para Desarrolladores",
+  description: "Comunidad de desarrolladores enfocada en automatización, inteligencia artificial y desarrollo web. Aprende, comparte y crece con BBMDev.",
   icons: { icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg" },
 };
 

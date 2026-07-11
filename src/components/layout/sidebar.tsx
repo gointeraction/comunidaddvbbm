@@ -153,7 +153,7 @@ function SidebarContent() {
           </div>
           <div className="terminal-text text-sm leading-relaxed">
             <span className="text-[#10B981] font-semibold">~/</span>
-            <span className="text-gray-100">autodev</span>
+            <span className="text-gray-100">bbmdev</span>
             <span className="animate-blink text-[#10B981]">▋</span>
           </div>
         </div>

@@ -111,7 +111,7 @@ export default function GamificationPage() {
     <div className="space-y-6 animate-fade-in-up">
       {/* Terminal Header */}
       <div className="terminal-text text-sm">
-        <span className="terminal-prompt">autodev</span>{' '}
+        <span className="terminal-prompt">bbmdev</span>{' '}
         <span className="terminal-path">~/gamificacion</span>
         <span className="animate-blink ml-1">█</span>
       </div>

@@ -121,7 +121,7 @@ export function AppHeader() {
       {/* ── Breadcrumb route path ── */}
       <div className="terminal-text hidden md:flex items-center gap-1.5 min-w-0 flex-1">
         <span className="text-[#10B981] font-semibold text-sm">$</span>
-        <span className="text-[#10B981] font-semibold text-sm">autodev</span>
+        <span className="text-[#10B981] font-semibold text-sm">bbmdev</span>
         <span className="text-gray-500">~</span>
         <span className="text-[#34D399] text-sm truncate">
           /{breadcrumbSegments.join('/')}

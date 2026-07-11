@@ -595,7 +595,7 @@ export default function ForumPage() {
     return (
       <div className="space-y-1">
         <div className="terminal-text text-xs mb-6">
-          <span className="terminal-prompt">autodev</span>{' '}
+          <span className="terminal-prompt">bbmdev</span>{' '}
           <span className="terminal-path">~/foro</span>{' '}
           <span className="terminal-comment">— detalle</span>
         </div>
@@ -646,7 +646,7 @@ function ForumList() {
     <div className="space-y-5">
       {/* Terminal header */}
       <div className="terminal-text text-xs">
-        <span className="terminal-prompt">autodev</span>{' '}
+        <span className="terminal-prompt">bbmdev</span>{' '}
         <span className="terminal-path">~/foro</span>
         <span className="animate-blink text-foreground">▋</span>
       </div>

@@ -521,7 +521,7 @@ export function AdminPage() {
     <div className="space-y-4">
       {/* Terminal header */}
       <div className="terminal-text flex items-center gap-2 text-sm">
-        <span className="text-foreground font-semibold">autodev</span>
+        <span className="text-foreground font-semibold">bbmdev</span>
         <span className="text-muted-foreground">~/admin</span>
         <Badge className="bg-terminal-red/20 text-terminal-red border border-terminal-red/40 text-xs ml-1">
           ADMIN

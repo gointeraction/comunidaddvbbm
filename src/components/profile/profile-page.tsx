@@ -479,7 +479,7 @@ export function ProfilePage() {
     <div className="space-y-4">
       {/* Terminal header */}
       <div className="terminal-text flex items-center gap-2 text-sm">
-        <span className="text-foreground font-semibold">autodev</span>
+        <span className="text-foreground font-semibold">bbmdev</span>
         <span className="text-muted-foreground">~/{headerPath}</span>
         <span className="animate-blink text-[#10B981]">▊</span>
       </div>

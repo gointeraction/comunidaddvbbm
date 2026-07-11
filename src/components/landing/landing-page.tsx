@@ -15,14 +15,14 @@ function InteractiveTerminal() {
 
   const commands = [
     {
-      cmd: '$ autodev init',
+      cmd: '$ bbmdev init',
       output: [
-        { text: '> Inicializando AutoDev v2.0...', type: 'output' as const },
+        { text: '> Inicializando BBMDev v2.0...', type: 'output' as const },
         { text: '> ✓ Comunidad de desarrolladores cargada', type: 'output' as const },
         { text: '> ✓ Foro activo: 1,247 publicaciones', type: 'output' as const },
         { text: '> ✓ Cursos disponibles: 12 módulos', type: 'output' as const },
         { text: '> ✓ Sistema de rankings activo', type: 'output' as const },
-        { text: '> Listo. Bienvenido a AutoDev.', type: 'output' as const },
+        { text: '> Listo. Bienvenido a BBMDev.', type: 'output' as const },
       ],
     },
     {
@@ -104,7 +104,7 @@ function InteractiveTerminal() {
         <div className="w-3 h-3 rounded-full bg-[#EF4444]" />
         <div className="w-3 h-3 rounded-full bg-[#FBBF24]" />
         <div className="w-3 h-3 rounded-full bg-[#10B981]" />
-        <span className="ml-2 text-xs text-gray-500 terminal-text">erik@autodev: ~/community</span>
+        <span className="ml-2 text-xs text-gray-500 terminal-text">developer@bbmdev: ~/community</span>
       </div>
       {/* Terminal body */}
       <div className="bg-gray-900/80 p-4 min-h-[220px] max-h-[300px] overflow-y-auto custom-scrollbar">
@@ -233,7 +233,7 @@ export default function LandingPage() {
               </div>
               <span className="terminal-text text-sm">
                 <span className="text-[#10B981] font-semibold">~/</span>
-                <span className="text-gray-100">autodev</span>
+                <span className="text-gray-100">bbmdev</span>
                 <span className="animate-blink text-[#10B981]">▋</span>
               </span>
             </div>
@@ -261,7 +261,7 @@ export default function LandingPage() {
           <div className="max-w-4xl mx-auto text-center">
             {/* Title */}
             <h1 className="text-5xl md:text-7xl font-bold terminal-text animate-glow text-gray-100 mb-3 tracking-tight">
-              AutoDev
+              BBMDev
             </h1>
             {/* Slogan */}
             <p className="terminal-text text-[#6EE7B7] text-sm md:text-base mb-2 animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
@@ -269,7 +269,7 @@ export default function LandingPage() {
             </p>
             {/* Subtitle */}
             <p className="terminal-text text-gray-500 text-xs md:text-sm mb-10 animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
-              autodev ~/comunidad
+              bbmdev ~/comunidad
             </p>
             {/* Terminal */}
             <div className="animate-fade-in-up" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
@@ -285,7 +285,7 @@ export default function LandingPage() {
               {/* Stats command header */}
               <div className="bg-gray-950/50 border-b border-white/10 px-4 py-2.5">
                 <span className="terminal-text text-xs text-gray-500">
-                  $ autodev stats --live
+                  $ bbmdev stats --live
                 </span>
               </div>
               <div className="flex flex-wrap justify-center divide-x divide-white/10">
@@ -370,7 +370,7 @@ export default function LandingPage() {
       {/* ── Footer ── */}
       <footer className="py-6 px-4 border-t border-white/10">
         <p className="text-center text-xs terminal-text text-gray-500">
-          {'// AutoDev v2.0 — built for developers, by developers'}
+          {'// BBMDev v2.0 — built for developers, by developers'}
         </p>
       </footer>
 

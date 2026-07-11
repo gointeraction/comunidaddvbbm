@@ -323,7 +323,7 @@ export default function OnboardingWizard() {
       <div className="w-full max-w-lg animate-fade-in-up">
         {/* Terminal Header */}
         <div className="terminal-text text-sm mb-6">
-          <span className="text-[#10B981]">autodev</span>{' '}
+          <span className="text-[#10B981]">bbmdev</span>{' '}
           <span className="text-[#34D399]">~/onboarding/paso-{step}</span>
         </div>
 

@@ -102,7 +102,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   loginWithGoogle: (googleUser) => {
     const defaultGoogleUser = {
-      email: googleUser?.email || 'dev.google@autodev.dev',
+      email: googleUser?.email || 'dev.google@bbmdev.dev',
       displayName: googleUser?.displayName || 'Google Developer',
       avatarUrl: googleUser?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     };

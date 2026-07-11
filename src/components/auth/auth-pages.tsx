@@ -17,7 +17,7 @@ import {
 function TerminalHeader({ path }: { path: string }) {
   return (
     <div className="terminal-text text-sm mb-6">
-      <span className="text-[#10B981]">autodev</span>{' '}
+      <span className="text-[#10B981]">bbmdev</span>{' '}
       <span className="text-[#34D399]">~/{path}</span>
     </div>
   );
@@ -33,8 +33,8 @@ function GoogleAccountModal({ isOpen, onClose, onSelect }: { isOpen: boolean; on
   if (!isOpen) return null;
 
   const mockAccounts = [
-    { email: 'carlos@autodev.dev', displayName: 'Carlos Dev', avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80' },
-    { email: 'lucia@autodev.dev', displayName: 'Lucia AI', avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80' },
+    { email: 'carlos@bbmdev.dev', displayName: 'Carlos Dev', avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80' },
+    { email: 'lucia@bbmdev.dev', displayName: 'Lucia AI', avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80' },
     { email: 'developer.google@gmail.com', displayName: 'Dev Google User', avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80' },
   ];
 
@@ -55,7 +55,7 @@ function GoogleAccountModal({ isOpen, onClose, onSelect }: { isOpen: boolean; on
         </div>
 
         <p className="text-xs text-gray-400">
-          Selecciona una cuenta de Google Workspace conectada para ingresar a la comunidad de AutoDev:
+          Selecciona una cuenta de Google Workspace conectada para ingresar a la comunidad de BBMDev:
         </p>
 
         <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
@@ -182,7 +182,7 @@ function LoginPage() {
           Iniciar sesión
         </CardTitle>
         <p className="text-sm text-gray-400 terminal-text mt-1">
-          Accede a tu cuenta de AutoDev
+          Accede a tu cuenta de BBMDev
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -334,7 +334,7 @@ function RegisterPage() {
           Crear cuenta
         </CardTitle>
         <p className="text-sm text-gray-400 terminal-text mt-1">
-          Únete a la comunidad de AutoDev
+          Únete a la comunidad de BBMDev
         </p>
       </CardHeader>
       <CardContent className="space-y-6">

@@ -452,7 +452,7 @@ export default function ResourcesPage() {
       {/* Terminal header */}
       <div className="flex items-center justify-between">
         <div className="terminal-text text-xs">
-          <span className="terminal-prompt">autodev</span>{' '}
+          <span className="terminal-prompt">bbmdev</span>{' '}
           <span className="terminal-path">~/recursos</span>
           <span className="animate-blink text-foreground">▋</span>
         </div>
