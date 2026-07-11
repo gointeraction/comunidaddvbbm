@@ -345,6 +345,16 @@ export function DirectosPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editSession, setEditSession] = useState<any>(null);
 
+  // Filter: hide sessions older than 1 day from scheduled time
+  const visibleSessions = liveSessions.filter((session) => {
+    if (session.status === 'ended' || session.status === 'cancelled') {
+      const scheduledTime = new Date(session.scheduledAt).getTime();
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      if (Date.now() - scheduledTime > oneDayMs) return false;
+    }
+    return true;
+  });
+
   const handleEdit = (session: any) => {
     setEditSession(session);
     setDialogOpen(true);
@@ -379,9 +389,9 @@ export function DirectosPage() {
         </Button>
       </div>
 
-      {liveSessions.length > 0 ? (
+      {visibleSessions.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {liveSessions.map((session, i) => (
+          {visibleSessions.map((session, i) => (
             <SessionCard key={session.liveId || `live-${i}`} session={session} onEdit={handleEdit} />
           ))}
         </div>
