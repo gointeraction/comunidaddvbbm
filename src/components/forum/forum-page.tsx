@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import { useAppStore } from '@/stores/app-store';
-import { MOCK_COMMENTS } from '@/lib/mock-data';
 import type { Post, Comment, ExperienceLevel } from '@/types/autodev';
 
 import { Button } from '@/components/ui/button';
@@ -196,9 +195,7 @@ function PostDetail() {
   const postId = routeParams.postId || '';
   const post = posts.find((p) => p.postId === postId);
   const [commentText, setCommentText] = useState('');
-  const [localComments, setLocalComments] = useState<Comment[]>(
-    MOCK_COMMENTS[postId] || []
-  );
+  const [localComments, setLocalComments] = useState<Comment[]>([]);
   const [localLikes, setLocalLikes] = useState<Record<string, boolean>>({});
 
   function handleSubmitComment() {

@@ -19,7 +19,6 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { AvatarInitials } from '@/components/autodev/avatar-initials';
 import { useAppStore } from '@/stores/app-store';
-import { MOCK_USER_ACHIEVEMENTS } from '@/lib/mock-data';
 import type { Interest, ExperienceLevel } from '@/types/autodev';
 
 const ALL_INTERESTS: Interest[] = ['automatizacion', 'ia', 'webapps', 'comunidad'];
@@ -186,14 +185,14 @@ function ProfileView() {
       </div>
 
       {/* Achievements section */}
-      {MOCK_USER_ACHIEVEMENTS.length > 0 && (
+      {false && (
         <div className="space-y-3">
           <div className="terminal-text flex items-center gap-2 text-sm">
             <span className="terminal-prompt">$</span>
             <span className="terminal-path">~/logros</span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {MOCK_USER_ACHIEVEMENTS.map((ua) => {
+            {[].map((ua: any) => {
               const rarity = ua.achievement?.rarity || 'common';
               return (
                 <div

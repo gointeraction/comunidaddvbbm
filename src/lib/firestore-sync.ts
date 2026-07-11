@@ -20,6 +20,7 @@ import {
   MOCK_POSTS,
   MOCK_RESOURCES,
   MOCK_COURSES,
+  MOCK_LESSONS,
   MOCK_LIVES,
   MOCK_RANKING,
   MOCK_MISSIONS,
@@ -155,6 +156,12 @@ export async function seedFirestoreData() {
     for (const p of MOCK_POSTS) await setDoc(doc(db, 'posts', p.postId), p);
     for (const r of MOCK_RESOURCES) await setDoc(doc(db, 'resources', r.resourceId), r);
     for (const c of MOCK_COURSES) await setDoc(doc(db, 'courses', c.courseId), c);
+    // Seed lessons as subcollections under courses
+    for (const [courseId, lessons] of Object.entries(MOCK_LESSONS)) {
+      for (const lesson of lessons) {
+        await setDoc(doc(db, `courses/${courseId}/lessons`, lesson.lessonId), lesson);
+      }
+    }
     for (const l of MOCK_LIVES) await setDoc(doc(db, 'liveSessions', l.liveId), l);
     for (const m of MOCK_MISSIONS) await setDoc(doc(db, 'missions', m.missionId), m);
     for (const a of MOCK_ACHIEVEMENTS) await setDoc(doc(db, 'achievements', a.achievementId), a);

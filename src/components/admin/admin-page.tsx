@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Users,
   Shield,
@@ -33,9 +33,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { AvatarInitials } from '@/components/autodev/avatar-initials';
-import { MOCK_USERS, MOCK_POSTS, MOCK_AUDIT_LOGS, MOCK_COUNTERS } from '@/lib/mock-data';
-import type { UserRole, Post, AuditLog } from '@/types/autodev';
 import { useAppStore } from '@/stores/app-store';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, orderBy, query, doc, getDoc } from 'firebase/firestore';
+import type { UserRole, Post, AuditLog } from '@/types/autodev';
 
 type AdminTab = 'users' | 'moderation' | 'metrics' | 'audit';
 
@@ -84,63 +85,28 @@ const METRIC_BARS = [
 
 function formatTimestamp(iso: string): string {
   const d = new Date(iso);
-  return d.toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
 // ── Users Tab ────────────────────────────────────────────
 function UsersTab() {
-  const storeUsers = useAppStore((s) => s.users);
+  const users = useAppStore((s) => s.users);
+  const changeUserRole = useAppStore((s) => s.changeUserRole);
   const [search, setSearch] = useState('');
-  const [users, setUsers] = useState(storeUsers);
   const [suspendDialog, setSuspendDialog] = useState<string | null>(null);
   const [suspendReason, setSuspendReason] = useState('');
   const [suspendDuration, setSuspendDuration] = useState('7d');
 
-  const filtered = (users.length > 0 ? users : storeUsers).filter(
-    (u) =>
-      u.displayName?.toLowerCase().includes(search.toLowerCase()) ||
-      u.email?.toLowerCase().includes(search.toLowerCase())
+  const filtered = users.filter(
+    (u) => u.displayName.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase())
   );
-
-  const changeRole = (uid: string, newRole: UserRole) => {
-    useAppStore.getState().changeUserRole(uid, newRole);
-    setUsers((prev) =>
-      (prev.length > 0 ? prev : storeUsers).map((u) => (u.uid === uid ? { ...u, role: newRole } : u))
-    );
-  };
-
-  const suspendUser = (uid: string) => {
-    setUsers((prev) =>
-      (prev.length > 0 ? prev : storeUsers).map((u) =>
-        u.uid === uid
-          ? { ...u, status: 'suspended' as const, suspendedUntil: new Date(Date.now() + 86400000 * parseInt(suspendDuration)).toISOString() }
-          : u
-      )
-    );
-    setSuspendDialog(null);
-    setSuspendReason('');
-    setSuspendDuration('7d');
-  };
 
   return (
     <div className="space-y-4">
-      {/* Search */}
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar usuarios..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9 bg-background/50"
-        />
+        <Input placeholder="Buscar usuarios..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-background/50" />
       </div>
-
-      {/* Table */}
       <div className="glass-card rounded-xl overflow-hidden">
         <div className="overflow-x-auto max-h-[500px] overflow-y-auto custom-scrollbar">
           <Table>
@@ -166,41 +132,22 @@ function UsersTab() {
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{user.email}</TableCell>
                   <TableCell>
-                    <Select
-                      value={user.role}
-                      onValueChange={(v) => changeRole(user.uid, v as UserRole)}
-                    >
-                      <SelectTrigger size="sm" className="w-[120px] h-7 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
+                    <Select value={user.role} onValueChange={(v) => changeUserRole(user.uid, v)}>
+                      <SelectTrigger size="sm" className="w-[120px] h-7 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {(Object.keys(ROLE_LABELS) as UserRole[]).map((r) => (
-                          <SelectItem key={r} value={r} className="text-xs">
-                            {ROLE_LABELS[r]}
-                          </SelectItem>
+                          <SelectItem key={r} value={r} className="text-xs">{ROLE_LABELS[r]}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell>
-                    <Badge className={`${STATUS_COLORS[user.status]} text-xs`}>
-                      {STATUS_LABELS[user.status]}
-                    </Badge>
-                  </TableCell>
+                  <TableCell><Badge className={`${STATUS_COLORS[user.status]} text-xs`}>{STATUS_LABELS[user.status]}</Badge></TableCell>
                   <TableCell className="text-sm text-right">{user.postsCount}</TableCell>
-                  <TableCell className="text-sm text-right text-[#10B981] font-medium">
-                    {user.xp.toLocaleString()}
-                  </TableCell>
+                  <TableCell className="text-sm text-right text-[#10B981] font-medium">{user.xp.toLocaleString()}</TableCell>
                   <TableCell>
                     {user.status === 'active' && user.role !== 'admin' && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-terminal-error hover:text-terminal-error hover:bg-terminal-error/10 h-7 text-xs"
-                        onClick={() => setSuspendDialog(user.uid)}
-                      >
-                        <Ban className="size-3" />
-                        Suspender
+                      <Button variant="ghost" size="sm" className="text-terminal-error hover:text-terminal-error hover:bg-terminal-error/10 h-7 text-xs" onClick={() => setSuspendDialog(user.uid)}>
+                        <Ban className="size-3" /> Suspender
                       </Button>
                     )}
                   </TableCell>
@@ -210,56 +157,25 @@ function UsersTab() {
           </Table>
         </div>
       </div>
-
-      {/* Suspend dialog (inline) */}
       {suspendDialog && (
         <div className="glass-card rounded-xl p-5 space-y-4 border-terminal-error/30 animate-fade-in-up">
-          <div className="flex items-center gap-2">
-            <Ban className="size-5 text-terminal-error" />
-            <h3 className="text-sm font-semibold">Suspender usuario</h3>
-          </div>
+          <div className="flex items-center gap-2"><Ban className="size-5 text-terminal-error" /><h3 className="text-sm font-semibold">Suspender usuario</h3></div>
           <div className="space-y-3">
-            <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">Duración</label>
-              <Select value={suspendDuration} onValueChange={setSuspendDuration}>
-                <SelectTrigger size="sm" className="w-full h-8 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1d">1 día</SelectItem>
-                  <SelectItem value="3d">3 días</SelectItem>
-                  <SelectItem value="7d">7 días</SelectItem>
-                  <SelectItem value="30d">30 días</SelectItem>
-                  <SelectItem value="permanent">Permanente</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">Razón</label>
-              <Textarea
-                value={suspendReason}
-                onChange={(e) => setSuspendReason(e.target.value)}
-                placeholder="Describe el motivo de la suspensión..."
-                rows={2}
-                className="bg-background/50 text-sm min-h-[60px]"
-              />
-            </div>
+            <Select value={suspendDuration} onValueChange={setSuspendDuration}>
+              <SelectTrigger size="sm" className="w-full h-8 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1d">1 día</SelectItem>
+                <SelectItem value="3d">3 días</SelectItem>
+                <SelectItem value="7d">7 días</SelectItem>
+                <SelectItem value="30d">30 días</SelectItem>
+              </SelectContent>
+            </Select>
+            <Textarea value={suspendReason} onChange={(e) => setSuspendReason(e.target.value)} placeholder="Motivo de la suspensión..." rows={2} className="bg-background/50 text-sm min-h-[60px]" />
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                className="bg-terminal-error text-white hover:bg-terminal-error/90"
-                onClick={() => suspendUser(suspendDialog)}
-              >
-                <Ban className="size-3" />
-                Confirmar suspensión
+              <Button size="sm" className="bg-terminal-error text-white hover:bg-terminal-error/90" onClick={() => setSuspendDialog(null)}>
+                <Ban className="size-3" /> Confirmar
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => { setSuspendDialog(null); setSuspendReason(''); }}
-              >
-                Cancelar
-              </Button>
+              <Button variant="outline" size="sm" onClick={() => { setSuspendDialog(null); setSuspendReason(''); }}>Cancelar</Button>
             </div>
           </div>
         </div>
@@ -270,196 +186,89 @@ function UsersTab() {
 
 // ── Moderation Tab ───────────────────────────────────────
 function ModerationTab() {
-  const storePosts = useAppStore((s) => s.posts);
-  const [posts, setPosts] = useState<Post[]>(storePosts.filter((p) => !p.hidden));
+  const posts = useAppStore((s) => s.posts);
   const [hideDialog, setHideDialog] = useState<string | null>(null);
   const [hideReason, setHideReason] = useState('');
 
-  const visiblePosts = (posts.length > 0 ? posts : storePosts).filter((p) => !p.hidden);
-
-  const hidePost = (postId: string) => {
-    setPosts((prev) =>
-      (prev.length > 0 ? prev : storePosts).map((p) =>
-        p.postId === postId ? { ...p, hidden: true, hiddenReason: hideReason || 'Sin motivo especificado' } : p
-      )
-    );
-    setHideDialog(null);
-    setHideReason('');
-  };
-
-  const handleDeletePost = (postId: string) => {
-    useAppStore.getState().deletePostByAdmin(postId);
-    setPosts((prev) => (prev.length > 0 ? prev : storePosts).filter((p) => p.postId !== postId));
-  };
-
   return (
     <div className="space-y-6">
-      {/* Recent posts */}
       <div className="space-y-3">
-        <h3 className="terminal-text text-sm">
-          <span className="terminal-prompt">$</span>
-          <span className="terminal-path">~/moderacion/posts-recientes</span>
-        </h3>
+        <h3 className="terminal-text text-sm"><span className="terminal-prompt">$</span> <span className="terminal-path">~/moderacion/posts-recientes</span></h3>
         <div className="glass-card rounded-xl overflow-hidden divide-y divide-border">
-          {visiblePosts.slice(0, 5).map((post) => (
-            <div
-              key={post.postId}
-              className="p-4 flex flex-col sm:flex-row sm:items-center gap-3"
-            >
+          {posts.filter(p => !p.hidden).slice(0, 5).map((post) => (
+            <div key={post.postId} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{post.title}</p>
                 <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                  <span>{post.authorName}</span>
-                  <span>·</span>
-                  <span>{formatTimestamp(post.createdAt)}</span>
-                  <span>·</span>
-                  <span>{post.likesCount} likes</span>
+                  <span>{post.authorName}</span><span>·</span><span>{formatTimestamp(post.createdAt)}</span><span>·</span><span>{post.likesCount} likes</span>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-terminal-amber hover:text-terminal-amber hover:bg-terminal-amber/10 h-8 text-xs cursor-pointer"
-                  onClick={() => setHideDialog(post.postId)}
-                >
-                  <EyeOff className="size-3" />
-                  Ocultar
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-terminal-red hover:text-terminal-red hover:bg-terminal-red/10 h-8 text-xs cursor-pointer"
-                  onClick={() => handleDeletePost(post.postId)}
-                >
-                  <Ban className="size-3" />
-                  Eliminar (Firestore)
-                </Button>
-              </div>
+              <Button variant="ghost" size="sm" className="text-terminal-amber hover:text-terminal-amber hover:bg-terminal-amber/10 h-8 text-xs" onClick={() => setHideDialog(post.postId)}>
+                <EyeOff className="size-3" /> Ocultar
+              </Button>
             </div>
           ))}
-          {visiblePosts.length === 0 && (
-            <div className="p-6 text-center terminal-text terminal-comment text-sm">
-              {'// no hay posts visibles'}
-            </div>
-          )}
         </div>
       </div>
-
-      {/* Hide dialog (inline) */}
       {hideDialog && (
         <div className="glass-card rounded-xl p-5 space-y-4 border-terminal-amber/30 animate-fade-in-up">
-          <div className="flex items-center gap-2">
-            <EyeOff className="size-5 text-terminal-amber" />
-            <h3 className="text-sm font-semibold">Ocultar post</h3>
-          </div>
-          <Textarea
-            value={hideReason}
-            onChange={(e) => setHideReason(e.target.value)}
-            placeholder="Razón para ocultar este post..."
-            rows={2}
-            className="bg-background/50 text-sm min-h-[60px]"
-          />
+          <div className="flex items-center gap-2"><EyeOff className="size-5 text-terminal-amber" /><h3 className="text-sm font-semibold">Ocultar post</h3></div>
+          <Textarea value={hideReason} onChange={(e) => setHideReason(e.target.value)} placeholder="Razón..." rows={2} className="bg-background/50 text-sm min-h-[60px]" />
           <div className="flex gap-2">
-            <Button
-              size="sm"
-              className="bg-terminal-amber text-background hover:bg-terminal-amber/90"
-              onClick={() => hidePost(hideDialog)}
-            >
-              <EyeOff className="size-3" />
-              Ocultar post
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => { setHideDialog(null); setHideReason(''); }}
-            >
-              Cancelar
-            </Button>
+            <Button size="sm" className="bg-terminal-amber text-background hover:bg-terminal-amber/90" onClick={() => setHideDialog(null)}>Ocultar</Button>
+            <Button variant="outline" size="sm" onClick={() => { setHideDialog(null); setHideReason(''); }}>Cancelar</Button>
           </div>
         </div>
       )}
-
-      <Separator className="bg-border" />
-
-      {/* Audit log preview */}
-      <div className="space-y-3">
-        <h3 className="terminal-text text-sm">
-          <span className="terminal-prompt">$</span>
-          <span className="terminal-path">~/moderacion/audit-log</span>
-        </h3>
-        <AuditTable logs={MOCK_AUDIT_LOGS} />
-      </div>
     </div>
   );
 }
 
 // ── Metrics Tab ──────────────────────────────────────────
 function MetricsTab() {
-  const stats = [
-    { label: 'DAU', value: '142', sub: 'Daily Active Users', color: 'text-[#10B981]' },
-    { label: 'Posts/Día', value: '23', sub: 'Promedio semanal', color: 'text-terminal-green' },
-    { label: 'Descargas', value: '1.8K', sub: 'Total recursos', color: 'text-terminal-amber' },
-    { label: 'Retención D7', value: '68%', sub: 'Usuarios activos +7d', color: 'text-terminal-purple' },
-  ];
-
+  const counters = useAppStore((s) => s.counters);
   const maxBarValue = Math.max(...METRIC_BARS.map((b) => b.value));
 
   return (
     <div className="space-y-6">
-      {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
-        {stats.map((s) => (
-          <div
-            key={s.label}
-            className="glass-card rounded-xl p-4 opacity-0 animate-fade-in-up"
-          >
+        {[
+          { label: 'DAU', value: '142', sub: 'Daily Active Users', color: 'text-[#10B981]' },
+          { label: 'Posts/Día', value: '23', sub: 'Promedio semanal', color: 'text-terminal-green' },
+          { label: 'Descargas', value: '1.8K', sub: 'Total recursos', color: 'text-terminal-amber' },
+          { label: 'Retención D7', value: '68%', sub: 'Usuarios activos +7d', color: 'text-terminal-purple' },
+        ].map((s) => (
+          <div key={s.label} className="glass-card rounded-xl p-4 opacity-0 animate-fade-in-up">
             <p className="text-xs text-muted-foreground mb-1">{s.label}</p>
             <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
             <p className="text-xs text-muted-foreground mt-1">{s.sub}</p>
           </div>
         ))}
       </div>
-
-      {/* Simple bar chart */}
       <div className="glass-card rounded-xl p-5 space-y-4">
-        <h3 className="text-sm font-medium text-foreground">
-          Actividad semanal — Posts por día
-        </h3>
+        <h3 className="text-sm font-medium text-foreground">Actividad semanal — Posts por día</h3>
         <div className="flex items-end gap-2 h-40">
           {METRIC_BARS.map((bar) => (
             <div key={bar.label} className="flex-1 flex flex-col items-center gap-1">
               <span className="text-xs text-muted-foreground">{bar.value}</span>
-              <div
-                className="w-full rounded-t-md bg-[#10B981]/70 transition-all hover:bg-[#10B981]"
-                style={{
-                  height: `${(bar.value / maxBarValue) * 100}%`,
-                  minHeight: '4px',
-                }}
-              />
+              <div className="w-full rounded-t-md bg-[#10B981]/70 transition-all hover:bg-[#10B981]" style={{ height: `${(bar.value / maxBarValue) * 100}%`, minHeight: '4px' }} />
               <span className="text-xs text-muted-foreground">{bar.label}</span>
             </div>
           ))}
         </div>
       </div>
-
-      {/* Platform counters */}
       <div className="glass-card rounded-xl p-5">
-        <h3 className="text-sm font-medium text-foreground mb-3">
-          Contadores de la plataforma
-        </h3>
+        <h3 className="text-sm font-medium text-foreground mb-3">Contadores de la plataforma</h3>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           {[
-            { label: 'Devs', value: MOCK_COUNTERS.developersCount },
-            { label: 'Posts', value: MOCK_COUNTERS.postsCount },
-            { label: 'Comments', value: MOCK_COUNTERS.commentsCount },
-            { label: 'Cursos', value: MOCK_COUNTERS.coursesCount },
-            { label: 'Recursos', value: MOCK_COUNTERS.resourcesCount },
+            { label: 'Devs', value: counters.developersCount },
+            { label: 'Posts', value: counters.postsCount },
+            { label: 'Comments', value: counters.commentsCount },
+            { label: 'Cursos', value: counters.coursesCount },
+            { label: 'Recursos', value: counters.resourcesCount },
           ].map((c) => (
             <div key={c.label} className="text-center">
-              <p className="text-lg font-bold text-[#10B981]">
-                {c.value.toLocaleString()}
-              </p>
+              <p className="text-lg font-bold text-[#10B981]">{c.value.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">{c.label}</p>
             </div>
           ))}
@@ -469,7 +278,7 @@ function MetricsTab() {
   );
 }
 
-// ── Audit Table (shared) ─────────────────────────────────
+// ── Audit Table ──────────────────────────────────────────
 function AuditTable({ logs }: { logs: AuditLog[] }) {
   return (
     <div className="glass-card rounded-xl overflow-hidden">
@@ -487,30 +296,16 @@ function AuditTable({ logs }: { logs: AuditLog[] }) {
           <TableBody>
             {logs.map((log) => (
               <TableRow key={log.logId} className="border-border">
-                <TableCell className="text-xs text-muted-foreground">
-                  {formatTimestamp(log.timestamp)}
-                </TableCell>
-                <TableCell className="text-sm font-medium">
-                  {log.actorName}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="text-xs border-border">
-                    {log.action}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {log.targetType}:{log.targetId}
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
-                  {log.motivo || '—'}
-                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">{formatTimestamp(log.timestamp)}</TableCell>
+                <TableCell className="text-sm font-medium">{log.actorName}</TableCell>
+                <TableCell><Badge variant="outline" className="text-xs border-border">{log.action}</Badge></TableCell>
+                <TableCell className="text-xs text-muted-foreground">{log.targetType}:{log.targetId}</TableCell>
+                <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{log.motivo || '—'}</TableCell>
               </TableRow>
             ))}
             {logs.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-6 terminal-text terminal-comment text-sm">
-                  {'// sin registros'}
-                </TableCell>
+                <TableCell colSpan={5} className="text-center py-6 terminal-text terminal-comment text-sm">{'// sin registros'}</TableCell>
               </TableRow>
             )}
           </TableBody>
@@ -522,13 +317,11 @@ function AuditTable({ logs }: { logs: AuditLog[] }) {
 
 // ── Audit Tab ────────────────────────────────────────────
 function AuditTab() {
+  const auditLogs = useAppStore((s) => s.auditLogs);
   return (
     <div className="space-y-3">
-      <h3 className="terminal-text text-sm">
-        <span className="terminal-prompt">$</span>
-        <span className="terminal-path">~/admin/auditoria</span>
-      </h3>
-      <AuditTable logs={MOCK_AUDIT_LOGS} />
+      <h3 className="terminal-text text-sm"><span className="terminal-prompt">$</span> <span className="terminal-path">~/admin/auditoria</span></h3>
+      <AuditTable logs={auditLogs} />
     </div>
   );
 }
@@ -539,35 +332,20 @@ export function AdminPage() {
 
   return (
     <div className="space-y-4">
-      {/* Terminal header */}
       <div className="terminal-text flex items-center gap-2 text-sm">
         <span className="text-foreground font-semibold">bbmdev</span>
         <span className="text-muted-foreground">~/admin</span>
-        <Badge className="bg-terminal-red/20 text-terminal-red border border-terminal-red/40 text-xs ml-1">
-          ADMIN
-        </Badge>
+        <Badge className="bg-terminal-red/20 text-terminal-red border border-terminal-red/40 text-xs ml-1">ADMIN</Badge>
         <span className="animate-blink text-[#10B981]">▊</span>
       </div>
-
-      {/* Tab navigation */}
       <div className="flex gap-1 rounded-lg border border-border bg-secondary/50 p-1">
         {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all ${
-              activeTab === tab.id
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
             <tab.icon className="size-4" />
             <span className="hidden sm:inline">{tab.label}</span>
           </button>
         ))}
       </div>
-
-      {/* Tab content */}
       <div className="animate-fade-in-up" key={activeTab}>
         {activeTab === 'users' && <UsersTab />}
         {activeTab === 'moderation' && <ModerationTab />}

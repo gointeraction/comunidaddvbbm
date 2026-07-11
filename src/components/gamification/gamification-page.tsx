@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { MOCK_USER_ACHIEVEMENTS } from '@/lib/mock-data';
 import { useAppStore } from '@/stores/app-store';
 import type { Achievement, AchievementRarity } from '@/types/autodev';
 import { Button } from '@/components/ui/button';
@@ -70,10 +69,7 @@ export default function GamificationPage() {
   const completedMissions = useMemo(() => missions.filter(m => m.completed), [missions]);
 
   // Achievements
-  const unlockedIds = useMemo(
-    () => new Set(MOCK_USER_ACHIEVEMENTS.map(ua => ua.achievementId)),
-    []
-  );
+  const unlockedIds = useMemo(() => new Set<string>(), []);
 
   const filteredAchievements = useMemo(() => {
     let list = achievements;
@@ -95,7 +91,7 @@ export default function GamificationPage() {
   }, [achievementFilter, unlockedIds]);
 
   const unlockedCount = unlockedIds.size;
-  const totalCount = MOCK_ACHIEVEMENTS.length;
+  const totalCount = achievements.length;
 
   // Achievement filter tabs
   const filterTabs: Array<{ value: 'todos' | 'desbloqueados' | AchievementRarity; label: string }> = [
@@ -348,9 +344,7 @@ export default function GamificationPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 stagger-children">
           {filteredAchievements.map(achievement => {
             const isUnlocked = unlockedIds.has(achievement.achievementId);
-            const userAch = isUnlocked
-              ? MOCK_USER_ACHIEVEMENTS.find(ua => ua.achievementId === achievement.achievementId)
-              : null;
+            const userAch = null;
             const rarity = RARITY_CONFIG[achievement.rarity];
 
             return (
