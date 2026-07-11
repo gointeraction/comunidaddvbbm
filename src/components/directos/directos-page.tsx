@@ -170,11 +170,10 @@ function LiveRoomModal({
                   <div key={m.id} className={`flex items-start gap-2.5 ${isMe ? 'flex-row-reverse' : ''}`}>
                     <AvatarInitials name={m.userName} className="size-6 shrink-0 text-[10px]" />
                     <div
-                      className={`max-w-[80%] rounded-xl px-3 py-2 ${
-                        isMe
+                      className={`max-w-[80%] rounded-xl px-3 py-2 ${isMe
                           ? 'bg-[#10B981] text-black font-medium rounded-tr-none'
                           : 'bg-white/10 text-gray-200 rounded-tl-none'
-                      }`}
+                        }`}
                     >
                       {!isMe && <p className="text-[10px] font-bold text-[#10B981] mb-0.5">{m.userName}</p>}
                       <p className="leading-relaxed break-words">{m.content}</p>
@@ -328,11 +327,10 @@ function SessionCard({
                   size="sm"
                   variant={registered ? 'outline' : 'default'}
                   onClick={() => setRegistered(!registered)}
-                  className={`flex-1 font-mono text-xs cursor-pointer ${
-                    registered
+                  className={`flex-1 font-mono text-xs cursor-pointer ${registered
                       ? 'border-[#10B981]/40 text-[#10B981] bg-[#10B981]/10 hover:bg-[#10B981]/20'
                       : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                  }`}
+                    }`}
                 >
                   {registered ? '✓ Registrado' : 'Registrarse'}
                 </Button>

@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { useAppStore } from '@/stores/app-store';
-import { initFirestoreSync } from '@/lib/firestore-sync';
 import LandingPage from '@/components/landing/landing-page';
 import AuthPages from '@/components/auth/auth-pages';
 import OnboardingWizard from '@/components/onboarding/onboarding-wizard';
@@ -19,14 +18,35 @@ import { DirectosPage } from '@/components/directos/directos-page';
 import { NotificationsPage } from '@/components/notifications/notifications-page';
 import { AdminPage } from '@/components/admin/admin-page';
 
+function LoadingScreen() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#030712]">
+      <div className="text-center">
+        <div className="terminal-text text-sm mb-4">
+          <span className="text-[#10B981]">bbmdev</span>{' '}
+          <span className="text-gray-500">~/</span>
+          <span className="animate-blink text-[#10B981]">▋</span>
+        </div>
+        <p className="text-xs text-gray-600 terminal-text">Cargando...</p>
+      </div>
+    </div>
+  );
+}
+
 function AppRouter() {
-  const { route, isAuthenticated, currentUser } = useAppStore();
+  const { route, isAuthenticated, currentUser, isLoading, initAuth } = useAppStore();
 
+  // Initialize Firebase Auth on mount
   useEffect(() => {
-    initFirestoreSync();
-  }, []);
+    initAuth();
+  }, [initAuth]);
 
-  // ── Public routes (no auth required) ──────────────
+  // Loading state while auth initializes
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
+  // Public routes (no auth required)
   if (!isAuthenticated || !currentUser) {
     switch (route) {
       case 'login':
@@ -38,12 +58,12 @@ function AppRouter() {
     }
   }
 
-  // ── Onboarding gate ───────────────────────────────
+  // Onboarding gate
   if (currentUser.status === 'onboarding_pending') {
     return <OnboardingWizard />;
   }
 
-  // ── Protected routes (auth + active required) ─────
+  // Protected routes (auth + active required)
   const routeMap: Record<string, React.ReactNode> = {
     foro: <ForumPage />,
     'foro-detalle': <ForumPage />,

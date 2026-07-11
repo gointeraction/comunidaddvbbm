@@ -40,7 +40,15 @@ import {
   changeRoleInFirestore,
   claimXPInFirestore,
   markLessonCompletedInFirestore,
+  initFirestoreSync,
 } from '@/lib/firestore-sync';
+import {
+  onAuthChange,
+  loginWithEmail,
+  registerWithEmail,
+  logoutFirebase,
+  getUserProfile,
+} from '@/lib/firebase';
 
 interface AppState {
   // Navigation
@@ -51,11 +59,15 @@ interface AppState {
   // Auth
   currentUser: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => boolean;
+  isLoading: boolean;
+  authError: string | null;
+  initAuth: () => void;
+  login: (email: string, password: string) => Promise<boolean>;
   loginWithGoogle: (googleUser?: { uid?: string; email: string; displayName: string; avatarUrl?: string }) => void;
-  register: (email: string, password: string) => boolean;
-  logout: () => void;
+  register: (email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
   completeOnboarding: (data: { displayName: string; interests: string[]; level: string; bio: string }) => void;
+  clearAuthError: () => void;
 
   // Notifications
   notifications: Notification[];
@@ -71,7 +83,7 @@ interface AppState {
   createComment: (postId: string, content: string) => void;
   likeComment: (postId: string, commentId: string) => void;
 
-  // Community & Platform Collections (Sincronizadas con Firestore en tiempo real)
+  // Community & Platform Collections
   users: User[];
   resources: Resource[];
   courses: Course[];
@@ -88,7 +100,7 @@ interface AppState {
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
 
-  // New synced actions
+  // Synced actions
   updateProfile: (data: Partial<User>) => void;
   upvoteResource: (resourceId: string, delta?: number) => void;
   deletePostByAdmin: (postId: string) => void;
@@ -103,16 +115,75 @@ export const useAppStore = create<AppState>((set, get) => ({
   routeParams: {},
   navigate: (route, params = {}) => set({ route, routeParams: params }),
 
-  // ── Auth ──
+  // ── Auth (Firebase-backed) ──
   currentUser: null,
   isAuthenticated: false,
-  login: (_email, _password) => {
-    // Sincronizar usuario autenticado con Firestore
-    const u = CURRENT_USER;
-    saveUserInFirestore(u);
-    set({ currentUser: u, isAuthenticated: true, route: 'foro' });
-    return true;
+  isLoading: true,
+  authError: null,
+
+  initAuth: () => {
+    onAuthChange(async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const userProfile = await getUserProfile(firebaseUser.uid);
+          if (userProfile) {
+            set({ currentUser: userProfile, isAuthenticated: true, isLoading: false });
+            // Initialize Firestore sync after auth
+            initFirestoreSync();
+            // Navigate based on status
+            if (userProfile.status === 'onboarding_pending') {
+              set({ route: 'onboarding' });
+            }
+          } else {
+            // User exists in Firebase Auth but not in Firestore — create doc
+            const newUser: User = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              displayName: firebaseUser.displayName || 'Developer',
+              avatarUrl: firebaseUser.photoURL,
+              interests: [],
+              level: 'principiante',
+              bio: '',
+              role: 'member',
+              status: 'onboarding_pending',
+              suspendedUntil: null,
+              xp: 0,
+              weeklyXP: 0,
+              levelNumber: 0,
+              postsCount: 0,
+              commentsCount: 0,
+              fcmToken: null,
+              pushEnabled: true,
+              emailNotifications: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              lastActiveAt: new Date().toISOString(),
+            };
+            saveUserInFirestore(newUser);
+            set({ currentUser: newUser, isAuthenticated: true, isLoading: false, route: 'onboarding' });
+          }
+        } catch {
+          set({ currentUser: null, isAuthenticated: false, isLoading: false });
+        }
+      } else {
+        set({ currentUser: null, isAuthenticated: false, isLoading: false });
+      }
+    });
   },
+
+  login: async (email, password) => {
+    try {
+      set({ authError: null });
+      await loginWithEmail(email, password);
+      // Auth state observer will handle the rest
+      return true;
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'auth/invalid-credential';
+      set({ authError: msg });
+      return false;
+    }
+  },
+
   loginWithGoogle: (googleUser) => {
     const defaultGoogleUser = {
       uid: googleUser?.uid || ('u-google-' + Date.now()),
@@ -139,27 +210,25 @@ export const useAppStore = create<AppState>((set, get) => ({
     saveUserInFirestore(newUser);
     set({ currentUser: newUser, isAuthenticated: true, route: 'foro' });
   },
-  register: (_email, _password) => {
-    const newUser: User = {
-      ...CURRENT_USER,
-      uid: 'u-new-' + Date.now(),
-      email: _email,
-      status: 'onboarding_pending',
-      xp: 0,
-      weeklyXP: 0,
-      levelNumber: 0,
-      postsCount: 0,
-      commentsCount: 0,
-      displayName: '',
-      bio: '',
-      interests: [],
-      role: 'member',
-    };
-    saveUserInFirestore(newUser);
-    set({ currentUser: newUser, isAuthenticated: true, route: 'onboarding' });
-    return true;
+
+  register: async (email, password) => {
+    try {
+      set({ authError: null });
+      await registerWithEmail(email, password, '');
+      // Auth state observer will handle the rest
+      return true;
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'auth/email-already-in-use';
+      set({ authError: msg });
+      return false;
+    }
   },
-  logout: () => set({ currentUser: null, isAuthenticated: false, route: 'landing' }),
+
+  logout: async () => {
+    await logoutFirebase();
+    set({ currentUser: null, isAuthenticated: false, route: 'landing' });
+  },
+
   completeOnboarding: (data) => {
     const user = get().currentUser;
     if (!user) return;
@@ -179,6 +248,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       route: 'foro',
     });
   },
+
+  clearAuthError: () => set({ authError: null }),
 
   // ── Notifications ──
   notifications: MOCK_NOTIFICATIONS,
@@ -250,7 +321,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   likeComment: (_postId, _commentId) => { /* placeholder */ },
 
-  // ── Community Collections (Inicializadas con datos base y sincronizadas vía Firestore) ──
+  // ── Community Collections ──
   users: MOCK_USERS,
   resources: MOCK_RESOURCES,
   courses: MOCK_COURSES,
