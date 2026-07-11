@@ -38,7 +38,7 @@
 
 **BBMDev** es una plataforma comunitaria SaaS diseñada para desarrolladores especializados en automatización, inteligencia artificial, aplicaciones web y ecosistemas de agentes de IA. La plataforma combina un foro de discusión, biblioteca de recursos, cursos, sesiones en vivo, gamificación y herramientas de colaboración en tiempo real en un único producto cohesivo.
 
-La aplicación está construida como una **Single Page Application (SPA)** con Next.js, utilizando Firebase como backend principal (autenticación, base de datos en tiempo real Firestore, notificaciones push FCM) y LiveKit para sesiones de audio/video en tiempo real.
+La aplicación está construida como una **Single Page Application (SPA)** con Next.js, utilizando Firebase como backend principal (autenticación, base de datos en tiempo real Firestore, notificaciones push FCM) e integración con YouTube Live para transmisiones en directo.
 
 ---
 
@@ -51,7 +51,7 @@ La aplicación está construida como una **Single Page Application (SPA)** con N
 | 💬 Foro | Posts, comentarios, likes, tags, moderación | ✅ Activo |
 | 📚 Recursos | Skills, Plugins, Subagents, MCP Servers, Tutoriales | ✅ Activo |
 | 🎓 Cursos | Cursos con lecciones, progreso y XP | ✅ Activo |
-| 📡 Directos | Sesiones en vivo con LiveKit | ✅ Activo |
+| 📡 Directos | Sesiones en vivo con YouTube Live | ✅ Activo |
 | 👥 Miembros | Directorio de la comunidad con perfiles | ✅ Activo |
 | 🏆 Ranking | Tabla de líderes semanal y global por XP | ✅ Activo |
 | 🎮 Gamificación | Misiones, logros, niveles y recompensas XP | ✅ Activo |
@@ -78,7 +78,7 @@ La aplicación está construida como una **Single Page Application (SPA)** con N
   - **Firebase Auth** — Autenticación de usuarios
   - **FCM (Firebase Cloud Messaging)** — Notificaciones push
   - **Firebase Hosting** — Despliegue y CDN
-- **[LiveKit](https://livekit.io/)** — Audio/Video en tiempo real para sesiones directas
+- **YouTube Live** — Integración de directos y transmisiones en vivo
 - **[Prisma](https://www.prisma.io/)** + **SQLite** — ORM para datos locales/secundarios
 - **[NextAuth](https://next-auth.js.org/)** — Capa de autenticación adicional
 
@@ -193,9 +193,9 @@ Biblioteca comunitaria de recursos técnicos categorizada por tipo y nivel:
 ### 📡 Directos (`/components/directos`)
 - Calendario de **sesiones en vivo** programadas
 - Estados: `Programado`, `En vivo`, `Finalizado`, `Cancelado`
-- **Reserva de plaza** y lista de espera
-- Integración con **LiveKit** para audio y video en tiempo real
-- Sala de **pair programming** con código compartido
+- Integración con **YouTube Live** (reproductor integrado de directos y enlaces externos)
+- Creación y edición de directos (para roles autorizados: administradores y autores)
+- Ocultación automática de sesiones finalizadas y canceladas tras 24 horas de su programación
 
 ### 👥 Miembros (`/components/members`)
 - **Directorio completo** de la comunidad
@@ -317,11 +317,6 @@ FIREBASE_PROJECT_ID=
 FIREBASE_PRIVATE_KEY=
 FIREBASE_CLIENT_EMAIL=
 
-# LiveKit (sesiones en vivo)
-LIVEKIT_URL=
-LIVEKIT_API_KEY=
-LIVEKIT_API_SECRET=
-
 # NextAuth
 NEXTAUTH_SECRET=
 NEXTAUTH_URL=http://localhost:3000
@@ -436,9 +431,7 @@ Configura las variables de entorno en **Firebase Functions** antes del deploy:
 
 ```bash
 firebase functions:config:set \
-  nextauth.secret="TU_SECRET" \
-  livekit.api_key="TU_API_KEY" \
-  livekit.api_secret="TU_API_SECRET"
+  nextauth.secret="TU_SECRET"
 ```
 
 ---
@@ -455,7 +448,7 @@ firebase functions:config:set \
 | `Resource` | Recurso técnico (Skill, Plugin, MCP, etc.) |
 | `Course` | Curso con lecciones y progreso |
 | `Lesson` | Lección individual con recompensa XP |
-| `LiveSession` | Sesión en vivo programada con LiveKit |
+| `LiveSession` | Sesión en vivo programada con YouTube Live |
 | `Mission` | Misión gamificada con tareas y recompensas |
 | `Achievement` | Logro desbloqueable por criterios específicos |
 | `Notification` | Notificación in-app y/o push |
