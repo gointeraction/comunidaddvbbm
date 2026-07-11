@@ -3,6 +3,8 @@
 import { useState, useMemo } from 'react';
 import { useAppStore } from '@/stores/app-store';
 import { createResourceInFirestore, incrementDownloadCountFirestore } from '@/lib/firestore-sync';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { ResourceType, ResourceLevel, Resource } from '@/types/autodev';
 
 import { Button } from '@/components/ui/button';
@@ -217,6 +219,22 @@ function CreateResourceDialog({
   const [installCmd, setInstallCmd] = useState('');
   const [attachments, setAttachments] = useState<{ id: string; name: string; size: number }[]>([]);
   const [publishToForum, setPublishToForum] = useState(false);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen no puede superar 5MB');
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      setCoverPreview(url);
+      setCoverFile(file);
+    }
+  };
 
   const handleAddAttachment = () => {
     if (attachments.length >= 3) return;
@@ -233,8 +251,20 @@ function CreateResourceDialog({
     setAttachments((prev) => prev.filter((a) => a.id !== id));
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!title.trim() || !description.trim()) return;
+
+    let coverUrl = '';
+    if (coverFile && currentUser) {
+      try {
+        const storageRef = ref(storage, `resources/${currentUser.uid}/${Date.now()}-${coverFile.name}`);
+        const snapshot = await uploadBytes(storageRef, coverFile);
+        coverUrl = await getDownloadURL(snapshot.ref);
+      } catch (err) {
+        console.warn('Error uploading cover:', err);
+      }
+    }
+
     const newRes = {
       resourceId: `res-${Date.now()}`,
       title: title.trim(),
@@ -244,7 +274,7 @@ function CreateResourceDialog({
       level,
       authorId: currentUser?.uid || 'anon',
       authorName: currentUser?.displayName || 'Desarrollador BBM',
-      coverUrl: '',
+      coverUrl,
       externalUrl: externalUrl.trim() || null,
       downloadsCount: 0,
       favoritesCount: 0,
@@ -259,14 +289,14 @@ function CreateResourceDialog({
     useAppStore.setState((prev) => ({ resources: [newRes as any, ...prev.resources] }));
     setTitle(''); setDescription(''); setContent(''); setType('Skill'); setLevel('Principiante');
     setTags(''); setExternalUrl(''); setGithubUrl(''); setInstallCmd('');
-    setAttachments([]); setPublishToForum(false);
+    setAttachments([]); setPublishToForum(false); setCoverPreview(null); setCoverFile(null);
     onOpenChange(false);
   };
 
   const handleCancel = () => {
     setTitle(''); setDescription(''); setContent(''); setType('Skill'); setLevel('Principiante');
     setTags(''); setExternalUrl(''); setGithubUrl(''); setInstallCmd('');
-    setAttachments([]); setPublishToForum(false);
+    setAttachments([]); setPublishToForum(false); setCoverPreview(null); setCoverFile(null);
     onOpenChange(false);
   };
 
@@ -354,9 +384,16 @@ function CreateResourceDialog({
               {/* Miniatura */}
               <div className="space-y-2">
                 <label className="text-sm font-mono text-[#10B981]">Miniatura</label>
-                <button className="w-full border-2 border-dashed border-white/20 rounded-lg py-6 flex flex-col items-center gap-2 hover:border-[#10B981]/40 hover:bg-[#10B981]/5 transition-all cursor-pointer">
-                  <span className="text-2xl">🖼️</span>
-                  <span className="text-xs text-gray-400">Click para subir imagen</span>
+                <input ref={coverInputRef} type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
+                <button onClick={() => coverInputRef.current?.click()} className="w-full border-2 border-dashed border-white/20 rounded-lg py-6 flex flex-col items-center gap-2 hover:border-[#10B981]/40 hover:bg-[#10B981]/5 transition-all cursor-pointer">
+                  {coverPreview ? (
+                    <img src={coverPreview} alt="Preview" className="w-full h-32 object-cover rounded-lg" />
+                  ) : (
+                    <>
+                      <span className="text-2xl">🖼️</span>
+                      <span className="text-xs text-gray-400">Click para subir imagen</span>
+                    </>
+                  )}
                 </button>
               </div>
 
