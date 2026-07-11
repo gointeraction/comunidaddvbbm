@@ -90,10 +90,15 @@ export const weeklyRankingReset = onSchedule("0 0 * * 1", async () => {
     await db.collection("users").doc(top.docs[i].id).update({ xp: FieldValue.increment(bonus) });
     await notify(top.docs[i].id, "rank_update", { rank: i + 1, bonusXP: bonus }, undefined, `Puesto #${i + 1} del ranking semanal. +${bonus} XP!`);
   }
+  // Process in batches of 500 to avoid Firestore batch limit
   const all = await db.collection("users").where("weeklyXP", ">", 0).get();
-  const batch = db.batch();
-  all.docs.forEach((d) => batch.update(d.ref, { weeklyXP: 0 }));
-  await batch.commit();
+  const BATCH_SIZE = 500;
+  for (let i = 0; i < all.docs.length; i += BATCH_SIZE) {
+    const batch = db.batch();
+    const chunk = all.docs.slice(i, i + BATCH_SIZE);
+    chunk.forEach((d) => batch.update(d.ref, { weeklyXP: 0 }));
+    await batch.commit();
+  }
 });
 
 // ══════════════════════════════════════════════════════

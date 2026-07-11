@@ -2,7 +2,7 @@
 
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, signOut, updateProfile, onAuthStateChanged, type Auth, type UserCredential } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, serverTimestamp, type Firestore } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, serverTimestamp, enableMultiTabIndexedDbPersistence, type Firestore } from 'firebase/firestore';
 import { getMessaging, getToken, type Messaging } from 'firebase/messaging';
 import { getStorage, ref, uploadBytes, getDownloadURL, type FirebaseStorage } from 'firebase/storage';
 import type { User } from '@/types/autodev';
@@ -33,6 +33,13 @@ if (typeof window !== 'undefined') {
   } catch {
     messaging = null;
   }
+  enableMultiTabIndexedDbPersistence(db).catch((err) => {
+    if (err.code === 'failed-precondition') {
+      console.warn('>[Firebase] Persistence failed: multiple tabs open');
+    } else if (err.code === 'unimplemented') {
+      console.warn('>[Firebase] Persistence not supported by browser');
+    }
+  });
 }
 
 export { app, auth, db, storage, messaging };

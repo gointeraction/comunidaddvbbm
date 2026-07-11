@@ -16,6 +16,7 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import { useAppStore } from '@/stores/app-store';
+import { limit } from 'firebase/firestore';
 // Seed data defined inline (no longer imported from mock-data.ts)
 
 const SEED_DATA = {
@@ -53,18 +54,35 @@ const SEED_DATA = {
 };
 
 let isSyncInitialized = false;
+let unsubscribers: (() => void)[] = [];
+
+// ── Rate Limiter Helper ──
+const lastCall: Record<string, number> = {};
+export function throttle(key: string, ms: number = 1000): boolean {
+  const now = Date.now();
+  if (lastCall[key] && now - lastCall[key] < ms) return false;
+  lastCall[key] = now;
+  return true;
+}
 
 /**
  * Inicializa la sincronización en tiempo real o carga desde Firestore.
  * Si las colecciones están vacías, siembra automáticamente los datos iniciales de la comunidad en Firestore.
  */
+export function cleanupFirestoreSync() {
+  unsubscribers.forEach(unsub => unsub());
+  unsubscribers = [];
+  isSyncInitialized = false;
+}
+
 export async function initFirestoreSync() {
-  if (typeof window === 'undefined' || isSyncInitialized || !db) return;
+  if (typeof window === 'undefined' || !db) return;
+  if (isSyncInitialized) return;
   isSyncInitialized = true;
 
   try {
-    const postsSnap = await getDocs(collection(db, 'posts'));
-    const coursesSnap = await getDocs(collection(db, 'courses'));
+    const postsSnap = await getDocs(query(collection(db, 'posts'), limit(100)));
+    const coursesSnap = await getDocs(query(collection(db, 'courses'), limit(100)));
     if (postsSnap.empty || coursesSnap.empty) {
       console.info('>[Firestore Sync] Colección posts o courses vacía. Sembrando datos en Firestore...');
       await seedFirestoreData();
@@ -73,17 +91,17 @@ export async function initFirestoreSync() {
     }
 
     // Suscribirse a posts
-    onSnapshot(
+    unsubscribers.push(onSnapshot(
       query(collection(db, 'posts'), orderBy('createdAt', 'desc')),
       (snap) => {
         const posts = snap.docs.map((d) => d.data() as any);
         if (posts.length > 0) useAppStore.setState({ posts });
       },
       (err) => console.warn('>[Firestore Sync] Posts snapshot err:', err.message)
-    );
+    ));
 
     // Suscribirse a users
-    onSnapshot(
+    unsubscribers.push(onSnapshot(
       collection(db, 'users'),
       (snap) => {
         const users = snap.docs.map((d) => d.data() as any);
@@ -98,40 +116,40 @@ export async function initFirestoreSync() {
         }
       },
       (err) => console.warn('>[Firestore Sync] Users snapshot err:', err.message)
-    );
+    ));
 
     // Suscribirse a courses
-    onSnapshot(
+    unsubscribers.push(onSnapshot(
       collection(db, 'courses'),
       (snap) => {
         const courses = snap.docs.map((d) => d.data() as any);
         if (courses.length > 0) useAppStore.setState({ courses });
       },
       (err) => console.warn('>[Firestore Sync] Courses err:', err.message)
-    );
+    ));
 
     // Suscribirse a resources
-    onSnapshot(
+    unsubscribers.push(onSnapshot(
       collection(db, 'resources'),
       (snap) => {
         const resources = snap.docs.map((d) => d.data() as any);
         if (resources.length > 0) useAppStore.setState({ resources });
       },
       (err) => console.warn('>[Firestore Sync] Resources err:', err.message)
-    );
+    ));
 
     // Suscribirse a liveSessions
-    onSnapshot(
+    unsubscribers.push(onSnapshot(
       collection(db, 'liveSessions'),
       (snap) => {
         const liveSessions = snap.docs.map((d) => d.data() as any);
         if (liveSessions.length > 0) useAppStore.setState({ liveSessions });
       },
       (err) => console.warn('>[Firestore Sync] LiveSessions err:', err.message)
-    );
+    ));
 
     // Suscribirse a notifications
-    onSnapshot(
+    unsubscribers.push(onSnapshot(
       collection(db, 'notifications'),
       (snap) => {
         const notifications = snap.docs.map((d) => d.data() as any);
@@ -143,29 +161,29 @@ export async function initFirestoreSync() {
         }
       },
       (err) => console.warn('>[Firestore Sync] Notifications err:', err.message)
-    );
+    ));
 
     // Suscribirse a missions & achievements
-    onSnapshot(
+    unsubscribers.push(onSnapshot(
       collection(db, 'missions'),
       (snap) => {
         const missions = snap.docs.map((d) => d.data() as any);
         if (missions.length > 0) useAppStore.setState({ missions });
       },
       () => {}
-    );
+    ));
 
-    onSnapshot(
+    unsubscribers.push(onSnapshot(
       collection(db, 'achievements'),
       (snap) => {
         const achievements = snap.docs.map((d) => d.data() as any);
         if (achievements.length > 0) useAppStore.setState({ achievements });
       },
       () => {}
-    );
+    ));
 
     // RF-LAND-02: Suscribirse a counters
-    onSnapshot(
+    unsubscribers.push(onSnapshot(
       collection(db, 'counters'),
       (snap) => {
         const docs = snap.docs.map((d) => d.data() as any);
@@ -176,12 +194,12 @@ export async function initFirestoreSync() {
         }
       },
       () => {}
-    );
+    ));
 
     // Suscribirse a live chat (per live session)
     const livesSnap = await getDocs(collection(db, 'liveSessions'));
     for (const liveDoc of livesSnap.docs) {
-      onSnapshot(
+      unsubscribers.push(onSnapshot(
         collection(db, `liveSessions/${liveDoc.id}/chat`),
         (snap) => {
           const messages = snap.docs.map((d) => ({ ...d.data(), liveId: liveDoc.id }));
@@ -192,11 +210,11 @@ export async function initFirestoreSync() {
           }
         },
         () => {}
-      );
+      ));
     }
 
     // Suscribirse a userAchievements
-    onSnapshot(
+    unsubscribers.push(onSnapshot(
       collection(db, 'userAchievements'),
       (snap) => {
         const userAchievements = snap.docs.map((d) => d.data() as any);
@@ -205,7 +223,7 @@ export async function initFirestoreSync() {
         }
       },
       () => {}
-    );
+    ));
   } catch (error: any) {
     console.warn('>[Firestore Sync] Aviso al conectar (usando estado local hasta reconectar):', error?.message || error);
   }
@@ -273,6 +291,7 @@ export async function createPostInFirestore(post: any) {
 
 export async function likePostInFirestore(postId: string, likedByUser: boolean) {
   if (!db) return;
+  if (!throttle(`like-${postId}`, 500)) return;
   try {
     const delta = likedByUser ? -1 : 1;
     await updateDoc(doc(db, 'posts', postId), {
@@ -285,6 +304,7 @@ export async function likePostInFirestore(postId: string, likedByUser: boolean) 
 
 export async function createCommentInFirestore(postId: string, comment: any) {
   if (!db) return;
+  if (!throttle(`comment-${postId}`, 1000)) return;
   try {
     await setDoc(doc(db, `posts/${postId}/comments`, comment.commentId), comment);
     await updateDoc(doc(db, 'posts', postId), {
