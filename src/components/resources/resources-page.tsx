@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useAppStore } from '@/stores/app-store';
 import { createResourceInFirestore, incrementDownloadCountFirestore } from '@/lib/firestore-sync';
 import { storage } from '@/lib/firebase';
