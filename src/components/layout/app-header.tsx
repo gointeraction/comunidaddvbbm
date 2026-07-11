@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Menu, Bell, Zap, ChevronRight, Terminal } from 'lucide-react';
+import { Menu, Bell, Zap, ChevronRight, Terminal, PanelLeftOpen, PanelLeftClose } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -80,6 +80,7 @@ export function AppHeader() {
     unreadCount,
     navigate,
     toggleSidebar,
+    sidebarOpen,
   } = useAppStore();
 
   const breadcrumbSegments = useMemo(() => {
@@ -100,15 +101,23 @@ export function AppHeader() {
         border-b border-white/10 bg-gray-950/85 backdrop-blur-md px-4
       `}
     >
-      {/* ── Mobile hamburger ── */}
+      {/* ── Sidebar toggle (desktop & mobile) ── */}
       <Button
         variant="ghost"
         size="icon"
-        className="md:hidden size-8 text-gray-400 hover:text-gray-100"
+        className="size-8 text-gray-400 hover:text-gray-100 flex items-center justify-center transition-colors shrink-0"
         onClick={toggleSidebar}
-        aria-label="Abrir menú"
+        title={sidebarOpen ? 'Ocultar menú lateral' : 'Abrir menú lateral'}
+        aria-label={sidebarOpen ? 'Ocultar menú lateral' : 'Abrir menú lateral'}
       >
-        <Menu className="size-5" />
+        {sidebarOpen ? (
+          <>
+            <PanelLeftClose className="size-5 hidden md:block" />
+            <Menu className="size-5 md:hidden" />
+          </>
+        ) : (
+          <PanelLeftOpen className="size-5 text-[#10B981]" />
+        )}
       </Button>
 
       {/* ── Logo (mobile) ── */}

@@ -16,6 +16,7 @@ import {
   Zap,
   ChevronRight,
   Terminal,
+  PanelLeftClose,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -99,7 +100,7 @@ function levelLabel(levelNumber: number): string {
 /* -------------------------------------------------------------------------- */
 
 function SidebarContent() {
-  const { route, navigate, currentUser, unreadCount, logout } = useAppStore();
+  const { route, navigate, currentUser, unreadCount, logout, toggleSidebar } = useAppStore();
 
   const bottomItems: BottomNavItem[] = useMemo(() => {
     const items: BottomNavItem[] = [
@@ -146,7 +147,7 @@ function SidebarContent() {
   return (
     <div className="flex h-full flex-col">
       {/* ── Logo / Brand ── */}
-      <div className="flex-shrink-0 px-4 pt-5 pb-3">
+      <div className="flex-shrink-0 px-4 pt-5 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-gray-900 border border-[#10B981]/40 flex items-center justify-center shadow-[0_0_18px_rgba(16,185,129,0.25)]">
             <Terminal className="w-4 h-4 text-[#10B981]" />
@@ -157,6 +158,14 @@ function SidebarContent() {
             <span className="animate-blink text-[#10B981]">▋</span>
           </div>
         </div>
+        <button
+          onClick={toggleSidebar}
+          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-100 hover:bg-white/5 transition-colors cursor-pointer"
+          title="Ocultar menú lateral"
+          aria-label="Ocultar menú lateral"
+        >
+          <PanelLeftClose className="w-4 h-4" />
+        </button>
       </div>
 
       <Separator className="bg-white/10" />
