@@ -68,6 +68,7 @@ function AppRouter() {
     foro: <ForumPage />,
     'foro-detalle': <ForumPage />,
     recursos: <ResourcesPage />,
+    'recurso-detalle': <ResourcesPage />,
     cursos: <CoursesPage />,
     directos: <DirectosPage />,
     miembros: <MembersPage />,

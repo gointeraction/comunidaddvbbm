@@ -3,6 +3,7 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, signOut, updateProfile, onAuthStateChanged, type Auth, type UserCredential } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, serverTimestamp, type Firestore } from 'firebase/firestore';
+import { getMessaging, getToken, type Messaging } from 'firebase/messaging';
 import { getStorage, ref, uploadBytes, getDownloadURL, type FirebaseStorage } from 'firebase/storage';
 import type { User } from '@/types/autodev';
 
@@ -20,15 +21,42 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
+let messaging: Messaging | null;
 
 if (typeof window !== 'undefined') {
   app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
   auth = getAuth(app);
   db = getFirestore(app);
   storage = getStorage(app);
+  try {
+    messaging = getMessaging(app);
+  } catch {
+    messaging = null;
+  }
 }
 
-export { app, auth, db, storage };
+export { app, auth, db, storage, messaging };
+
+// ── RF-066: FCM Push Notification Setup ────────────────
+export async function requestNotificationPermission(): Promise<string | null> {
+  if (!messaging) return null;
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return null;
+    const token = await getToken(messaging, { vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || '' });
+    return token;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveFCMToken(uid: string, token: string): Promise<void> {
+  try {
+    await setDoc(doc(db, 'users', uid), { fcmToken: token }, { merge: true });
+  } catch (e) {
+    console.warn('Error saving FCM token:', e);
+  }
+}
 
 // ── Auth State Observer ──────────────────────────────
 export function onAuthChange(callback: (user: import('firebase/auth').User | null) => void) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, useRef, type FormEvent } from 'react';
 import { useAppStore } from '@/stores/app-store';
 import { signInWithGoogleFirebase, resetPassword } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
@@ -115,6 +115,8 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
+  const failedAttemptsRef = useRef(0);
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
@@ -133,12 +135,34 @@ function LoginPage() {
     clearAuthError();
     if (!email || !password) return;
 
+    // RF-007: Rate limiting check
+    if (lockedUntil && Date.now() < lockedUntil) {
+      const minutesLeft = Math.ceil((lockedUntil - Date.now()) / 60000);
+      return;
+    }
+
     setLoading(true);
     await login(email, password);
     setLoading(false);
+
+    // If login failed (authError is set), increment counter
+    const currentError = useAppStore.getState().authError;
+    if (currentError) {
+      failedAttemptsRef.current += 1;
+      if (failedAttemptsRef.current >= 5) {
+        setLockedUntil(Date.now() + 15 * 60 * 1000);
+        failedAttemptsRef.current = 0;
+      }
+    } else {
+      failedAttemptsRef.current = 0;
+    }
   };
 
-  const displayError = authError ? getFirebaseErrorMessage(authError) : null;
+  const isLocked = lockedUntil !== null && Date.now() < lockedUntil;
+  const lockMinutesLeft = isLocked ? Math.ceil((lockedUntil! - Date.now()) / 60000) : 0;
+  const displayError = isLocked
+    ? `Demasiados intentos. Intenta de nuevo en ${lockMinutesLeft} minutos`
+    : authError ? getFirebaseErrorMessage(authError) : null;
 
   return (
     <>
@@ -179,8 +203,8 @@ function LoginPage() {
             </div>
           )}
 
-          <Button type="submit" disabled={loading} className="w-full bg-[#10B981] text-gray-950 hover:bg-[#34D399] font-mono font-semibold rounded-xl shadow-[0_0_22px_rgba(16,185,129,0.4)] cursor-pointer">
-            {loading ? 'Conectando...' : 'Iniciar sesión'}
+          <Button type="submit" disabled={loading || isLocked} className="w-full bg-[#10B981] text-gray-950 hover:bg-[#34D399] font-mono font-semibold rounded-xl shadow-[0_0_22px_rgba(16,185,129,0.4)] cursor-pointer">
+            {loading ? 'Conectando...' : isLocked ? `Bloqueado (${lockMinutesLeft}min)` : 'Iniciar sesión'}
           </Button>
         </form>
 

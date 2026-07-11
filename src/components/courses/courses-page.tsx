@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useAppStore } from '@/stores/app-store';
 import { MOCK_LESSONS } from '@/lib/mock-data';
+import { db } from '@/lib/firebase';
+import { collection, addDoc } from 'firebase/firestore';
 import type { Course, Lesson } from '@/types/autodev';
 
 import { Button } from '@/components/ui/button';
@@ -12,6 +14,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   BookOpen,
   Clock,
@@ -22,6 +33,7 @@ import {
   Zap,
   Trophy,
   GraduationCap,
+  Plus,
 } from 'lucide-react';
 
 function formatDuration(minutes: number): string {
@@ -368,8 +380,25 @@ function CourseDetail({
             </span>
           </div>
         </div>
-        <div className="w-full sm:w-48">
-          <Progress value={progressPercent} className="h-2" />
+        <div className="flex items-center gap-2">
+          {/* RF-035: Simulated certificate */}
+          {progressPercent === 100 && (
+            <Button
+              size="sm"
+              onClick={() => {
+                const user = useAppStore.getState().currentUser;
+                const html = `<!DOCTYPE html><html><head><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f5;font-family:Georgia,serif;}.cert{width:700px;padding:40px;background:white;border:3px solid #10B981;position:relative;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.1);}.cert::before{content:'';position:absolute;inset:8px;border:1px solid #10B981;pointer-events:none;}h1{color:#10B981;margin:0 0 8px}h2{margin:0 0 4px;font-size:1.3em}.meta{color:#666;font-size:.9em;margin:16px 0}</style></head><body><div class="cert"><h1>CERTIFICADO</h1><h2>${course.title}</h2><p style="font-size:1.1em">Otorgado a</p><p style="font-size:1.4em;font-weight:bold;color:#333">${user?.displayName || 'Estudiante'}</p><p class="meta">Fecha: ${new Date().toLocaleDateString('es-ES', { year:'numeric', month:'long', day:'numeric' })}</p><p class="meta">Comunidad BBMDev</p></div></body></html>`;
+                window.open('data:text/html,' + encodeURIComponent(html), '_blank');
+              }}
+              className="bg-yellow-500 text-black hover:bg-yellow-400"
+            >
+              <GraduationCap className="size-4 mr-1.5" />
+              Ver Certificado
+            </Button>
+          )}
+          <div className="w-full sm:w-48">
+            <Progress value={progressPercent} className="h-2" />
+          </div>
         </div>
       </div>
 
@@ -546,6 +575,44 @@ function CourseDetail({
 // ── Courses Page (main export) ──────────────────────────
 export default function CoursesPage() {
   const { route, navigate, courses } = useAppStore();
+  const currentUser = useAppStore((s) => s.currentUser);
+  const [newCourseOpen, setNewCourseOpen] = useState(false);
+  const [courseTitle, setCourseTitle] = useState('');
+  const [courseDescription, setCourseDescription] = useState('');
+  const [courseDuration, setCourseDuration] = useState('');
+
+  const canCreate = currentUser?.role === 'autor' || currentUser?.role === 'admin';
+
+  async function handleCreateCourse() {
+    if (!courseTitle.trim() || !courseDescription.trim()) return;
+    const duration = parseInt(courseDuration) || 60;
+    const newCourse = {
+      courseId: `c-${Date.now()}`,
+      title: courseTitle.trim(),
+      description: courseDescription.trim(),
+      durationMinutes: duration,
+      authorId: currentUser?.uid || 'anon',
+      authorName: currentUser?.displayName || 'Autor',
+      lessonsCount: 0,
+      enrolledCount: 0,
+      isEnrolled: false,
+      progress: 0,
+      tags: [],
+      createdAt: new Date().toISOString(),
+    };
+    try {
+      await addDoc(collection(db, 'courses'), newCourse);
+    } catch (e) {
+      console.warn('Error creating course:', e);
+    }
+    useAppStore.setState((prev) => ({
+      courses: [newCourse as any, ...prev.courses],
+    }));
+    setCourseTitle('');
+    setCourseDescription('');
+    setCourseDuration('');
+    setNewCourseOpen(false);
+  }
 
   // Course detail view
   if (route === 'curso-detalle' || route === 'leccion') {
@@ -569,11 +636,48 @@ export default function CoursesPage() {
   return (
     <div className="space-y-5">
       {/* Terminal header */}
-      <div className="terminal-text text-xs">
-        <span className="terminal-prompt">bbmdev</span>{' '}
-        <span className="terminal-path">~/cursos</span>
-        <span className="animate-blink text-foreground">▋</span>
+      <div className="flex items-center justify-between">
+        <div className="terminal-text text-xs">
+          <span className="terminal-prompt">bbmdev</span>{' '}
+          <span className="terminal-path">~/cursos</span>
+          <span className="animate-blink text-foreground">▋</span>
+        </div>
+        {canCreate && (
+          <Button size="sm" onClick={() => setNewCourseOpen(true)} className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Plus className="size-4 mr-1.5" />
+            Nuevo curso
+          </Button>
+        )}
       </div>
+
+      {/* RF-034: Create Course Dialog */}
+      <Dialog open={newCourseOpen} onOpenChange={setNewCourseOpen}>
+        <DialogContent className="sm:max-w-lg bg-card border-border/50">
+          <DialogHeader>
+            <DialogTitle className="terminal-text text-primary">~/nuevo-curso</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <label className="text-sm text-muted-foreground">Título</label>
+              <Input value={courseTitle} onChange={(e) => setCourseTitle(e.target.value)} placeholder="Nombre del curso" className="bg-secondary/50 border-border/50" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm text-muted-foreground">Descripción</label>
+              <Textarea value={courseDescription} onChange={(e) => setCourseDescription(e.target.value)} placeholder="Describe el curso..." rows={4} className="bg-secondary/50 border-border/50 resize-none" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm text-muted-foreground">Duración (minutos)</label>
+              <Input type="number" value={courseDuration} onChange={(e) => setCourseDuration(e.target.value)} placeholder="60" className="bg-secondary/50 border-border/50" />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button variant="ghost" onClick={() => setNewCourseOpen(false)} className="flex-1">Cancelar</Button>
+              <Button onClick={handleCreateCourse} disabled={!courseTitle.trim() || !courseDescription.trim()} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40">
+                <Plus className="size-4 mr-1.5" /> Crear curso
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Course grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

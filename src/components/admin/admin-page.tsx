@@ -11,6 +11,8 @@ import {
   Ban,
   ChevronDown,
   UserCog,
+  Radio,
+  XCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,16 +37,17 @@ import {
 import { AvatarInitials } from '@/components/autodev/avatar-initials';
 import { useAppStore } from '@/stores/app-store';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, orderBy, query, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, doc, getDoc, updateDoc } from 'firebase/firestore';
 import type { UserRole, Post, AuditLog } from '@/types/autodev';
 
-type AdminTab = 'users' | 'moderation' | 'metrics' | 'audit';
+type AdminTab = 'users' | 'moderation' | 'metrics' | 'audit' | 'directos';
 
 const TABS: { id: AdminTab; label: string; icon: React.ElementType }[] = [
   { id: 'users', label: 'Usuarios', icon: Users },
   { id: 'moderation', label: 'Moderación', icon: Shield },
   { id: 'metrics', label: 'Métricas', icon: BarChart3 },
   { id: 'audit', label: 'Auditoría', icon: ScrollText },
+  { id: 'directos', label: 'Directos', icon: Radio },
 ];
 
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -326,6 +329,85 @@ function AuditTab() {
   );
 }
 
+// ── Directos Tab (RF-048) ────────────────────────────────
+function DirectosTab() {
+  const liveSessions = useAppStore((s) => s.liveSessions);
+
+  async function handleCancelSession(sessionId: string) {
+    try {
+      await updateDoc(doc(db, 'liveSessions', sessionId), { status: 'cancelled' });
+      useAppStore.setState((prev) => ({
+        liveSessions: prev.liveSessions.map((s: any) =>
+          s.liveId === sessionId ? { ...s, status: 'cancelled' } : s
+        ),
+      }));
+    } catch (e) {
+      console.warn('Error cancelling session:', e);
+    }
+  }
+
+  const SESSION_STATUS_COLORS: Record<string, string> = {
+    scheduled: 'bg-green-700/30 text-green-400',
+    live: 'bg-red-700/30 text-red-400',
+    ended: 'bg-gray-700/30 text-gray-400',
+    cancelled: 'bg-yellow-700/30 text-yellow-400',
+  };
+
+  return (
+    <div className="space-y-4">
+      <h3 className="terminal-text text-sm"><span className="terminal-prompt">$</span> <span className="terminal-path">~/admin/directos</span></h3>
+      <div className="glass-card rounded-xl overflow-hidden">
+        <div className="overflow-x-auto max-h-[500px] overflow-y-auto custom-scrollbar">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-xs text-muted-foreground">Título</TableHead>
+                <TableHead className="text-xs text-muted-foreground">Estado</TableHead>
+                <TableHead className="text-xs text-muted-foreground">Fecha</TableHead>
+                <TableHead className="text-xs text-muted-foreground">Inscritos</TableHead>
+                <TableHead className="text-xs text-muted-foreground">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {liveSessions.map((session: any) => (
+                <TableRow key={session.liveId} className="border-border">
+                  <TableCell className="text-sm font-medium">{session.title}</TableCell>
+                  <TableCell>
+                    <Badge className={`${SESSION_STATUS_COLORS[session.status] || 'bg-gray-700/30 text-gray-400'} text-xs`}>
+                      {session.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {session.scheduledAt ? formatTimestamp(session.scheduledAt) : '—'}
+                  </TableCell>
+                  <TableCell className="text-sm">{session.registeredUsers?.length || 0}</TableCell>
+                  <TableCell>
+                    {session.status === 'scheduled' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-terminal-error hover:text-terminal-error hover:bg-terminal-error/10 h-7 text-xs"
+                        onClick={() => handleCancelSession(session.liveId)}
+                      >
+                        <XCircle className="size-3" /> Cancelar
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {liveSessions.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-6 terminal-text terminal-comment text-sm">{'// sin sesiones programadas'}</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Admin Page ──────────────────────────────────────
 export function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('users');
@@ -351,6 +433,7 @@ export function AdminPage() {
         {activeTab === 'moderation' && <ModerationTab />}
         {activeTab === 'metrics' && <MetricsTab />}
         {activeTab === 'audit' && <AuditTab />}
+        {activeTab === 'directos' && <DirectosTab />}
       </div>
     </div>
   );

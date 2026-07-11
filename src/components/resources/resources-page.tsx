@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useAppStore } from '@/stores/app-store';
-import { createResourceInFirestore } from '@/lib/firestore-sync';
+import { createResourceInFirestore, incrementDownloadCountFirestore } from '@/lib/firestore-sync';
 import type { ResourceType, ResourceLevel } from '@/types/autodev';
 
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,8 @@ import {
   Users,
   GraduationCap,
   X,
+  ArrowLeft,
+  ExternalLink,
 } from 'lucide-react';
 
 const TYPE_OPTIONS: (ResourceType | 'All')[] = [
@@ -423,8 +425,88 @@ function CreateResourceDialog({
   );
 }
 
+// ── Resource Detail ─────────────────────────────────────
+function ResourceDetail({ resourceId, onBack }: { resourceId: string; onBack: () => void }) {
+  const resources = useAppStore((s) => s.resources);
+  const resource = resources.find((r) => r.resourceId === resourceId);
+
+  if (!resource) {
+    return (
+      <div className="text-center py-20 text-muted-foreground">
+        <p className="terminal-text">Recurso no encontrado</p>
+        <Button variant="ghost" className="mt-4 text-primary" onClick={onBack}>
+          <ArrowLeft className="size-4 mr-2" /> Volver a recursos
+        </Button>
+      </div>
+    );
+  }
+
+  function handleDownload() {
+    if (!resource) return;
+    if (resource.externalUrl) {
+      window.open(resource.externalUrl, '_blank');
+    }
+    incrementDownloadCountFirestore(resource.resourceId);
+    useAppStore.setState((prev) => ({
+      resources: prev.resources.map((r) =>
+        r.resourceId === resourceId ? { ...r, downloadsCount: r.downloadsCount + 1 } : r
+      ),
+    }));
+  }
+
+  return (
+    <div className="animate-fade-in-up space-y-4">
+      <button onClick={onBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+        <ArrowLeft className="size-4" /> Volver a recursos
+      </button>
+      <Card className="glass-card border-border/50">
+        <CardContent className="p-5 md:p-6 space-y-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <Badge variant="outline" className="text-[10px] mb-2">{resource.type}</Badge>
+              <h2 className="text-xl font-semibold text-foreground">{resource.title}</h2>
+              <p className="text-sm text-muted-foreground mt-1">por {resource.authorName}</p>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">{resource.description}</p>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <Badge variant="outline" className={`text-[10px] ${LEVEL_COLORS[resource.level]}`}>{resource.level}</Badge>
+            <span className="flex items-center gap-1"><Download className="size-3.5" /> {resource.downloadsCount}</span>
+            <span className="flex items-center gap-1"><Star className="size-3.5" /> {resource.favoritesCount}</span>
+          </div>
+          <div className="flex gap-3">
+            {resource.externalUrl && (
+              <Button onClick={handleDownload} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <ExternalLink className="size-4 mr-1.5" /> Descargar
+              </Button>
+            )}
+          </div>
+          {resource.attachments && resource.attachments.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-foreground">Archivos adjuntos</p>
+              {resource.attachments.map((att: any) => (
+                <div key={att.id} className="flex items-center justify-between bg-secondary/50 border border-border/50 rounded-md px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <FileText className="size-4 text-primary/60" />
+                    <div>
+                      <p className="text-xs text-foreground">{att.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{formatFileSize(att.size)}</p>
+                    </div>
+                  </div>
+                  <button onClick={handleDownload} className="text-xs text-primary hover:underline terminal-text">Descargar</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ── Resources Page (main export) ────────────────────────
 export default function ResourcesPage() {
+  const { route, navigate } = useAppStore();
   const currentUser = useAppStore((s) => s.currentUser);
   const resources = useAppStore((s) => s.resources);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -436,6 +518,21 @@ export default function ResourcesPage() {
     currentUser?.role === 'autor' ||
     currentUser?.role === 'moderador' ||
     currentUser?.role === 'admin';
+
+  // Resource detail view
+  if (route === 'recurso-detalle') {
+    const resourceId = useAppStore.getState().routeParams.resourceId || '';
+    return (
+      <div className="space-y-1">
+        <div className="terminal-text text-xs mb-4">
+          <span className="terminal-prompt">bbmdev</span>{' '}
+          <span className="terminal-path">~/recursos</span>{' '}
+          <span className="terminal-comment">— {resourceId}</span>
+        </div>
+        <ResourceDetail resourceId={resourceId} onBack={() => navigate('recursos')} />
+      </div>
+    );
+  }
 
   const filteredResources = useMemo(() => {
     return resources.filter((r) => {

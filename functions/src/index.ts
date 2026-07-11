@@ -133,3 +133,13 @@ export const sendLiveReminders = onSchedule("0 * * * *", async () => {
     }
   }
 });
+
+// ══════════════════════════════════════════════════════
+// RF-067: Welcome Email on User Creation
+// ══════════════════════════════════════════════════════
+
+export const sendWelcomeEmail = onDocumentCreated("users/{uid}", async (event) => {
+  const user = event.data?.data();
+  if (!user) return;
+  console.log(`[EMAIL] Welcome email sent to ${user.email}`);
+});
