@@ -97,11 +97,15 @@ function CourseCard({
     >
       {/* Cover */}
       <div
-        className={`relative h-36 bg-gradient-to-br ${gradient} flex items-center justify-center`}
+        className={`relative h-36 bg-gradient-to-br ${gradient} flex items-center justify-center overflow-hidden`}
       >
-        <div className="text-primary/30 group-hover:text-primary/50 transition-colors">
-          {getCourseIcon(course.courseId)}
-        </div>
+        {(course as any).coverUrl ? (
+          <img src={(course as any).coverUrl} alt={course.title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="text-primary/30 group-hover:text-primary/50 transition-colors">
+            {getCourseIcon(course.courseId)}
+          </div>
+        )}
         {course.isEnrolled && (
           <Badge className="absolute top-2 right-2 bg-primary/20 text-primary border-primary/30 text-[10px]">
             <CheckCircle2 className="size-3 mr-1" />
@@ -625,6 +629,8 @@ export default function CoursesPage() {
   const [courseDuration, setCourseDuration] = useState('');
   const [courseExternalUrl, setCourseExternalUrl] = useState('');
   const [editCourse, setEditCourse] = useState<any>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
 
   const canCreate = currentUser?.role === 'admin' || (currentUser?.role === 'autor') || (currentUser && AUTHORIZED_EMAILS.includes(currentUser.email));
 
@@ -635,17 +641,52 @@ export default function CoursesPage() {
       setCourseDescription(editCourse.description || '');
       setCourseDuration(String(editCourse.durationMinutes || 60));
       setCourseExternalUrl(editCourse.externalUrl || '');
+      setCoverPreview(editCourse.coverUrl || null);
+      setCoverFile(null);
     } else {
       setCourseTitle('');
       setCourseDescription('');
       setCourseDuration('');
       setCourseExternalUrl('');
+      setCoverPreview(null);
+      setCoverFile(null);
     }
   }, [editCourse]);
+
+  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen no puede superar 5MB');
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      setCoverPreview(url);
+      setCoverFile(file);
+    }
+  }
+
+  async function uploadCoverImage(file: File, userId: string): Promise<string> {
+    const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+    const { storage } = await import('@/lib/firebase');
+    const storageRef = ref(storage, `courses/${userId}/${Date.now()}-${file.name}`);
+    const snapshot = await uploadBytes(storageRef, file);
+    return await getDownloadURL(snapshot.ref);
+  }
 
   async function handleCreateCourse() {
     if (!courseTitle.trim() || !courseDescription.trim()) return;
     const duration = parseInt(courseDuration) || 60;
+
+    let coverUrl = '';
+    if (coverFile && currentUser) {
+      try {
+        coverUrl = await uploadCoverImage(coverFile, currentUser.uid);
+      } catch (err) {
+        console.warn('Error uploading cover:', err);
+      }
+    }
+
     const newCourse = {
       courseId: `c-${Date.now()}`,
       title: courseTitle.trim(),
@@ -658,6 +699,7 @@ export default function CoursesPage() {
       isEnrolled: false,
       progress: 0,
       tags: [],
+      coverUrl,
       createdAt: new Date().toISOString(),
       externalUrl: courseExternalUrl.trim() || null,
     };
@@ -673,12 +715,24 @@ export default function CoursesPage() {
     setCourseDescription('');
     setCourseDuration('');
     setCourseExternalUrl('');
+    setCoverPreview(null);
+    setCoverFile(null);
     setNewCourseOpen(false);
   }
 
   async function handleUpdateCourse() {
     if (!editCourse || !courseTitle.trim() || !courseDescription.trim()) return;
     const duration = parseInt(courseDuration) || 60;
+
+    let coverUrl = editCourse.coverUrl || '';
+    if (coverFile && currentUser) {
+      try {
+        coverUrl = await uploadCoverImage(coverFile, currentUser.uid);
+      } catch (err) {
+        console.warn('Error uploading cover:', err);
+      }
+    }
+
     const { updateDoc, doc } = await import('firebase/firestore');
     try {
       await updateDoc(doc(db, 'courses', editCourse.courseId || editCourse.id), {
@@ -686,12 +740,13 @@ export default function CoursesPage() {
         description: courseDescription.trim(),
         durationMinutes: duration,
         externalUrl: courseExternalUrl.trim() || null,
+        coverUrl,
         updatedAt: new Date().toISOString(),
       });
       useAppStore.setState((prev) => ({
         courses: prev.courses.map(c =>
           (c.courseId || c.id) === (editCourse.courseId || editCourse.id)
-            ? { ...c, title: courseTitle.trim(), description: courseDescription.trim(), durationMinutes: duration, externalUrl: courseExternalUrl.trim() || null }
+            ? { ...c, title: courseTitle.trim(), description: courseDescription.trim(), durationMinutes: duration, externalUrl: courseExternalUrl.trim() || null, coverUrl }
             : c
         ),
       }));
@@ -702,6 +757,8 @@ export default function CoursesPage() {
     setCourseDescription('');
     setCourseDuration('');
     setCourseExternalUrl('');
+    setCoverPreview(null);
+    setCoverFile(null);
     setNewCourseOpen(false);
     setEditCourse(null);
   }
@@ -760,6 +817,20 @@ export default function CoursesPage() {
             <div className="space-y-1.5">
               <label className="text-sm font-mono text-[#10B981]">Duración (minutos)</label>
               <Input type="number" value={courseDuration} onChange={(e) => setCourseDuration(e.target.value)} placeholder="60" className="bg-transparent border border-white/10 text-white placeholder:text-gray-600 font-mono text-sm focus:border-[#10B981]/50" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-mono text-[#10B981]">Foto del curso</label>
+              <label className="w-full border-2 border-dashed border-white/20 rounded-lg py-4 flex flex-col items-center gap-2 hover:border-[#10B981]/40 hover:bg-[#10B981]/5 transition-all cursor-pointer">
+                <input type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
+                {coverPreview ? (
+                  <img src={coverPreview} alt="Preview" className="w-full h-24 object-cover rounded-lg" />
+                ) : (
+                  <>
+                    <span className="text-2xl">🖼️</span>
+                    <span className="text-xs text-gray-400 font-mono">Click para subir imagen</span>
+                  </>
+                )}
+              </label>
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-mono text-[#10B981]">Enlace externo (opcional)</label>
