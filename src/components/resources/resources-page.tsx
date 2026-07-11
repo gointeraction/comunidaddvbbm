@@ -489,7 +489,7 @@ function ResourceDetail({ resourceId, onBack }: { resourceId: string; onBack: ()
   const [editDescription, setEditDescription] = useState('');
   const [editContent, setEditContent] = useState('');
 
-  const isAuthorized = currentUser && AUTHORIZED_EMAILS.includes(currentUser.email);
+  const isAuthorized = currentUser && (AUTHORIZED_EMAILS.includes(currentUser.email) || currentUser.role === 'admin');
 
   const handleStartEdit = () => {
     if (!resource) return;
