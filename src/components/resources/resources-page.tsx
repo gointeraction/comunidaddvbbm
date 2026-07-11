@@ -526,10 +526,7 @@ export default function ResourcesPage() {
   const [activeLevel, setActiveLevel] = useState('All');
   const [searchText, setSearchText] = useState('');
 
-  const canCreate =
-    currentUser?.role === 'autor' ||
-    currentUser?.role === 'moderador' ||
-    currentUser?.role === 'admin';
+  const canCreate = currentUser?.status === 'active';
 
   const filteredResources = useMemo(() => {
     return resources.filter((r) => {
@@ -595,10 +592,10 @@ export default function ResourcesPage() {
           <Button
             size="sm"
             onClick={() => setDialogOpen(true)}
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
+            className="bg-[#10B981] text-gray-950 hover:bg-[#34D399] font-mono font-semibold rounded-xl shadow-[0_0_22px_rgba(16,185,129,0.4)]"
           >
             <Plus className="size-4 mr-1.5" />
-            Nuevo recurso
+            Publicar Recurso
           </Button>
         )}
       </div>
