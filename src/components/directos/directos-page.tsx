@@ -1,16 +1,17 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Clock, Users, Video, Radio, Calendar, Send, MessageSquare, X, Lock } from 'lucide-react';
+import { Clock, Users, Video, Radio, Calendar, Send, MessageSquare, X, Lock, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { AvatarInitials } from '@/components/autodev/avatar-initials';
 import type { LiveStatus } from '@/types/autodev';
 import { useAppStore } from '@/stores/app-store';
 import { db } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import { sendLiveChatMessageInFirestore } from '@/lib/firestore-sync';
 
 // ── Authorized emails for creating live sessions ──
@@ -368,12 +369,96 @@ function SessionCard({
   );
 }
 
+// ── Create Live Session Dialog ──────────────────────────
+function CreateLiveSessionDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const currentUser = useAppStore((s) => s.currentUser);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('');
+  const [duration, setDuration] = useState('60');
+  const [maxAttendees, setMaxAttendees] = useState('50');
+
+  const handleCreate = async () => {
+    if (!title.trim() || !scheduledDate || !scheduledTime) return;
+    const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`).toISOString();
+    try {
+      await addDoc(collection(db, 'liveSessions'), {
+        title: title.trim(),
+        description: description.trim(),
+        hostId: currentUser?.uid || '',
+        hostName: currentUser?.displayName || 'Organizador',
+        scheduledAt,
+        durationMinutes: parseInt(duration),
+        maxAttendees: parseInt(maxAttendees),
+        status: 'scheduled',
+        streamUrl: null,
+        createdAt: new Date().toISOString(),
+      });
+      setTitle(''); setDescription(''); setScheduledDate(''); setScheduledTime('');
+      setDuration('60'); setMaxAttendees('50');
+      onOpenChange(false);
+    } catch (err) {
+      console.warn('Error creating live session:', err);
+    }
+  };
+
+  return (
+    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm ${open ? '' : 'hidden'}`}>
+      <div className="w-full max-w-lg bg-[#0f172a] border border-white/10 rounded-xl shadow-2xl p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <Radio className="text-[#10B981]" /> Crear Directo
+          </h2>
+          <button onClick={() => onOpenChange(false)} className="text-gray-500 hover:text-white cursor-pointer">✕</button>
+        </div>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-mono text-[#10B981]">Titulo *</label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Titulo del directo..." className="bg-transparent border border-white/10 text-white placeholder:text-gray-600 font-mono text-sm focus:border-[#10B981]/50" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-mono text-[#10B981]">Descripcion</label>
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descripcion del directo..." rows={3} className="bg-transparent border border-white/10 text-white placeholder:text-gray-600 font-mono text-sm resize-none focus:border-[#10B981]/50" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-mono text-[#10B981]">Fecha *</label>
+              <Input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} className="bg-transparent border border-white/10 text-white font-mono text-sm focus:border-[#10B981]/50" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-mono text-[#10B981]">Hora *</label>
+              <Input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} className="bg-transparent border border-white/10 text-white font-mono text-sm focus:border-[#10B981]/50" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-mono text-[#10B981]">Duracion (min)</label>
+              <Input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} className="bg-transparent border border-white/10 text-white font-mono text-sm focus:border-[#10B981]/50" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-mono text-[#10B981]">Cupo maximo</label>
+              <Input type="number" value={maxAttendees} onChange={(e) => setMaxAttendees(e.target.value)} className="bg-transparent border border-white/10 text-white font-mono text-sm focus:border-[#10B981]/50" />
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-3 pt-2">
+          <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 text-gray-400 hover:text-white">Cancelar</Button>
+          <Button onClick={handleCreate} disabled={!title.trim() || !scheduledDate || !scheduledTime} className="flex-1 bg-[#10B981] text-gray-950 hover:bg-[#34D399] font-mono font-semibold rounded-xl shadow-[0_0_22px_rgba(16,185,129,0.4)] disabled:opacity-40">
+            <Plus className="size-4 mr-1.5" /> Crear Directo
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function DirectosPage() {
   const liveSessions = useAppStore((s) => s.liveSessions);
   const currentUser = useAppStore((s) => s.currentUser);
   const hasSessions = liveSessions.length > 0;
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Check if current user is authorized
   const isAuthorized = currentUser && AUTHORIZED_EMAILS.includes(currentUser.email);
 
   if (!isAuthorized) {
@@ -397,11 +482,18 @@ export function DirectosPage() {
 
   return (
     <div className="space-y-4">
-      {/* Terminal header */}
-      <div className="terminal-text flex items-center gap-2 text-sm">
-        <span className="text-foreground font-semibold">bbmdev</span>
-        <span className="text-muted-foreground">~/directos</span>
-        <span className="animate-blink text-[#10B981]">▊</span>
+      <CreateLiveSessionDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+
+      {/* Terminal header + Create button */}
+      <div className="flex items-center justify-between">
+        <div className="terminal-text flex items-center gap-2 text-sm">
+          <span className="text-foreground font-semibold">bbmdev</span>
+          <span className="text-muted-foreground">~/directos</span>
+          <span className="animate-blink text-[#10B981]">▊</span>
+        </div>
+        <Button onClick={() => setDialogOpen(true)} className="bg-[#10B981] text-gray-950 hover:bg-[#34D399] font-mono font-semibold rounded-xl shadow-[0_0_22px_rgba(16,185,129,0.4)]">
+          <Plus className="size-4 mr-1.5" /> Nuevo Directo
+        </Button>
       </div>
 
       {hasSessions ? (
@@ -411,7 +503,6 @@ export function DirectosPage() {
           ))}
         </div>
       ) : (
-        /* Empty state */
         <div className="glass-card rounded-xl p-12 flex flex-col items-center justify-center gap-4 text-center animate-fade-in-up">
           <div className="relative">
             <Radio className="size-12 text-muted-foreground/30" />
@@ -421,16 +512,11 @@ export function DirectosPage() {
             </span>
           </div>
           <div className="space-y-2">
-            <p className="terminal-text terminal-comment text-sm">
-              {'// PRÓXIMOS'}
-            </p>
+            <p className="terminal-text terminal-comment text-sm">{'// PRÓXIMOS'}</p>
             <p className="text-sm text-muted-foreground max-w-md leading-relaxed">
-              Próximamente anunciaremos nuevas sesiones en vivo sobre
-              automatización, n8n, WhatsApp e IA
+              Próximamente anunciaremos nuevas sesiones en vivo sobre automatización, n8n, WhatsApp e IA
             </p>
-            <p className="terminal-text terminal-comment text-xs mt-2">
-              Miembros gratis, cupo limitado
-            </p>
+            <p className="terminal-text terminal-comment text-xs mt-2">Miembros gratis, cupo limitado</p>
           </div>
         </div>
       )}
