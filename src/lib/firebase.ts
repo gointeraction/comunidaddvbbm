@@ -106,7 +106,11 @@ export async function signInWithGoogleFirebase(): Promise<{ uid: string; email: 
       avatarUrl: user.photoURL || undefined,
     };
   } catch (error: unknown) {
-    console.warn('Firebase Google Auth fallback:', (error as Error)?.message || error);
+    // COOP error is non-blocking — auth still works
+    if ((error as any)?.code === 'auth/popup-blocked-by-browser') {
+      console.warn('[Firebase] Popup blocked by browser. Try email/password login.');
+    }
+    console.warn('Firebase Google Auth:', (error as Error)?.message || error);
     return null;
   }
 }
