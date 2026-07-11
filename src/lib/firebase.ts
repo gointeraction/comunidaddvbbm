@@ -1,6 +1,7 @@
 'use client';
 
-import { initializeApp, getApps, initializeAppCheck, ReCaptchaV3Provider, type FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, signOut, updateProfile, onAuthStateChanged, type Auth, type UserCredential } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, serverTimestamp, enableMultiTabIndexedDbPersistence, type Firestore } from 'firebase/firestore';
 import { getMessaging, getToken, type Messaging } from 'firebase/messaging';
