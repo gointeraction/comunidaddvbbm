@@ -498,8 +498,8 @@ export function DirectosPage() {
 
       {hasSessions ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 stagger-children">
-          {liveSessions.map((session) => (
-            <SessionCard key={session.liveId} session={session} />
+          {liveSessions.map((session, index) => (
+            <SessionCard key={session.liveId || `live-${index}`} session={session} />
           ))}
         </div>
       ) : (
