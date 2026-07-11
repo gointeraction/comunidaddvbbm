@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useAppStore } from '@/stores/app-store';
 import { createResourceInFirestore, incrementDownloadCountFirestore } from '@/lib/firestore-sync';
-import type { ResourceType, ResourceLevel } from '@/types/autodev';
+import type { ResourceType, ResourceLevel, Resource } from '@/types/autodev';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -93,7 +93,7 @@ function ResourceCard({
   resource,
   onToggleFavorite,
 }: {
-  resource: (typeof MOCK_RESOURCES)[0];
+  resource: Resource;
   onToggleFavorite: (id: string) => void;
 }) {
   const navigate = useAppStore((s) => s.navigate);

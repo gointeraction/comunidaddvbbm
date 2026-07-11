@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from '@/stores/app-store';
-import { MOCK_LESSONS } from '@/lib/mock-data';
 import { db } from '@/lib/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
 import type { Course, Lesson } from '@/types/autodev';
 
 import { Button } from '@/components/ui/button';
@@ -185,18 +184,24 @@ function CourseDetail({
   onBack: () => void;
 }) {
   const courses = useAppStore((s) => s.courses);
-  const [localLessons, setLocalLessons] = useState<Record<string, Lesson[]>>(
-    () => {
-      const copy: Record<string, Lesson[]> = {};
-      Object.entries(MOCK_LESSONS).forEach(([key, val]) => {
-        copy[key] = val.map((l) => ({ ...l }));
-      });
-      return copy;
+  const [localLessons, setLocalLessons] = useState<Record<string, Lesson[]>>({});
+  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+
+  // Fetch lessons from Firestore
+  useEffect(() => {
+    async function fetchLessons() {
+      try {
+        const lessonsSnap = await getDocs(
+          query(collection(db, `courses/${courseId}/lessons`), orderBy('order', 'asc'))
+        );
+        const lessonsData = lessonsSnap.docs.map(d => ({ lessonId: d.id, ...d.data() } as Lesson));
+        setLocalLessons(prev => ({ ...prev, [courseId]: lessonsData }));
+      } catch (err) {
+        console.warn('Error fetching lessons:', err);
+      }
     }
-  );
-  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(
-    null
-  );
+    fetchLessons();
+  }, [courseId]);
 
   const course = courses.find((c) => c.courseId === courseId);
   const lessons = localLessons[courseId] || [];

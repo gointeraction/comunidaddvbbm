@@ -15,21 +15,6 @@ import type {
   GamificationConfig,
 } from '@/types/autodev';
 import {
-  CURRENT_USER,
-  MOCK_NOTIFICATIONS,
-  MOCK_POSTS,
-  MOCK_USERS,
-  MOCK_RESOURCES,
-  MOCK_COURSES,
-  MOCK_LIVES,
-  MOCK_RANKING,
-  MOCK_MISSIONS,
-  MOCK_ACHIEVEMENTS,
-  MOCK_AUDIT_LOGS,
-  MOCK_COUNTERS,
-  MOCK_GAMIFICATION_CONFIG,
-} from '@/lib/mock-data';
-import {
   saveUserInFirestore,
   createPostInFirestore,
   likePostInFirestore,
@@ -262,9 +247,9 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   clearAuthError: () => set({ authError: null }),
 
-  // ── Notifications ──
-  notifications: MOCK_NOTIFICATIONS,
-  unreadCount: MOCK_NOTIFICATIONS.filter(n => !n.read).length,
+  // ── Notifications (from Firestore) ──
+  notifications: [],
+  unreadCount: 0,
   markAsRead: (notifId) => {
     markNotifReadInFirestore(notifId);
     const notifications = get().notifications.map(n =>
@@ -277,8 +262,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ notifications, unreadCount: 0 });
   },
 
-  // ── Forum ──
-  posts: MOCK_POSTS,
+  // ── Forum (from Firestore) ──
+  posts: [],
   selectedPostId: null,
   createPost: (title, content, tags) => {
     const user = get().currentUser;
@@ -351,17 +336,17 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   likeComment: (_postId, _commentId) => { /* placeholder */ },
 
-  // ── Community Collections ──
-  users: MOCK_USERS,
-  resources: MOCK_RESOURCES,
-  courses: MOCK_COURSES,
-  liveSessions: MOCK_LIVES,
-  ranking: MOCK_RANKING,
-  missions: MOCK_MISSIONS,
-  achievements: MOCK_ACHIEVEMENTS,
-  auditLogs: MOCK_AUDIT_LOGS,
-  counters: MOCK_COUNTERS,
-  gamificationConfig: MOCK_GAMIFICATION_CONFIG,
+  // ── Community Collections (from Firestore) ──
+  users: [],
+  resources: [],
+  courses: [],
+  liveSessions: [],
+  ranking: [],
+  missions: [],
+  achievements: [],
+  auditLogs: [],
+  counters: { developersCount: 0, postsCount: 0, commentsCount: 0, coursesCount: 0, resourcesCount: 0 },
+  gamificationConfig: { postXP: 10, commentXP: 5, taskXP: 15, likeReceivedXP: 5, weeklyRewards: { top1: 100, top2: 50, top3: 25 } },
 
   // ── Sidebar ──
   sidebarOpen: true,

@@ -162,31 +162,51 @@ export async function initFirestoreSync() {
 }
 
 /**
- * Siembra los datos de toda la comunidad en Firestore.
+ * Siembra datos comunitarios en Firestore.
+ * NOTA: No siembra usuarios (ellos se registran via Firebase Auth).
+ * Los posts se crean con authorId del usuario actual.
  */
 export async function seedFirestoreData() {
   if (!db) return;
+  const { currentUser } = useAppStore.getState();
+  const authorId = currentUser?.uid || 'system';
+  const authorName = currentUser?.displayName || 'Sistema';
+  const authorLevel = currentUser?.level || 'avanzado';
+
   try {
-    for (const u of MOCK_USERS) await setDoc(doc(db, 'users', u.uid), u);
-    for (const p of MOCK_POSTS) await setDoc(doc(db, 'posts', p.postId), p);
-    for (const r of MOCK_RESOURCES) await setDoc(doc(db, 'resources', r.resourceId), r);
-    for (const c of MOCK_COURSES) await setDoc(doc(db, 'courses', c.courseId), c);
-    // Seed lessons as subcollections under courses
+    // Seed posts with current user as author
+    for (const p of MOCK_POSTS) {
+      await setDoc(doc(db, 'posts', p.postId), { ...p, authorId, authorName, authorLevel });
+    }
+    // Seed resources
+    for (const r of MOCK_RESOURCES) {
+      await setDoc(doc(db, 'resources', r.resourceId), { ...r, authorId, authorName });
+    }
+    // Seed courses
+    for (const c of MOCK_COURSES) {
+      await setDoc(doc(db, 'courses', c.courseId), { ...c, authorId, authorName });
+    }
+    // Seed lessons
     for (const [courseId, lessons] of Object.entries(MOCK_LESSONS)) {
       for (const lesson of lessons) {
         await setDoc(doc(db, `courses/${courseId}/lessons`, lesson.lessonId), lesson);
       }
     }
-    for (const l of MOCK_LIVES) await setDoc(doc(db, 'liveSessions', l.liveId), l);
+    // Seed live sessions
+    for (const l of MOCK_LIVES) {
+      await setDoc(doc(db, 'liveSessions', l.liveId), { ...l, hostId: authorId, hostName: authorName });
+    }
+    // Seed missions
     for (const m of MOCK_MISSIONS) await setDoc(doc(db, 'missions', m.missionId), m);
+    // Seed achievements
     for (const a of MOCK_ACHIEVEMENTS) await setDoc(doc(db, 'achievements', a.achievementId), a);
-    for (const n of MOCK_NOTIFICATIONS) await setDoc(doc(db, 'notifications', n.notifId), n);
-    for (const log of MOCK_AUDIT_LOGS) await setDoc(doc(db, 'auditLogs', log.logId), log);
+    // Seed counters
     await setDoc(doc(db, 'counters', 'global'), MOCK_COUNTERS as any);
+    // Seed gamification config
     await setDoc(doc(db, 'gamificationConfig', 'main'), MOCK_GAMIFICATION_CONFIG as any);
-    console.info('>[Firestore Sync] ✓ Sembrado completo de todas las colecciones en Firestore.');
+    console.info('>[Firestore Sync] ✓ Sembrado completo en Firestore.');
   } catch (err: any) {
-    console.warn('>[Firestore Sync] Error durante sembrado en Firestore:', err?.message || err);
+    console.warn('>[Firestore Sync] Error durante sembrado:', err?.message || err);
   }
 }
 
