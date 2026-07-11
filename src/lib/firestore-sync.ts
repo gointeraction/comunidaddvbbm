@@ -7,6 +7,8 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  deleteDoc,
+  addDoc,
   onSnapshot,
   increment,
   query,
@@ -216,5 +218,73 @@ export async function markNotifReadInFirestore(notifId: string) {
     await updateDoc(doc(db, 'notifications', notifId), { read: true });
   } catch (e: any) {
     console.warn('Error al marcar notificación en Firestore:', e?.message || e);
+  }
+}
+
+export async function upvoteResourceInFirestore(resourceId: string, delta: number) {
+  if (!db) return;
+  try {
+    await updateDoc(doc(db, 'resources', resourceId), {
+      upvotes: increment(delta),
+    });
+  } catch (e: any) {
+    console.warn('Error al votar recurso en Firestore:', e?.message || e);
+  }
+}
+
+export async function createResourceInFirestore(resource: any) {
+  if (!db) return;
+  try {
+    await setDoc(doc(db, 'resources', resource.resourceId), resource);
+  } catch (e: any) {
+    console.warn('Error al crear recurso en Firestore:', e?.message || e);
+  }
+}
+
+export async function deletePostFromFirestore(postId: string) {
+  if (!db) return;
+  try {
+    await deleteDoc(doc(db, 'posts', postId));
+  } catch (e: any) {
+    console.warn('Error al eliminar post en Firestore:', e?.message || e);
+  }
+}
+
+export async function changeRoleInFirestore(uid: string, newRole: string) {
+  if (!db) return;
+  try {
+    await updateDoc(doc(db, 'users', uid), { role: newRole });
+  } catch (e: any) {
+    console.warn('Error al cambiar rol en Firestore:', e?.message || e);
+  }
+}
+
+export async function sendLiveChatMessageInFirestore(liveId: string, message: any) {
+  if (!db) return;
+  try {
+    await setDoc(doc(db, `liveSessions/${liveId}/chat`, message.id), message);
+  } catch (e: any) {
+    console.warn('Error al enviar chat en vivo en Firestore:', e?.message || e);
+  }
+}
+
+export async function claimXPInFirestore(uid: string, xpReward: number) {
+  if (!db) return;
+  try {
+    await updateDoc(doc(db, 'users', uid), {
+      xp: increment(xpReward),
+      weeklyXP: increment(xpReward),
+    });
+  } catch (e: any) {
+    console.warn('Error al reclamar XP en Firestore:', e?.message || e);
+  }
+}
+
+export async function markLessonCompletedInFirestore(uid: string, completedLessons: string[]) {
+  if (!db) return;
+  try {
+    await updateDoc(doc(db, 'users', uid), { completedLessons });
+  } catch (e: any) {
+    console.warn('Error al guardar lección completada en Firestore:', e?.message || e);
   }
 }

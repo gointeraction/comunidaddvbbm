@@ -224,7 +224,7 @@ function ProfileView() {
 
 // ── Edit Mode ────────────────────────────────────────────
 function ProfileEdit() {
-  const { currentUser, navigate } = useAppStore();
+  const { currentUser, navigate, updateProfile } = useAppStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [displayName, setDisplayName] = useState(currentUser?.displayName || '');
@@ -251,6 +251,13 @@ function ProfileEdit() {
   );
 
   const handleSave = () => {
+    updateProfile({
+      displayName,
+      bio,
+      interests,
+      level,
+      avatarUrl: avatarPreview || undefined,
+    });
     navigate('perfil');
   };
 

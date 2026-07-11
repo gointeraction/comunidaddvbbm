@@ -49,7 +49,7 @@ function getXPForLevel(level: number): number {
 // ── Component ────────────────────────────────────────────
 
 export default function GamificationPage() {
-  const { currentUser, missions, achievements } = useAppStore();
+  const { currentUser, missions, achievements, claimMissionReward } = useAppStore();
   const [achievementFilter, setAchievementFilter] = useState<'todos' | 'desbloqueados' | AchievementRarity>('todos');
   const [completedExpanded, setCompletedExpanded] = useState(false);
 
@@ -238,9 +238,18 @@ export default function GamificationPage() {
 
                 {/* Status */}
                 {allDone && (
-                  <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-terminal-green font-medium bg-terminal-green/10 rounded-lg py-1.5 border border-terminal-green/20">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    Misión completada
+                  <div className="mt-3 flex items-center justify-between bg-terminal-green/10 rounded-lg p-2 border border-terminal-green/20">
+                    <span className="flex items-center gap-1.5 text-xs text-terminal-green font-medium">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Misión completada
+                    </span>
+                    <Button
+                      size="sm"
+                      onClick={() => claimMissionReward(mission.missionId, mission.xpReward)}
+                      className="bg-[#10B981] hover:bg-[#10B981]/90 text-black text-xs font-semibold h-7 px-3 cursor-pointer"
+                    >
+                      Reclamar +{mission.xpReward} XP
+                    </Button>
                   </div>
                 )}
               </div>

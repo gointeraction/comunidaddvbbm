@@ -210,6 +210,7 @@ function CourseDetail({
   }
 
   function handleToggleComplete(lessonId: string) {
+      useAppStore.getState().markLessonCompleted(courseId, lessonId);
       setLocalLessons((prev) => {
         const courseLessons = prev[courseId] || [];
         const updated = courseLessons.map((l) =>

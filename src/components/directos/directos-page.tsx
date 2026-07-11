@@ -1,12 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { Clock, Users, Video, Radio, Calendar } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Clock, Users, Video, Radio, Calendar, Send, MessageSquare, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
 import { AvatarInitials } from '@/components/autodev/avatar-initials';
 import type { LiveStatus } from '@/types/autodev';
+import { useAppStore } from '@/stores/app-store';
+import { db } from '@/lib/firebase';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { sendLiveChatMessageInFirestore } from '@/lib/firestore-sync';
 
 const STATUS_CONFIG: Record<
   LiveStatus,
@@ -55,6 +60,149 @@ function formatDuration(minutes: number): string {
   return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
 }
 
+function LiveRoomModal({
+  open,
+  onClose,
+  session,
+}: {
+  open: boolean;
+  onClose: () => void;
+  session: any;
+}) {
+  const { currentUser } = useAppStore();
+  const [messages, setMessages] = useState<any[]>([]);
+  const [inputMsg, setInputMsg] = useState('');
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open || !db) return;
+    const q = query(collection(db, `liveSessions/${session.liveId}/chat`), orderBy('createdAt', 'asc'));
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const msgs = snap.docs.map((d) => d.data());
+        setMessages(msgs);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      },
+      (err) => console.warn('Live chat snapshot err:', err.message)
+    );
+    return () => unsub();
+  }, [open, session.liveId]);
+
+  const handleSend = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputMsg.trim()) return;
+    const msg = {
+      id: 'msg-' + Date.now() + Math.random().toString(36).slice(2, 6),
+      userId: currentUser?.uid || 'anon',
+      userName: currentUser?.displayName || 'Desarrollador BBM',
+      userAvatarUrl: currentUser?.avatarUrl || null,
+      content: inputMsg.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    sendLiveChatMessageInFirestore(session.liveId, msg);
+    setInputMsg('');
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fade-in">
+      <div className="glass-card w-full max-w-6xl h-[88vh] rounded-2xl border border-[#10B981]/40 flex flex-col lg:flex-row overflow-hidden shadow-2xl shadow-[#10B981]/10">
+        {/* Left: Video Player Embed / Stage */}
+        <div className="flex-1 bg-black/90 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-white/10 p-4 sm:p-6">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="size-2 rounded-full bg-terminal-red animate-ping" />
+              <Badge className="bg-terminal-red text-white font-mono text-xs">EN VIVO</Badge>
+              <span className="text-sm font-semibold text-gray-200 truncate">{session.title}</span>
+            </div>
+            <Button variant="ghost" size="icon" onClick={onClose} className="text-gray-400 hover:text-white cursor-pointer">
+              <X className="size-5" />
+            </Button>
+          </div>
+
+          <div className="my-auto py-12 flex flex-col items-center justify-center text-center gap-4">
+            <div className="w-20 h-20 rounded-2xl bg-[#10B981]/10 border border-[#10B981]/30 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+              <Radio className="size-10 text-[#10B981] animate-pulse" />
+            </div>
+            <div className="space-y-1 max-w-lg">
+              <h3 className="text-lg font-bold text-white">{session.title}</h3>
+              <p className="text-xs text-gray-400">{session.description}</p>
+            </div>
+            <Badge variant="outline" className="text-xs font-mono text-[#10B981] border-[#10B981]/30 bg-[#10B981]/5">
+              Ponente: {session.speakerName} ({session.speakerRole})
+            </Badge>
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-gray-400 border-t border-white/10 pt-3 font-mono">
+            <span>+{session.xpReward} XP por asistencia</span>
+            <span className="flex items-center gap-1.5 text-[#10B981]">
+              <Users className="size-3.5" />
+              Sala comunitaria conectada a Firestore
+            </span>
+          </div>
+        </div>
+
+        {/* Right: Live Chat */}
+        <div className="w-full lg:w-96 flex flex-col bg-gray-950/80 h-1/2 lg:h-full">
+          <div className="p-3.5 border-b border-white/10 flex items-center justify-between bg-white/5">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="size-4 text-[#10B981]" />
+              <span className="font-semibold text-sm text-gray-200">Chat en Vivo</span>
+            </div>
+            <Badge variant="secondary" className="text-[10px] font-mono">
+              {messages.length} msgs
+            </Badge>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-3 space-y-3 font-sans text-xs">
+            {messages.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center text-gray-500 gap-2 p-4">
+                <MessageSquare className="size-8 opacity-30" />
+                <p>No hay mensajes aún en esta sala de chat.</p>
+                <p className="text-[10px] font-mono text-[#10B981]">¡Sé el primero en saludar a la comunidad!</p>
+              </div>
+            ) : (
+              messages.map((m) => {
+                const isMe = m.userId === currentUser?.uid;
+                return (
+                  <div key={m.id} className={`flex items-start gap-2.5 ${isMe ? 'flex-row-reverse' : ''}`}>
+                    <AvatarInitials name={m.userName} className="size-6 shrink-0 text-[10px]" />
+                    <div
+                      className={`max-w-[80%] rounded-xl px-3 py-2 ${
+                        isMe
+                          ? 'bg-[#10B981] text-black font-medium rounded-tr-none'
+                          : 'bg-white/10 text-gray-200 rounded-tl-none'
+                      }`}
+                    >
+                      {!isMe && <p className="text-[10px] font-bold text-[#10B981] mb-0.5">{m.userName}</p>}
+                      <p className="leading-relaxed break-words">{m.content}</p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+            <div ref={chatEndRef} />
+          </div>
+
+          <form onSubmit={handleSend} className="p-3 border-t border-white/10 flex items-center gap-2 bg-gray-950">
+            <Input
+              value={inputMsg}
+              onChange={(e) => setInputMsg(e.target.value)}
+              placeholder="Escribe en el chat en vivo..."
+              className="h-9 text-xs bg-white/5 border-white/10 focus:border-[#10B981]"
+            />
+            <Button type="submit" size="icon" className="size-9 bg-[#10B981] hover:bg-[#10B981]/90 text-black shrink-0 cursor-pointer">
+              <Send className="size-4" />
+            </Button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SessionCard({
   session,
 }: {
@@ -73,6 +221,7 @@ function SessionCard({
   };
 }) {
   const [registered, setRegistered] = useState(false);
+  const [roomOpen, setRoomOpen] = useState(false);
   const statusInfo = STATUS_CONFIG[session.status] ?? STATUS_CONFIG.scheduled;
   const fillPercent = Math.min(
     100,
@@ -80,120 +229,138 @@ function SessionCard({
   );
 
   return (
-    <div className="glass-card rounded-xl p-5 flex flex-col justify-between gap-4 border border-border/60 hover:border-border transition-colors">
-      <div className="space-y-3">
-        {/* Top: Status badge & XP */}
-        <div className="flex items-center justify-between gap-2">
-          <Badge
-            variant="outline"
-            className={`${statusInfo.className} text-[11px] font-mono uppercase tracking-wider`}
-          >
-            {session.status === 'live' && (
-              <span className="size-1.5 rounded-full bg-terminal-red animate-ping mr-1.5" />
-            )}
-            {statusInfo.label}
-          </Badge>
+    <>
+      <LiveRoomModal open={roomOpen} onClose={() => setRoomOpen(false)} session={session} />
+      <div className="glass-card rounded-xl p-5 flex flex-col justify-between gap-4 border border-border/60 hover:border-border transition-colors">
+        <div className="space-y-3">
+          {/* Top: Status badge & XP */}
+          <div className="flex items-center justify-between gap-2">
+            <Badge
+              variant="outline"
+              className={`${statusInfo.className} text-[11px] font-mono uppercase tracking-wider`}
+            >
+              {session.status === 'live' && (
+                <span className="size-1.5 rounded-full bg-terminal-red animate-ping mr-1.5" />
+              )}
+              {statusInfo.label}
+            </Badge>
 
-          <Badge
-            variant="outline"
-            className="text-[11px] font-mono border-terminal-amber/30 text-terminal-amber bg-terminal-amber/5"
-          >
-            +{session.xpReward} XP
-          </Badge>
-        </div>
-
-        {/* Title & description */}
-        <div className="space-y-1">
-          <h3 className="font-semibold text-foreground text-base line-clamp-2 leading-snug">
-            {session.title}
-          </h3>
-          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-            {session.description}
-          </p>
-        </div>
-
-        {/* Date & Duration */}
-        <div className="flex items-center gap-4 text-xs text-muted-foreground font-mono">
-          <div className="flex items-center gap-1.5">
-            <Calendar className="size-3.5 text-primary" />
-            <span>{formatSpanishDate(session.scheduledAt)}</span>
+            <Badge
+              variant="outline"
+              className="text-[11px] font-mono border-terminal-amber/30 text-terminal-amber bg-terminal-amber/5"
+            >
+              +{session.xpReward} XP
+            </Badge>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Clock className="size-3.5 text-muted-foreground" />
-            <span>{formatDuration(session.durationMinutes)}</span>
-          </div>
-        </div>
 
-        {/* Speaker */}
-        <div className="flex items-center gap-2 pt-1">
-          <AvatarInitials
-            name={session.speakerName}
-            className="size-7 text-[10px] bg-secondary text-foreground"
-          />
-          <div className="min-w-0">
-            <p className="text-xs font-medium text-foreground truncate">
-              {session.speakerName}
-            </p>
-            <p className="text-[10px] text-muted-foreground truncate font-mono">
-              {session.speakerRole}
+          {/* Title & description */}
+          <div className="space-y-1">
+            <h3 className="font-semibold text-foreground text-base line-clamp-2 leading-snug">
+              {session.title}
+            </h3>
+            <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+              {session.description}
             </p>
           </div>
-        </div>
-      </div>
 
-      <div className="space-y-3 pt-2 border-t border-border/40">
-        {/* Attendees progress */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono">
-            <span className="flex items-center gap-1">
-              <Users className="size-3 text-muted-foreground" />
-              <span>
-                {session.attendeesCount + (registered ? 1 : 0)}/
-                {session.maxAttendees}
+          {/* Date & Duration */}
+          <div className="flex items-center gap-4 text-xs text-muted-foreground font-mono">
+            <div className="flex items-center gap-1.5">
+              <Calendar className="size-3.5 text-primary" />
+              <span>{formatSpanishDate(session.scheduledAt)}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Clock className="size-3.5 text-muted-foreground" />
+              <span>{formatDuration(session.durationMinutes)}</span>
+            </div>
+          </div>
+
+          {/* Speaker */}
+          <div className="flex items-center gap-2 pt-1">
+            <AvatarInitials
+              name={session.speakerName}
+              className="size-7 text-[10px] bg-secondary text-foreground"
+            />
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-foreground truncate">
+                {session.speakerName}
+              </p>
+              <p className="text-[10px] text-muted-foreground truncate font-mono">
+                {session.speakerRole}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-3 pt-2 border-t border-border/40">
+          {/* Attendees progress */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono">
+              <span className="flex items-center gap-1">
+                <Users className="size-3 text-muted-foreground" />
+                <span>
+                  {session.attendeesCount + (registered ? 1 : 0)}/
+                  {session.maxAttendees}
+                </span>
               </span>
-            </span>
-            <span>{fillPercent}% lleno</span>
+              <span>{fillPercent}% lleno</span>
+            </div>
+            <Progress
+              value={fillPercent}
+              className="h-1.5 bg-secondary [&>div]:bg-[#10B981]"
+            />
           </div>
-          <Progress
-            value={fillPercent}
-            className="h-1.5 bg-secondary [&>div]:bg-[#10B981]"
-          />
-        </div>
 
-        {/* Action Button */}
-        {session.status === 'live' ? (
-          <Button
-            size="sm"
-            className="w-full bg-terminal-red hover:bg-terminal-red/90 text-white font-mono text-xs shadow-lg shadow-terminal-red/20"
-          >
-            <Video className="size-3.5 mr-1.5 animate-pulse" />
-            Unirse Ahora
-          </Button>
-        ) : session.status === 'scheduled' ? (
-          <Button
-            size="sm"
-            variant={registered ? 'outline' : 'default'}
-            onClick={() => setRegistered(!registered)}
-            className={`w-full font-mono text-xs ${
-              registered
-                ? 'border-[#10B981]/40 text-[#10B981] bg-[#10B981]/10 hover:bg-[#10B981]/20'
-                : 'bg-primary text-primary-foreground hover:bg-primary/90'
-            }`}
-          >
-            {registered ? '✓ Registrado (Cancelar)' : 'Registrarse'}
-          </Button>
-        ) : (
-          <Button
-            size="sm"
-            variant="secondary"
-            disabled
-            className="w-full font-mono text-xs opacity-50"
-          >
-            Sesión finalizada
-          </Button>
-        )}
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-2">
+            {session.status === 'live' ? (
+              <Button
+                size="sm"
+                onClick={() => setRoomOpen(true)}
+                className="w-full bg-terminal-red hover:bg-terminal-red/90 text-white font-mono text-xs shadow-lg shadow-terminal-red/20 cursor-pointer"
+              >
+                <Video className="size-3.5 mr-1.5 animate-pulse" />
+                Unirse Ahora
+              </Button>
+            ) : session.status === 'scheduled' ? (
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={registered ? 'outline' : 'default'}
+                  onClick={() => setRegistered(!registered)}
+                  className={`flex-1 font-mono text-xs cursor-pointer ${
+                    registered
+                      ? 'border-[#10B981]/40 text-[#10B981] bg-[#10B981]/10 hover:bg-[#10B981]/20'
+                      : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  }`}
+                >
+                  {registered ? '✓ Registrado' : 'Registrarse'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setRoomOpen(true)}
+                  className="font-mono text-xs border-border hover:border-[#10B981]/40 text-gray-300 hover:text-[#10B981] cursor-pointer shrink-0"
+                  title="Entrar a Sala Previa y Chat"
+                >
+                  <MessageSquare className="size-3.5 mr-1" />
+                  Sala/Chat
+                </Button>
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled
+                className="w-full font-mono text-xs opacity-50"
+              >
+                Sesión finalizada
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

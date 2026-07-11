@@ -35,6 +35,11 @@ import {
   likePostInFirestore,
   createCommentInFirestore,
   markNotifReadInFirestore,
+  upvoteResourceInFirestore,
+  deletePostFromFirestore,
+  changeRoleInFirestore,
+  claimXPInFirestore,
+  markLessonCompletedInFirestore,
 } from '@/lib/firestore-sync';
 
 interface AppState {
@@ -82,6 +87,14 @@ interface AppState {
   sidebarOpen: boolean;
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
+
+  // New synced actions
+  updateProfile: (data: Partial<User>) => void;
+  upvoteResource: (resourceId: string, delta?: number) => void;
+  deletePostByAdmin: (postId: string) => void;
+  changeUserRole: (uid: string, newRole: string) => void;
+  claimMissionReward: (missionId: string, xpReward: number) => void;
+  markLessonCompleted: (courseId: string, lessonId: string) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -253,4 +266,65 @@ export const useAppStore = create<AppState>((set, get) => ({
   sidebarOpen: true,
   toggleSidebar: () => set(s => ({ sidebarOpen: !s.sidebarOpen })),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
+
+  // ── Synced Actions ──
+  updateProfile: (data) => {
+    const user = get().currentUser;
+    if (!user) return;
+    const updatedUser = { ...user, ...data };
+    saveUserInFirestore(updatedUser);
+    const users = get().users.map(u => u.uid === user.uid ? updatedUser : u);
+    set({ currentUser: updatedUser, users });
+  },
+
+  upvoteResource: (resourceId, delta = 1) => {
+    upvoteResourceInFirestore(resourceId, delta);
+    const resources = get().resources.map(r =>
+      r.resourceId === resourceId ? { ...r, upvotes: r.upvotes + delta } : r
+    );
+    set({ resources });
+  },
+
+  deletePostByAdmin: (postId) => {
+    deletePostFromFirestore(postId);
+    const posts = get().posts.filter(p => p.postId !== postId);
+    set({ posts });
+  },
+
+  changeUserRole: (uid, newRole) => {
+    changeRoleInFirestore(uid, newRole);
+    const users = get().users.map(u => u.uid === uid ? { ...u, role: newRole as any } : u);
+    let currentUser = get().currentUser;
+    if (currentUser && currentUser.uid === uid) {
+      currentUser = { ...currentUser, role: newRole as any };
+    }
+    set({ users, currentUser });
+  },
+
+  claimMissionReward: (missionId, xpReward) => {
+    const user = get().currentUser;
+    if (!user) return;
+    claimXPInFirestore(user.uid, xpReward);
+    const updatedUser = {
+      ...user,
+      xp: user.xp + xpReward,
+      weeklyXP: user.weeklyXP + xpReward,
+    };
+    const users = get().users.map(u => u.uid === user.uid ? updatedUser : u);
+    const missions = get().missions.map(m =>
+      m.missionId === missionId ? { ...m, claimed: true } : m
+    );
+    set({ currentUser: updatedUser, users, missions });
+  },
+
+  markLessonCompleted: (courseId, lessonId) => {
+    const user = get().currentUser;
+    if (!user) return;
+    const currentCompleted = (user as any).completedLessons || [];
+    if (currentCompleted.includes(lessonId)) return;
+    const newCompleted = [...currentCompleted, lessonId];
+    markLessonCompletedInFirestore(user.uid, newCompleted);
+    const updatedUser = { ...user, completedLessons: newCompleted } as any;
+    set({ currentUser: updatedUser });
+  },
 }));

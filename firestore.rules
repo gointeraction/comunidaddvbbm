@@ -30,7 +30,7 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if isAuthenticated();
       allow create: if isOwner(uid);
-      allow update: if isOwner(uid) || isAdmin();
+      allow update: if isOwner(uid) || isAdmin() || isModerator();
       allow delete: if isAdmin();
     }
 
@@ -54,7 +54,7 @@ service cloud.firestore {
     match /resources/{resourceId} {
       allow read: if isAuthenticated();
       allow create: if isActive();
-      allow update: if isOwner(resource.data.authorId) || isModerator();
+      allow update: if isAuthenticated();
       allow delete: if isOwner(resource.data.authorId) || isAdmin();
     }
 
@@ -62,12 +62,12 @@ service cloud.firestore {
     match /courses/{courseId} {
       allow read: if isAuthenticated();
       allow create: if isModerator();
-      allow update: if isModerator();
+      allow update: if isModerator() || isAuthenticated();
       allow delete: if isAdmin();
 
       match /lessons/{lessonId} {
         allow read: if isAuthenticated();
-        allow write: if isModerator();
+        allow write: if isModerator() || isAuthenticated();
       }
     }
 
@@ -77,6 +77,12 @@ service cloud.firestore {
       allow create: if isModerator();
       allow update: if isModerator();
       allow delete: if isAdmin();
+
+      match /chat/{msgId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update, delete: if isModerator() || isAdmin() || isOwner(resource.data.userId);
+      }
     }
 
     // ── Notifications ────────────────────────────────────────

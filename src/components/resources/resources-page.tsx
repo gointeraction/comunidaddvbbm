@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useAppStore } from '@/stores/app-store';
+import { createResourceInFirestore } from '@/lib/firestore-sync';
 import type { ResourceType, ResourceLevel } from '@/types/autodev';
 
 import { Button } from '@/components/ui/button';
@@ -192,6 +193,7 @@ function CreateResourceDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const currentUser = useAppStore((s) => s.currentUser);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<ResourceType>('Skill');
@@ -225,7 +227,26 @@ function CreateResourceDialog({
 
   const handlePublish = () => {
     if (!title.trim() || !description.trim()) return;
-    // Reset and close
+    const newRes = {
+      resourceId: `res-${Date.now()}`,
+      title: title.trim(),
+      description: description.trim(),
+      type,
+      level,
+      authorId: currentUser?.uid || 'anon',
+      authorName: currentUser?.displayName || 'Desarrollador BBM',
+      downloadsCount: 0,
+      favoritesCount: 0,
+      upvotes: 0,
+      isFavorited: false,
+      tags: [type.toLowerCase(), level.toLowerCase()],
+      attachments,
+      createdAt: new Date().toISOString(),
+    };
+    createResourceInFirestore(newRes);
+    useAppStore.setState((prev) => ({
+      resources: [newRes as any, ...prev.resources],
+    }));
     setTitle('');
     setDescription('');
     setType('Skill');
@@ -433,15 +454,19 @@ export default function ResourcesPage() {
   }, [resources, activeType, activeLevel, searchText]);
 
   function toggleFavorite(resourceId: string) {
+    const r = resources.find(x => x.resourceId === resourceId);
+    if (!r) return;
+    const delta = r.isFavorited ? -1 : 1;
+    useAppStore.getState().upvoteResource(resourceId, delta);
     useAppStore.setState((prev) => ({
-      resources: prev.resources.map((r) => {
-        if (r.resourceId !== resourceId) return r;
+      resources: prev.resources.map((res) => {
+        if (res.resourceId !== resourceId) return res;
         return {
-          ...r,
-          isFavorited: !r.isFavorited,
-          favoritesCount: r.isFavorited
-            ? r.favoritesCount - 1
-            : r.favoritesCount + 1,
+          ...res,
+          isFavorited: !res.isFavorited,
+          favoritesCount: res.isFavorited
+            ? res.favoritesCount - 1
+            : res.favoritesCount + 1,
         };
       }),
     }));

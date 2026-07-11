@@ -35,6 +35,7 @@ import {
 import { AvatarInitials } from '@/components/autodev/avatar-initials';
 import { MOCK_USERS, MOCK_POSTS, MOCK_AUDIT_LOGS, MOCK_COUNTERS } from '@/lib/mock-data';
 import type { UserRole, Post, AuditLog } from '@/types/autodev';
+import { useAppStore } from '@/stores/app-store';
 
 type AdminTab = 'users' | 'moderation' | 'metrics' | 'audit';
 
@@ -93,27 +94,29 @@ function formatTimestamp(iso: string): string {
 
 // ── Users Tab ────────────────────────────────────────────
 function UsersTab() {
+  const storeUsers = useAppStore((s) => s.users);
   const [search, setSearch] = useState('');
-  const [users, setUsers] = useState(MOCK_USERS);
+  const [users, setUsers] = useState(storeUsers);
   const [suspendDialog, setSuspendDialog] = useState<string | null>(null);
   const [suspendReason, setSuspendReason] = useState('');
   const [suspendDuration, setSuspendDuration] = useState('7d');
 
-  const filtered = users.filter(
+  const filtered = (users.length > 0 ? users : storeUsers).filter(
     (u) =>
-      u.displayName.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase())
+      u.displayName?.toLowerCase().includes(search.toLowerCase()) ||
+      u.email?.toLowerCase().includes(search.toLowerCase())
   );
 
   const changeRole = (uid: string, newRole: UserRole) => {
+    useAppStore.getState().changeUserRole(uid, newRole);
     setUsers((prev) =>
-      prev.map((u) => (u.uid === uid ? { ...u, role: newRole } : u))
+      (prev.length > 0 ? prev : storeUsers).map((u) => (u.uid === uid ? { ...u, role: newRole } : u))
     );
   };
 
   const suspendUser = (uid: string) => {
     setUsers((prev) =>
-      prev.map((u) =>
+      (prev.length > 0 ? prev : storeUsers).map((u) =>
         u.uid === uid
           ? { ...u, status: 'suspended' as const, suspendedUntil: new Date(Date.now() + 86400000 * parseInt(suspendDuration)).toISOString() }
           : u
@@ -267,20 +270,26 @@ function UsersTab() {
 
 // ── Moderation Tab ───────────────────────────────────────
 function ModerationTab() {
-  const [posts, setPosts] = useState<Post[]>(MOCK_POSTS.filter((p) => !p.hidden));
+  const storePosts = useAppStore((s) => s.posts);
+  const [posts, setPosts] = useState<Post[]>(storePosts.filter((p) => !p.hidden));
   const [hideDialog, setHideDialog] = useState<string | null>(null);
   const [hideReason, setHideReason] = useState('');
 
-  const visiblePosts = posts.filter((p) => !p.hidden);
+  const visiblePosts = (posts.length > 0 ? posts : storePosts).filter((p) => !p.hidden);
 
   const hidePost = (postId: string) => {
     setPosts((prev) =>
-      prev.map((p) =>
+      (prev.length > 0 ? prev : storePosts).map((p) =>
         p.postId === postId ? { ...p, hidden: true, hiddenReason: hideReason || 'Sin motivo especificado' } : p
       )
     );
     setHideDialog(null);
     setHideReason('');
+  };
+
+  const handleDeletePost = (postId: string) => {
+    useAppStore.getState().deletePostByAdmin(postId);
+    setPosts((prev) => (prev.length > 0 ? prev : storePosts).filter((p) => p.postId !== postId));
   };
 
   return (
@@ -307,15 +316,26 @@ function ModerationTab() {
                   <span>{post.likesCount} likes</span>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-terminal-amber hover:text-terminal-amber hover:bg-terminal-amber/10 h-8 text-xs shrink-0"
-                onClick={() => setHideDialog(post.postId)}
-              >
-                <EyeOff className="size-3" />
-                Ocultar
-              </Button>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-terminal-amber hover:text-terminal-amber hover:bg-terminal-amber/10 h-8 text-xs cursor-pointer"
+                  onClick={() => setHideDialog(post.postId)}
+                >
+                  <EyeOff className="size-3" />
+                  Ocultar
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-terminal-red hover:text-terminal-red hover:bg-terminal-red/10 h-8 text-xs cursor-pointer"
+                  onClick={() => handleDeletePost(post.postId)}
+                >
+                  <Ban className="size-3" />
+                  Eliminar (Firestore)
+                </Button>
+              </div>
             </div>
           ))}
           {visiblePosts.length === 0 && (
