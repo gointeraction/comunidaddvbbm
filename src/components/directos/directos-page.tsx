@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Clock, Users, Video, Radio, Calendar, Send, MessageSquare, X } from 'lucide-react';
+import { Clock, Users, Video, Radio, Calendar, Send, MessageSquare, X, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -12,6 +12,12 @@ import { useAppStore } from '@/stores/app-store';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { sendLiveChatMessageInFirestore } from '@/lib/firestore-sync';
+
+// ── Authorized emails for creating live sessions ──
+const AUTHORIZED_EMAILS = [
+  'jibohorquez@gmail.com',
+  'c.moreno.mvv@gmail.com',
+];
 
 const STATUS_CONFIG: Record<
   LiveStatus,
@@ -364,7 +370,30 @@ function SessionCard({
 
 export function DirectosPage() {
   const liveSessions = useAppStore((s) => s.liveSessions);
+  const currentUser = useAppStore((s) => s.currentUser);
   const hasSessions = liveSessions.length > 0;
+
+  // Check if current user is authorized
+  const isAuthorized = currentUser && AUTHORIZED_EMAILS.includes(currentUser.email);
+
+  if (!isAuthorized) {
+    return (
+      <div className="space-y-4">
+        <div className="terminal-text flex items-center gap-2 text-sm">
+          <span className="text-foreground font-semibold">bbmdev</span>
+          <span className="text-muted-foreground">~/directos</span>
+          <span className="animate-blink text-[#10B981]">▊</span>
+        </div>
+        <div className="glass-card rounded-xl p-12 flex flex-col items-center justify-center gap-4 text-center">
+          <Lock className="size-12 text-gray-600" />
+          <div className="space-y-2">
+            <p className="text-gray-400 text-sm font-mono">Acceso restringido</p>
+            <p className="text-gray-600 text-xs font-mono">Solo los organizadores pueden gestionar directos</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

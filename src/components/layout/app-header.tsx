@@ -15,13 +15,14 @@ interface NavLink {
   label: string;
   route: Route;
   icon: React.ElementType;
+  requiresAuth?: string[]; // Authorized emails (if set, only these can see this link)
 }
 
 const NAV_LINKS: NavLink[] = [
   { label: 'foro', route: 'foro', icon: MessageSquare },
   { label: 'cursos', route: 'cursos', icon: BookOpen },
   { label: 'recursos', route: 'recursos', icon: Package },
-  { label: 'directos', route: 'directos', icon: Radio },
+  { label: 'directos', route: 'directos', icon: Radio, requiresAuth: ['jibohorquez@gmail.com', 'c.moreno.mvv@gmail.com'] },
   { label: 'miembros', route: 'miembros', icon: Users },
   { label: 'ranking', route: 'ranking', icon: Trophy },
 ];
@@ -100,7 +101,13 @@ export function AppHeader() {
 
       {/* ── Navigation Links ── */}
       <nav className="hidden md:flex items-center gap-1 flex-1">
-        {NAV_LINKS.map((link) => {
+        {NAV_LINKS.filter(link => {
+          // If link requires specific emails, check if current user is authorized
+          if (link.requiresAuth && currentUser) {
+            return link.requiresAuth.includes(currentUser.email);
+          }
+          return true;
+        }).map((link) => {
           const isActive = route === link.route || route === `${link.route}-detalle`;
           const Icon = link.icon;
           return (
