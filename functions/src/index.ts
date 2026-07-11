@@ -131,11 +131,27 @@ export const sendLiveReminders = onSchedule("0 * * * *", async () => {
     .where("scheduledAt", ">=", new Date(now).toISOString())
     .get();
 
+  // Batch notifications to avoid Firestore batch limit
+  const BATCH_SIZE = 500;
   for (const session of upcoming.docs) {
     const data = session.data();
     const registered: string[] = data.registeredUsers || [];
-    for (const userId of registered) {
-      await notify(userId, "live_reminder", { liveId: session.id }, undefined, data.title);
+    for (let i = 0; i < registered.length; i += BATCH_SIZE) {
+      const batch = db.batch();
+      const chunk = registered.slice(i, i + BATCH_SIZE);
+      for (const userId of chunk) {
+        const notifRef = db.collection("notifications").doc();
+        batch.set(notifRef, {
+          userId,
+          type: "live_reminder",
+          data: { liveId: session.id },
+          fromUserName: undefined,
+          targetTitle: data.title,
+          read: false,
+          createdAt: FieldValue.serverTimestamp(),
+        });
+      }
+      await batch.commit();
     }
   }
 });

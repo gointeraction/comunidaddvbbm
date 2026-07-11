@@ -1,6 +1,6 @@
 'use client';
 
-import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, initializeAppCheck, ReCaptchaV3Provider, type FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, signOut, updateProfile, onAuthStateChanged, type Auth, type UserCredential } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, serverTimestamp, enableMultiTabIndexedDbPersistence, type Firestore } from 'firebase/firestore';
 import { getMessaging, getToken, type Messaging } from 'firebase/messaging';
@@ -32,6 +32,15 @@ if (typeof window !== 'undefined') {
     messaging = getMessaging(app);
   } catch {
     messaging = null;
+  }
+  // App Check - protects Firestore/Storage/Functions from abuse
+  try {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''),
+      isTokenAutoRefreshEnabled: true,
+    });
+  } catch {
+    console.warn('>[Firebase] App Check initialization failed');
   }
   enableMultiTabIndexedDbPersistence(db).catch((err) => {
     if (err.code === 'failed-precondition') {
