@@ -39,6 +39,10 @@ import { useAppStore } from '@/stores/app-store';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, orderBy, query, doc, getDoc, updateDoc } from 'firebase/firestore';
 import type { UserRole, Post, AuditLog } from '@/types/autodev';
+import { Lock } from 'lucide-react';
+
+// ── Authorized emails for admin access ──
+const AUTHORIZED_EMAILS = ['jibohorquez@gmail.com', 'c.moreno.mvv@gmail.com'];
 
 type AdminTab = 'users' | 'moderation' | 'metrics' | 'audit' | 'directos';
 
@@ -411,18 +415,32 @@ function DirectosTab() {
 // ── Main Admin Page ──────────────────────────────────────
 export function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('users');
+  const currentUser = useAppStore((s) => s.currentUser);
+  const isAuthorized = currentUser && AUTHORIZED_EMAILS.includes(currentUser.email);
+
+  if (!isAuthorized) {
+    return (
+      <div className="space-y-4">
+        <div className="font-mono text-xs"><span className="text-white font-semibold">bbmdev</span> <span className="text-gray-500">~/admin</span></div>
+        <div className="border border-white/10 rounded-xl p-12 flex flex-col items-center justify-center gap-4 text-center bg-white/5">
+          <Lock className="size-12 text-gray-600" />
+          <p className="text-gray-400 text-sm font-mono">Acceso restringido</p>
+          <p className="text-gray-600 text-xs font-mono">Solo los administradores pueden acceder a este panel</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
-      <div className="terminal-text flex items-center gap-2 text-sm">
-        <span className="text-foreground font-semibold">bbmdev</span>
-        <span className="text-muted-foreground">~/admin</span>
-        <Badge className="bg-terminal-red/20 text-terminal-red border border-terminal-red/40 text-xs ml-1">ADMIN</Badge>
-        <span className="animate-blink text-[#10B981]">▊</span>
+      <div className="font-mono text-xs">
+        <span className="text-white font-semibold">bbmdev</span>
+        <span className="text-gray-500">~/admin</span>
+        <Badge className="bg-red-500/20 text-red-400 border border-red-500/40 text-xs ml-2">ADMIN</Badge>
       </div>
-      <div className="flex gap-1 rounded-lg border border-border bg-secondary/50 p-1">
+      <div className="flex gap-1 rounded-lg border border-white/10 bg-white/5 p-1">
         {TABS.map((tab) => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all cursor-pointer ${activeTab === tab.id ? 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'}`}>
             <tab.icon className="size-4" />
             <span className="hidden sm:inline">{tab.label}</span>
           </button>
