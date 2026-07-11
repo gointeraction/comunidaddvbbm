@@ -2,61 +2,41 @@
 
 import { useMemo } from 'react';
 import { useAppStore } from '@/stores/app-store';
-import type { ExperienceLevel } from '@/types/autodev';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Trophy, Crown, Medal, Zap, MessageSquare, ThumbsUp, Target, TrendingUp, Rocket } from 'lucide-react';
+import { Trophy, Crown, Medal, MessageSquare, ThumbsUp, Target, Rocket, Zap } from 'lucide-react';
 
 // ── Helpers ──────────────────────────────────────────────
-
-const LEVEL_BADGE_STYLES: Record<ExperienceLevel, string> = {
-  principiante: 'bg-gray-700 text-gray-300 border-gray-600',
-  intermedio: 'bg-green-900/50 text-green-300 border-green-700',
-  avanzado: 'bg-blue-900/50 text-blue-300 border-blue-700',
-};
-
-const MEDAL_STYLES: Record<number, { border: string; glow: string; bg: string; text: string; icon: typeof Crown }> = {
-  1: { border: 'border-gold/40', glow: 'shadow-gold/10 shadow-lg', bg: 'bg-gold/10', text: 'text-gold', icon: Crown },
-  2: { border: 'border-silver/40', glow: 'shadow-silver/10 shadow-lg', bg: 'bg-silver/10', text: 'text-silver', icon: Medal },
-  3: { border: 'border-bronze/40', glow: 'shadow-bronze/10 shadow-lg', bg: 'bg-bronze/10', text: 'text-bronze', icon: Medal },
-};
-
 function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map(w => w[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 }
 
-const AVATAR_GRADIENTS: Record<ExperienceLevel, string> = {
-  principiante: 'from-gray-600 to-gray-700',
-  intermedio: 'from-green-700 to-green-800',
-  avanzado: 'from-blue-600 to-blue-700',
-};
+function getLevelForXP(xp: number): number {
+  if (xp >= 5000) return 15;
+  if (xp >= 4000) return 13;
+  if (xp >= 3000) return 11;
+  if (xp >= 2000) return 9;
+  if (xp >= 1000) return 7;
+  if (xp >= 500) return 5;
+  if (xp >= 200) return 3;
+  if (xp >= 50) return 2;
+  return 1;
+}
 
 function getWeekRange() {
   const now = new Date();
   const day = now.getDay();
-  const diffToMonday = day === 0 ? -6 : 1 - day;
   const monday = new Date(now);
-  monday.setDate(now.getDate() + diffToMonday);
-
+  monday.setDate(now.getDate() - ((day + 6) % 7));
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
-
-  const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
-  const yearOpts: Intl.DateTimeFormatOptions = { year: 'numeric' };
-  const start = monday.toLocaleDateString('es-ES', opts);
-  const end = sunday.toLocaleDateString('es-ES', { ...opts, year: 'numeric' });
-  return `${start} → ${end}`;
+  const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+  return `${monday.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} → ${sunday.toLocaleDateString('es-ES', opts)}`;
 }
 
 // ── Component ────────────────────────────────────────────
-
 export default function RankingPage() {
   const { currentUser, ranking, gamificationConfig } = useAppStore();
+  const userLevel = currentUser ? getLevelForXP(currentUser.xp) : 1;
+  const userRank = currentUser ? ranking.find(r => r.uid === currentUser.uid) : null;
 
   const top3 = useMemo(() => ranking.slice(0, 3), [ranking]);
   const rest = useMemo(() => ranking.slice(3), [ranking]);
@@ -67,250 +47,195 @@ export default function RankingPage() {
     return [top3[1], top3[0], top3[2]];
   }, [top3]);
 
-  const podiumSizes = ['md:first', 'md:order-2 md:scale-110 md:z-10', 'md:last'];
-
   return (
-    <div className="space-y-6 animate-fade-in-up">
-      {/* Terminal Header */}
-      <div className="terminal-text text-sm">
-        <span className="terminal-prompt">bbmdev</span>{' '}
-        <span className="terminal-path">~/ranking</span>
-        <span className="animate-blink ml-1">█</span>
-      </div>
-
-      {/* Period Indicator */}
-      <div className="glass-card rounded-xl p-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <div className="font-mono text-xs text-gray-500 flex items-center gap-2">
+            <span className="text-[#10B981]">$</span> autodev leaderboard --week
+            <span className="animate-blink text-[#10B981]">▋</span>
+          </div>
           <div className="flex items-center gap-3">
-            <TrendingUp className="h-5 w-5 text-[#10B981]" />
-            <div>
-              <p className="text-foreground font-medium text-sm">
-                Ranking Semanal
-              </p>
-              <p className="text-muted-foreground text-xs terminal-text">
-                {getWeekRange()}
-              </p>
+            <Trophy className="text-yellow-500" />
+            <h1 className="text-2xl font-bold text-white">Leaderboard Semanal</h1>
+          </div>
+          <p className="text-sm text-gray-500">Compite con la comunidad · {getWeekRange()}</p>
+        </div>
+        {/* User position badge */}
+        {userRank && (
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-[10px] font-mono text-gray-500">posicion</p>
+              <p className="text-2xl font-bold text-[#10B981]">#{userRank.rank}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-mono text-gray-500">XP</p>
+              <p className="text-2xl font-bold text-[#10B981]">{currentUser?.weeklyXP || 0}</p>
             </div>
           </div>
-          <p className="terminal-text text-xs terminal-comment">
-            # Se reinicia cada lunes
-          </p>
-        </div>
+        )}
       </div>
 
-      {/* XP Rules Panel */}
-      <div className="glass-card rounded-xl p-5">
-        <h3 className="terminal-text text-sm font-semibold mb-4 flex items-center gap-2">
-          <Zap className="h-4 w-4 text-terminal-amber" />
-          <span className="text-terminal-amber">Reglas de XP</span>
-        </h3>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left: Podium + List */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Podium */}
+          {podiumOrder.length >= 3 && (
+            <div className="flex items-end justify-center gap-4 pt-4">
+              {podiumOrder.map((entry) => {
+                const isCenter = entry.rank === 1;
+                const medalColors: Record<number, { bg: string; border: string; text: string; glow: string }> = {
+                  1: { bg: 'bg-yellow-500', border: 'border-yellow-400', text: 'text-yellow-400', glow: 'shadow-[0_0_20px_rgba(234,179,8,0.3)]' },
+                  2: { bg: 'bg-gray-400', border: 'border-gray-300', text: 'text-gray-300', glow: 'shadow-[0_0_15px_rgba(156,163,175,0.2)]' },
+                  3: { bg: 'bg-amber-600', border: 'border-amber-500', text: 'text-amber-500', glow: 'shadow-[0_0_15px_rgba(217,119,6,0.2)]' },
+                };
+                const mc = medalColors[entry.rank] || medalColors[3];
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* XP Sources */}
-          <div className="space-y-2.5">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Fuentes de XP</p>
-            <div className="flex items-center justify-between text-sm py-1.5 px-3 rounded-lg bg-secondary/50">
-              <span className="text-muted-foreground flex items-center gap-2">
-                <MessageSquare className="h-3.5 w-3.5 text-terminal-green" />
-                Post
-              </span>
-              <span className="text-terminal-green font-bold">+{gamificationConfig.postXP} XP</span>
+                return (
+                  <div key={entry.uid} className={`flex-1 max-w-[220px] ${isCenter ? 'mb-4' : ''}`}>
+                    {/* Medal badge */}
+                    <div className="flex justify-center mb-2">
+                      <div className={`w-8 h-8 rounded-full ${mc.bg} flex items-center justify-center text-xs font-bold text-black`}>
+                        {entry.rank}
+                      </div>
+                    </div>
+                    {/* Avatar */}
+                    <div className={`mx-auto ${isCenter ? 'w-28 h-28' : 'w-20 h-20'} rounded-full bg-gradient-to-br from-[#10B981] to-[#059669] flex items-center justify-center ${mc.glow} border-2 ${mc.border}`}>
+                      <span className={`${isCenter ? 'text-3xl' : 'text-xl'} font-bold text-white`}>{getInitials(entry.displayName)}</span>
+                    </div>
+                    {/* Name */}
+                    <p className="text-center text-sm font-semibold text-white mt-2 truncate">{entry.displayName}</p>
+                    {/* XP */}
+                    <div className={`mt-3 border border-white/10 rounded-lg p-3 text-center ${isCenter ? 'border-yellow-400/40 bg-yellow-400/5' : 'bg-white/5'}`}>
+                      <p className={`text-xl font-bold ${mc.text}`}>{entry.xp}</p>
+                      <p className="text-[10px] font-mono text-gray-500">XP</p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <div className="flex items-center justify-between text-sm py-1.5 px-3 rounded-lg bg-secondary/50">
-              <span className="text-muted-foreground flex items-center gap-2">
-                <Target className="h-3.5 w-3.5 text-[#10B981]" />
-                Tarea
-              </span>
-              <span className="text-[#10B981] font-bold">+{gamificationConfig.taskXP} XP</span>
+          )}
+
+          {/* Ranking List */}
+          <div className="border border-white/10 rounded-xl overflow-hidden bg-white/5">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <span className="text-[#10B981]">🏆</span>
+                <span className="font-mono text-sm text-white">$ ls <span className="text-gray-500">--rank</span></span>
+              </div>
+              <span className="text-[10px] font-mono text-gray-600">reset: lunes</span>
             </div>
-            <div className="flex items-center justify-between text-sm py-1.5 px-3 rounded-lg bg-secondary/50">
-              <span className="text-muted-foreground flex items-center gap-2">
-                <MessageSquare className="h-3.5 w-3.5 text-terminal-purple" />
-                Comentario
-              </span>
-              <span className="text-terminal-purple font-bold">+{gamificationConfig.commentXP} XP</span>
+
+            <div className="divide-y divide-white/5">
+              {rest.map((entry, idx) => {
+                const isCurrentUser = currentUser?.uid === entry.uid;
+                const level = getLevelForXP(entry.xp);
+                return (
+                  <div key={entry.uid} className={`flex items-center gap-4 px-4 py-3 ${isCurrentUser ? 'bg-[#10B981]/5' : idx % 2 === 0 ? 'bg-transparent' : 'bg-white/[0.02]'} hover:bg-white/5 transition-colors`}>
+                    {/* Rank */}
+                    <span className={`w-8 text-center font-bold text-sm ${entry.rank <= 3 ? 'text-[#10B981]' : 'text-gray-500'}`}>{entry.rank}</span>
+                    {/* Avatar */}
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#10B981] to-[#059669] flex items-center justify-center shrink-0">
+                      <span className="text-sm font-bold text-white">{getInitials(entry.displayName)}</span>
+                    </div>
+                    {/* Name + Level */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-white truncate">{entry.displayName}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30">Nv.{level}</span>
+                      </div>
+                      {/* Stats */}
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="flex items-center gap-1 text-[10px] text-gray-500">
+                          <MessageSquare className="size-2.5" /> {entry.postsCount || 0}
+                        </span>
+                        <span className="flex items-center gap-1 text-[10px] text-gray-500">
+                          <MessageSquare className="size-2.5" /> {entry.commentsCount || 0}
+                        </span>
+                        <span className="flex items-center gap-1 text-[10px] text-gray-500">
+                          <ThumbsUp className="size-2.5" /> 0
+                        </span>
+                      </div>
+                    </div>
+                    {/* XP Bar */}
+                    <div className="w-32 hidden sm:block">
+                      <div className="w-full h-1.5 rounded-full bg-gray-700 overflow-hidden">
+                        <div className="h-full rounded-full bg-[#10B981] transition-all" style={{ width: `${Math.min((entry.xp / (top3[0]?.xp || 1)) * 100, 100)}%` }} />
+                      </div>
+                    </div>
+                    {/* XP */}
+                    <span className="text-sm font-bold text-[#10B981] w-12 text-right">{entry.xp}</span>
+                    <span className="text-[10px] text-gray-500">XP</span>
+                  </div>
+                );
+              })}
             </div>
-            <div className="flex items-center justify-between text-sm py-1.5 px-3 rounded-lg bg-secondary/50">
-              <span className="text-muted-foreground flex items-center gap-2">
-                <ThumbsUp className="h-3.5 w-3.5 text-terminal-amber" />
-                Like recibido
+          </div>
+        </div>
+
+        {/* Right Sidebar */}
+        <div className="space-y-4">
+          {/* XP Rules */}
+          <div className="border border-white/10 rounded-xl bg-white/5 overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/10">
+              <span className="font-mono text-sm text-white flex items-center gap-2">
+                <span className="text-green-500">⊙</span> $ man xp
               </span>
-              <span className="text-terminal-amber font-bold">+{gamificationConfig.likeReceivedXP} XP</span>
+            </div>
+            <div className="divide-y divide-white/5">
+              <div className="px-4 py-2.5 flex items-center justify-between">
+                <span className="text-sm text-gray-400 flex items-center gap-2"><MessageSquare className="size-3.5 text-[#10B981]" /> crear post</span>
+                <span className="text-sm font-mono text-[#10B981]">+{gamificationConfig.postXP}</span>
+              </div>
+              <div className="px-4 py-2.5 flex items-center justify-between">
+                <span className="text-sm text-gray-400 flex items-center gap-2"><MessageSquare className="size-3.5 text-[#10B981]" /> comentar</span>
+                <span className="text-sm font-mono text-[#10B981]">+{gamificationConfig.commentXP}</span>
+              </div>
+              <div className="px-4 py-2.5 flex items-center justify-between">
+                <span className="text-sm text-gray-400 flex items-center gap-2"><Target className="size-3.5 text-[#10B981]" /> completar leccion</span>
+                <span className="text-sm font-mono text-[#10B981]">+{gamificationConfig.taskXP}</span>
+              </div>
+              <div className="px-4 py-2.5 flex items-center justify-between">
+                <span className="text-sm text-gray-400 flex items-center gap-2"><Zap className="size-3.5 text-yellow-500" /> ganar badge</span>
+                <span className="text-sm font-mono text-yellow-500">+$var</span>
+              </div>
             </div>
           </div>
 
           {/* Weekly Rewards */}
-          <div className="space-y-2.5">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Recompensas Semanales</p>
-            <div className="flex items-center justify-between text-sm py-1.5 px-3 rounded-lg bg-secondary/50">
-              <span className="flex items-center gap-2">
-                <Crown className="h-3.5 w-3.5 text-gold" />
-                <span className="text-foreground">Top 1</span>
-              </span>
-              <span className="text-gold font-bold">+{gamificationConfig.weeklyRewards.top1} XP</span>
+          <div className="border border-white/10 rounded-xl bg-white/5 overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/10">
+              <span className="text-xs font-mono text-gray-500">// premios semanales</span>
             </div>
-            <div className="flex items-center justify-between text-sm py-1.5 px-3 rounded-lg bg-secondary/50">
-              <span className="flex items-center gap-2">
-                <Medal className="h-3.5 w-3.5 text-silver" />
-                <span className="text-foreground">Top 2</span>
-              </span>
-              <span className="text-silver font-bold">+{gamificationConfig.weeklyRewards.top2} XP</span>
-            </div>
-            <div className="flex items-center justify-between text-sm py-1.5 px-3 rounded-lg bg-secondary/50">
-              <span className="flex items-center gap-2">
-                <Medal className="h-3.5 w-3.5 text-bronze" />
-                <span className="text-foreground">Top 3</span>
-              </span>
-              <span className="text-bronze font-bold">+{gamificationConfig.weeklyRewards.top3} XP</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Top 3 Podium */}
-      {podiumOrder.length >= 3 && (
-        <div className="flex flex-col md:flex-row items-center md:items-end justify-center gap-4 md:gap-6 pt-4">
-          {podiumOrder.map((entry, idx) => {
-            const style = MEDAL_STYLES[entry.rank];
-            const sizeClass = podiumSizes[idx];
-            const isCenter = entry.rank === 1;
-            const IconComp = style.icon;
-
-            return (
-              <div
-                key={entry.uid}
-                className={`${sizeClass} flex-1 max-w-[280px] w-full transition-transform duration-300`}
-              >
-                <div
-                  className={`glass-card rounded-xl p-5 text-center border ${style.border} ${style.glow} relative`}
-                >
-                  {/* Rank badge */}
-                  <div className={`absolute -top-3 left-1/2 -translate-x-1/2 ${style.bg} rounded-full px-3 py-1 border ${style.border}`}>
-                    <span className={`font-bold text-sm ${style.text} flex items-center gap-1`}>
-                      {isCenter && <IconComp className="h-4 w-4" />}
-                      #{entry.rank}
-                    </span>
-                  </div>
-
-                  <div className="pt-4 space-y-3">
-                    {/* Avatar */}
-                    <div className={`mx-auto w-20 h-20 md:${isCenter ? 'w-24 h-24' : 'w-20 h-20'} rounded-full bg-gradient-to-br ${AVATAR_GRADIENTS[entry.level]} flex items-center justify-center text-2xl md:text-3xl font-bold text-white shadow-lg`}>
-                      {getInitials(entry.displayName)}
-                    </div>
-
-                    {/* Name */}
-                    <div>
-                      <p className="text-foreground font-bold text-lg truncate">
-                        {entry.displayName}
-                      </p>
-                      <Badge className={`${LEVEL_BADGE_STYLES[entry.level]} border text-[10px] uppercase tracking-wider mt-1`}>
-                        {entry.level}
-                      </Badge>
-                    </div>
-
-                    {/* XP */}
-                    <div className={`text-2xl md:text-3xl font-bold ${style.text} terminal-text`}>
-                      {entry.xp} <span className="text-sm text-muted-foreground font-normal">XP</span>
-                    </div>
-                  </div>
-                </div>
+            <div className="divide-y divide-white/5">
+              <div className="px-4 py-2.5 flex items-center justify-between">
+                <span className="text-sm text-gray-300 flex items-center gap-2">🏆 puesto 1</span>
+                <span className="text-sm font-mono text-[#10B981]">+{gamificationConfig.weeklyRewards.top1} XP</span>
               </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Leaderboard Table */}
-      {rest.length > 0 && (
-        <div className="glass-card rounded-xl overflow-hidden">
-          <div className="p-4 border-b border-border">
-            <h3 className="terminal-text text-sm font-semibold flex items-center gap-2">
-              <span className="text-[#10B981]">$</span>
-              <span className="text-foreground">Leaderboard</span>
-            </h3>
+              <div className="px-4 py-2.5 flex items-center justify-between">
+                <span className="text-sm text-gray-300 flex items-center gap-2">🥈 top 3</span>
+                <span className="text-sm font-mono text-[#10B981]">+{gamificationConfig.weeklyRewards.top2} XP</span>
+              </div>
+              <div className="px-4 py-2.5 flex items-center justify-between">
+                <span className="text-sm text-gray-300 flex items-center gap-2">🥉 top 10</span>
+                <span className="text-sm font-mono text-[#10B981]">+{gamificationConfig.weeklyRewards.top3} XP</span>
+              </div>
+            </div>
           </div>
 
-          <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left text-xs text-muted-foreground font-medium terminal-text px-4 py-3 w-16">
-                    #
-                  </th>
-                  <th className="text-left text-xs text-muted-foreground font-medium terminal-text px-4 py-3">
-                    Miembro
-                  </th>
-                  <th className="text-left text-xs text-muted-foreground font-medium terminal-text px-4 py-3 hidden sm:table-cell">
-                    Nivel
-                  </th>
-                  <th className="text-right text-xs text-muted-foreground font-medium terminal-text px-4 py-3 w-24">
-                    XP
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {rest.map((entry, idx) => {
-                  const isCurrentUser = currentUser?.uid === entry.uid;
-                  return (
-                    <tr
-                      key={entry.uid}
-                      className={`border-b border-border/50 transition-colors ${
-                        isCurrentUser
-                          ? 'bg-[#10B981]/5'
-                          : idx % 2 === 0
-                          ? 'bg-transparent'
-                          : 'bg-secondary/20'
-                      } hover:bg-secondary/40`}
-                    >
-                      <td className="px-4 py-3">
-                        <span className={`text-sm font-bold ${isCurrentUser ? 'text-[#10B981]' : 'text-muted-foreground'} terminal-text`}>
-                          {entry.rank}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${AVATAR_GRADIENTS[entry.level]} flex items-center justify-center text-[10px] font-bold text-white shrink-0`}>
-                            {getInitials(entry.displayName)}
-                          </div>
-                          <div className="min-w-0">
-                            <p className={`text-sm font-medium truncate ${isCurrentUser ? 'text-[#10B981]' : 'text-foreground'}`}>
-                              {entry.displayName}
-                              {isCurrentUser && (
-                                <span className="text-xs text-[#10B981] ml-2">(tú)</span>
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 hidden sm:table-cell">
-                        <Badge className={`${LEVEL_BADGE_STYLES[entry.level]} border text-[10px] uppercase tracking-wider`}>
-                          {entry.level}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className={`text-sm font-bold terminal-text ${isCurrentUser ? 'text-[#10B981]' : 'text-foreground'}`}>
-                          {entry.xp}
-                        </span>
-                        <span className="text-xs text-muted-foreground ml-1">XP</span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          {/* CTA */}
+          <div className="border border-[#10B981]/30 rounded-xl bg-[#10B981]/5 p-5 text-center">
+            <div className="w-12 h-12 rounded-full bg-[#10B981]/20 flex items-center justify-center mx-auto mb-3">
+              <Rocket className="text-[#10B981]" />
+            </div>
+            <h3 className="text-sm font-bold text-white mb-1">{'¡sube al top!'}</h3>
+            <p className="text-[10px] text-gray-500 mb-4">Participa activamente y gana XP para aparecer en el leaderboard.</p>
+            <button className="w-full py-2.5 bg-[#10B981] text-gray-950 rounded-lg text-sm font-mono font-semibold hover:bg-[#34D399] transition-colors cursor-pointer shadow-[0_0_22px_rgba(16,185,129,0.3)]">
+              {'>'} ir al foro
+            </button>
           </div>
         </div>
-      )}
-
-      {/* CTA */}
-      <div className="text-center py-6">
-        <p className="text-muted-foreground text-sm mb-3 terminal-text">
-          <span className="terminal-comment">#</span> Participa activamente para subir en el ranking
-        </p>
-        <Button className="bg-[#10B981] text-background hover:bg-[#10B981]/90 font-semibold gap-2">
-          <Rocket className="h-4 w-4" />
-          ¡Sube al top!
-        </Button>
       </div>
     </div>
   );
