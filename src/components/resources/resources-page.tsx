@@ -473,6 +473,9 @@ function CreateResourceDialog({
   );
 }
 
+// ── Authorized emails ──
+const AUTHORIZED_EMAILS = ['jibohorquez@gmail.com', 'c.moreno.mvv@gmail.com'];
+
 // ── Resource Detail ─────────────────────────────────────
 function ResourceDetail({ resourceId, onBack }: { resourceId: string; onBack: () => void }) {
   const resources = useAppStore((s) => s.resources);
@@ -481,6 +484,42 @@ function ResourceDetail({ resourceId, onBack }: { resourceId: string; onBack: ()
   const resource = resources.find((r) => r.resourceId === resourceId);
   const [reviewText, setReviewText] = useState('');
   const [reviewRating, setReviewRating] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editContent, setEditContent] = useState('');
+
+  const isAuthorized = currentUser && AUTHORIZED_EMAILS.includes(currentUser.email);
+
+  const handleStartEdit = () => {
+    if (!resource) return;
+    setEditTitle(resource.title);
+    setEditDescription(resource.description);
+    setEditContent(resource.content || '');
+    setIsEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!resource) return;
+    const { updateDoc, doc } = await import('firebase/firestore');
+    const { db } = await import('@/lib/firebase');
+    try {
+      await updateDoc(doc(db, 'resources', resource.resourceId), {
+        title: editTitle.trim(),
+        description: editDescription.trim(),
+        content: editContent.trim(),
+        updatedAt: new Date().toISOString(),
+      });
+      useAppStore.setState((prev) => ({
+        resources: prev.resources.map(r =>
+          r.resourceId === resourceId ? { ...r, title: editTitle.trim(), description: editDescription.trim(), content: editContent.trim() } : r
+        ),
+      }));
+      setIsEditing(false);
+    } catch (err) {
+      console.warn('Error updating resource:', err);
+    }
+  };
 
   if (!resource) {
     return (
@@ -590,6 +629,29 @@ function ResourceDetail({ resourceId, onBack }: { resourceId: string; onBack: ()
 
         {/* Right Sidebar */}
         <div className="space-y-4">
+          {/* Edit Form (shown when editing) */}
+          {isEditing && (
+            <div className="border border-[#10B981]/30 rounded-xl p-4 bg-[#10B981]/5 space-y-4">
+              <p className="text-xs font-mono text-[#10B981]">编辑 recurso</p>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-400">Titulo</label>
+                <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="w-full bg-transparent border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono focus:border-[#10B981]/50" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-400">Descripcion</label>
+                <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={3} className="w-full bg-transparent border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono resize-none focus:border-[#10B981]/50" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-400">Contenido</label>
+                <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={4} className="w-full bg-transparent border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono resize-none focus:border-[#10B981]/50" />
+              </div>
+              <div className="flex gap-2">
+                <button onClick={handleSaveEdit} className="flex-1 py-2 bg-[#10B981] text-gray-950 rounded-lg text-sm font-mono font-semibold hover:bg-[#34D399] transition-colors cursor-pointer">Guardar</button>
+                <button onClick={() => setIsEditing(false)} className="flex-1 py-2 border border-white/10 rounded-lg text-gray-400 text-sm font-mono hover:bg-white/5 transition-colors cursor-pointer">Cancelar</button>
+              </div>
+            </div>
+          )}
+
           {/* Resource Image */}
           <div className="border border-white/10 rounded-xl overflow-hidden bg-gradient-to-br from-[#10B981]/10 to-[#10B981]/5 h-48 flex items-center justify-center">
             {resource.coverUrl ? (
@@ -621,6 +683,13 @@ function ResourceDetail({ resourceId, onBack }: { resourceId: string; onBack: ()
           <button onClick={() => navigate('foro')} className="w-full py-3 border border-white/10 rounded-xl text-gray-300 text-sm flex items-center justify-center gap-2 hover:bg-white/5 transition-colors cursor-pointer">
             <span>📝</span> crear post
           </button>
+
+          {/* Edit button for authorized users */}
+          {isAuthorized && (
+            <button onClick={handleStartEdit} className="w-full py-3 border border-[#10B981]/30 rounded-xl text-[#10B981] text-sm flex items-center justify-center gap-2 hover:bg-[#10B981]/10 transition-colors cursor-pointer">
+              <span>✏️</span> editar recurso
+            </button>
+          )}
 
           {/* Author */}
           <div className="border border-white/10 rounded-xl p-4 bg-white/5">
