@@ -932,8 +932,8 @@ function ForumList() {
             </div>
           ) : (
             <>
-              {visiblePosts.map((post) => (
-                <PostCard key={post.postId} post={post} />
+              {visiblePosts.map((post, idx) => (
+                <PostCard key={`${post.postId}-${idx}`} post={post} />
               ))}
               {hasMore && (
                 <div className="flex justify-center pt-4">
@@ -1093,8 +1093,8 @@ function TrendingWidget() {
         </span>
       </div>
       <div className="divide-y divide-white/5">
-        {trendingPosts.map((post) => (
-          <div key={post.postId} className="px-4 py-3 hover:bg-white/5 transition-colors cursor-pointer">
+        {trendingPosts.map((post, idx) => (
+          <div key={`${post.postId}-trending-${idx}`} className="px-4 py-3 hover:bg-white/5 transition-colors cursor-pointer">
             <p className="text-sm text-white leading-snug line-clamp-2">👋 {post.authorName} se presenta</p>
             <div className="flex items-center gap-3 mt-1.5">
               <span className="flex items-center gap-1 text-[10px] text-gray-500">

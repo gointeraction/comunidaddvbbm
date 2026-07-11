@@ -229,9 +229,9 @@ export default function MembersPage() {
           </h3>
           {userPosts.length > 0 ? (
             <div className="space-y-3">
-              {userPosts.map(post => (
+              {userPosts.map((post, idx) => (
                 <button
-                  key={post.postId}
+                  key={`${post.postId}-${idx}`}
                   className="w-full text-left p-3 rounded-lg bg-secondary/50 hover:bg-secondary border border-transparent hover:border-border transition-colors group"
                   onClick={() => navigate('foro-detalle', { postId: post.postId })}
                 >

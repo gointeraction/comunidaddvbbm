@@ -108,6 +108,7 @@ export interface Course {
   isEnrolled: boolean;
   progress: number;
   createdAt: string;
+  externalUrl?: string | null;
 }
 
 export interface Lesson {

@@ -202,8 +202,8 @@ function ModerationTab() {
       <div className="space-y-3">
         <h3 className="terminal-text text-sm"><span className="terminal-prompt">$</span> <span className="terminal-path">~/moderacion/posts-recientes</span></h3>
         <div className="glass-card rounded-xl overflow-hidden divide-y divide-border">
-          {posts.filter(p => !p.hidden).slice(0, 5).map((post) => (
-            <div key={post.postId} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+          {posts.filter(p => !p.hidden).slice(0, 5).map((post, idx) => (
+            <div key={`${post.postId}-${idx}`} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{post.title}</p>
                 <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">

@@ -33,6 +33,7 @@ import {
   Trophy,
   GraduationCap,
   Plus,
+  ExternalLink,
 } from 'lucide-react';
 
 function formatDuration(minutes: number): string {
@@ -84,7 +85,13 @@ function CourseCard({
   return (
     <Card
       className="glass-card border-border/50 hover:border-primary/30 transition-all group cursor-pointer overflow-hidden"
-      onClick={() => onOpenCourse(course.courseId)}
+      onClick={() => {
+        if (course.externalUrl) {
+          window.open(course.externalUrl, '_blank');
+        } else {
+          onOpenCourse(course.courseId);
+        }
+      }}
     >
       {/* Cover */}
       <div
@@ -119,19 +126,23 @@ function CourseCard({
             <Clock className="size-3" />
             {formatDuration(course.durationMinutes)}
           </span>
-          <span className="flex items-center gap-1">
-            <Play className="size-3" />
-            {course.lessonsCount} lecciones
-          </span>
+          {!course.externalUrl && (
+            <span className="flex items-center gap-1">
+              <Play className="size-3" />
+              {course.lessonsCount} lecciones
+            </span>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-3">
-          <Users className="size-3" />
-          <span>{course.enrolledCount} inscritos</span>
-        </div>
+        {!course.externalUrl && (
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-3">
+            <Users className="size-3" />
+            <span>{course.enrolledCount} inscritos</span>
+          </div>
+        )}
 
         {/* Progress bar */}
-        {course.isEnrolled && (
+        {!course.externalUrl && course.isEnrolled && (
           <div className="mb-3">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] text-muted-foreground">
@@ -149,16 +160,27 @@ function CourseCard({
         <Button
           size="sm"
           className={`w-full text-xs ${
-            course.isEnrolled
-              ? 'bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30'
-              : 'bg-primary text-primary-foreground hover:bg-primary/90'
+            course.externalUrl
+              ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+              : course.isEnrolled
+                ? 'bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30'
+                : 'bg-primary text-primary-foreground hover:bg-primary/90'
           }`}
           onClick={(e) => {
             e.stopPropagation();
-            onOpenCourse(course.courseId);
+            if (course.externalUrl) {
+              window.open(course.externalUrl, '_blank');
+            } else {
+              onOpenCourse(course.courseId);
+            }
           }}
         >
-          {course.isEnrolled ? (
+          {course.externalUrl ? (
+            <>
+              <ExternalLink className="size-3.5 mr-1.5" />
+              Ir al curso
+            </>
+          ) : course.isEnrolled ? (
             <>
               <Play className="size-3.5 mr-1.5" />
               Continuar
@@ -585,6 +607,7 @@ export default function CoursesPage() {
   const [courseTitle, setCourseTitle] = useState('');
   const [courseDescription, setCourseDescription] = useState('');
   const [courseDuration, setCourseDuration] = useState('');
+  const [courseExternalUrl, setCourseExternalUrl] = useState('');
 
   const canCreate = currentUser?.role === 'autor' || currentUser?.role === 'admin';
 
@@ -604,6 +627,7 @@ export default function CoursesPage() {
       progress: 0,
       tags: [],
       createdAt: new Date().toISOString(),
+      externalUrl: courseExternalUrl.trim() || null,
     };
     try {
       await addDoc(collection(db, 'courses'), newCourse);
@@ -616,6 +640,7 @@ export default function CoursesPage() {
     setCourseTitle('');
     setCourseDescription('');
     setCourseDuration('');
+    setCourseExternalUrl('');
     setNewCourseOpen(false);
   }
 
@@ -673,6 +698,10 @@ export default function CoursesPage() {
             <div className="space-y-1.5">
               <label className="text-sm text-muted-foreground">Duración (minutos)</label>
               <Input type="number" value={courseDuration} onChange={(e) => setCourseDuration(e.target.value)} placeholder="60" className="bg-secondary/50 border-border/50" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm text-muted-foreground">Enlace externo (opcional)</label>
+              <Input value={courseExternalUrl} onChange={(e) => setCourseExternalUrl(e.target.value)} placeholder="https://ejemplo.com/curso" className="bg-secondary/50 border-border/50" />
             </div>
             <div className="flex gap-3 pt-2">
               <Button variant="ghost" onClick={() => setNewCourseOpen(false)} className="flex-1">Cancelar</Button>
