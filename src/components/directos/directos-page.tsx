@@ -381,7 +381,7 @@ function CreateLiveSessionDialog({ open, onOpenChange }: { open: boolean; onOpen
 
   const handleCreate = async () => {
     if (!title.trim() || !scheduledDate || !scheduledTime) return;
-    const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`).toISOString();
+    const scheduledAt = new Date(scheduledDate + 'T' + scheduledTime + ':00').toISOString();
     try {
       await addDoc(collection(db, 'liveSessions'), {
         title: title.trim(),
