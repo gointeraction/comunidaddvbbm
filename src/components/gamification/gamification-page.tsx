@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { MOCK_MISSIONS, MOCK_ACHIEVEMENTS, MOCK_USER_ACHIEVEMENTS } from '@/lib/mock-data';
+import { MOCK_USER_ACHIEVEMENTS } from '@/lib/mock-data';
 import { useAppStore } from '@/stores/app-store';
 import type { Achievement, AchievementRarity } from '@/types/autodev';
 import { Button } from '@/components/ui/button';
@@ -23,20 +23,18 @@ const RARITY_CONFIG: Record<AchievementRarity, { label: string; cssClass: string
 
 const ACHIEVEMENT_ICONS: Record<string, string> = {
   FIRST_POST: '📝',
-  COMMENTER_10: '💬',
-  TOP_10_WEEKLY: '🏆',
-  ACTIVE_30: '🔥',
-  RESOURCE_AUTHOR: '📦',
-  MENTOR: '🧠',
-  WEEKLY_CHAMPION: '👑',
-  COURSE_MASTER: '🎓',
+  CONVERSATIONALIST: '💬',
+  HELPFUL_DEV: '🤝',
+  CODE_MASTER: '⚡',
+  COMMUNITY_TOP: '👑',
+  AUTO_EXPERT: '🤖',
+  PIONEER: '🚀',
+  NIGHT_OWL: '🦉',
 };
 
-function relativeDate(dateStr: string) {
-  const now = Date.now();
-  const d = new Date(dateStr).getTime();
-  const diff = now - d;
-  const days = Math.floor(diff / 86400000);
+function relativeDate(dateStr: string): string {
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const days = Math.floor(diffMs / 86400000);
   if (days < 1) return 'hoy';
   if (days === 1) return 'ayer';
   if (days < 30) return `hace ${days} días`;
@@ -51,7 +49,7 @@ function getXPForLevel(level: number): number {
 // ── Component ────────────────────────────────────────────
 
 export default function GamificationPage() {
-  const { currentUser } = useAppStore();
+  const { currentUser, missions, achievements } = useAppStore();
   const [achievementFilter, setAchievementFilter] = useState<'todos' | 'desbloqueados' | AchievementRarity>('todos');
   const [completedExpanded, setCompletedExpanded] = useState(false);
 
@@ -68,8 +66,8 @@ export default function GamificationPage() {
   const progressPercent = Math.min(100, Math.round((xpInLevel / xpNeeded) * 100));
 
   // Missions
-  const activeMissions = useMemo(() => MOCK_MISSIONS.filter(m => !m.completed), []);
-  const completedMissions = useMemo(() => MOCK_MISSIONS.filter(m => m.completed), []);
+  const activeMissions = useMemo(() => missions.filter(m => !m.completed), [missions]);
+  const completedMissions = useMemo(() => missions.filter(m => m.completed), [missions]);
 
   // Achievements
   const unlockedIds = useMemo(
@@ -78,7 +76,7 @@ export default function GamificationPage() {
   );
 
   const filteredAchievements = useMemo(() => {
-    let list = MOCK_ACHIEVEMENTS;
+    let list = achievements;
 
     if (achievementFilter === 'desbloqueados') {
       list = list.filter(a => unlockedIds.has(a.achievementId));

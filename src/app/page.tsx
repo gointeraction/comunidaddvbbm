@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useAppStore } from '@/stores/app-store';
+import { initFirestoreSync } from '@/lib/firestore-sync';
 import LandingPage from '@/components/landing/landing-page';
 import AuthPages from '@/components/auth/auth-pages';
 import OnboardingWizard from '@/components/onboarding/onboarding-wizard';
@@ -19,6 +21,10 @@ import { AdminPage } from '@/components/admin/admin-page';
 
 function AppRouter() {
   const { route, isAuthenticated, currentUser } = useAppStore();
+
+  useEffect(() => {
+    initFirestoreSync();
+  }, []);
 
   // ── Public routes (no auth required) ──────────────
   if (!isAuthenticated || !currentUser) {

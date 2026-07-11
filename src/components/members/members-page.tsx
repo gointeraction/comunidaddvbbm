@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { MOCK_USERS, MOCK_POSTS } from '@/lib/mock-data';
 import { useAppStore } from '@/stores/app-store';
 import type { User, ExperienceLevel } from '@/types/autodev';
 import { Input } from '@/components/ui/input';
@@ -85,27 +84,24 @@ const INTEREST_LABELS: Record<string, string> = {
 // ── Component ────────────────────────────────────────────
 
 export default function MembersPage() {
-  const { navigate, currentUser, posts } = useAppStore();
+  const { posts, navigate, users, currentUser } = useAppStore();
   const [search, setSearch] = useState('');
   const [levelFilter, setLevelFilter] = useState<'todos' | ExperienceLevel>('todos');
   const [sortMode, setSortMode] = useState<'recientes' | 'activos' | 'todos'>('recientes');
   const [selectedUid, setSelectedUid] = useState<string | null>(null);
 
-  // Merge MOCK_USERS with posts from store
-  const allPosts = posts.length > 0 ? posts : MOCK_POSTS;
-
   const filteredUsers = useMemo(() => {
-    let users = MOCK_USERS.filter(u => u.status === 'active');
+    let list = users.filter(u => u.status === 'active');
 
     // Level filter
     if (levelFilter !== 'todos') {
-      users = users.filter(u => u.level === levelFilter);
+      list = list.filter(u => u.level === levelFilter);
     }
 
     // Search
     if (search.trim()) {
       const q = search.toLowerCase().trim();
-      users = users.filter(
+      list = list.filter(
         u =>
           u.displayName.toLowerCase().includes(q) ||
           u.interests.some(i => INTEREST_LABELS[i]?.toLowerCase().includes(q)) ||
@@ -115,26 +111,26 @@ export default function MembersPage() {
 
     // Sort
     if (sortMode === 'recientes') {
-      users = [...users].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      list = [...list].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     } else if (sortMode === 'activos') {
-      users = [...users].sort((a, b) => new Date(b.lastActiveAt).getTime() - new Date(a.lastActiveAt).getTime());
+      list = [...list].sort((a, b) => new Date(b.lastActiveAt).getTime() - new Date(a.lastActiveAt).getTime());
     }
 
-    return users;
-  }, [levelFilter, search, sortMode]);
+    return list;
+  }, [levelFilter, search, sortMode, users]);
 
-  const activeToday = MOCK_USERS.filter(u => {
+  const activeToday = users.filter(u => {
     const lastActive = new Date(u.lastActiveAt).getTime();
     const now = Date.now();
     return now - lastActive < 86400000 && u.status === 'active';
   }).length;
 
-  const selectedUser = selectedUid ? MOCK_USERS.find(u => u.uid === selectedUid) ?? null : null;
+  const selectedUser = selectedUid ? users.find(u => u.uid === selectedUid) ?? null : null;
 
   const userPosts = useMemo(() => {
     if (!selectedUser) return [];
-    return allPosts.filter(p => p.authorId === selectedUser.uid).slice(0, 5);
-  }, [selectedUser, allPosts]);
+    return posts.filter(p => p.authorId === selectedUser.uid).slice(0, 5);
+  }, [selectedUser, posts]);
 
   // ── Profile View ──
   if (selectedUser) {
@@ -287,7 +283,7 @@ export default function MembersPage() {
         <div className="flex items-center gap-2 glass-card rounded-lg px-4 py-2">
           <Users className="h-4 w-4 text-[#10B981]" />
           <span className="text-muted-foreground">Total:</span>
-          <span className="text-foreground font-bold">{MOCK_USERS.filter(u => u.status === 'active').length}</span>
+          <span className="text-foreground font-bold">{users.filter(u => u.status === 'active').length}</span>
         </div>
         <div className="flex items-center gap-2 glass-card rounded-lg px-4 py-2">
           <UserCheck className="h-4 w-4 text-terminal-green" />

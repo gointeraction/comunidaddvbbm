@@ -1,6 +1,41 @@
 import { create } from 'zustand';
-import type { Route, User, Notification, Post } from '@/types/autodev';
-import { CURRENT_USER, MOCK_NOTIFICATIONS, MOCK_POSTS } from '@/lib/mock-data';
+import type {
+  Route,
+  User,
+  Notification,
+  Post,
+  Resource,
+  Course,
+  LiveSession,
+  RankingEntry,
+  Mission,
+  Achievement,
+  AuditLog,
+  Counters,
+  GamificationConfig,
+} from '@/types/autodev';
+import {
+  CURRENT_USER,
+  MOCK_NOTIFICATIONS,
+  MOCK_POSTS,
+  MOCK_USERS,
+  MOCK_RESOURCES,
+  MOCK_COURSES,
+  MOCK_LIVES,
+  MOCK_RANKING,
+  MOCK_MISSIONS,
+  MOCK_ACHIEVEMENTS,
+  MOCK_AUDIT_LOGS,
+  MOCK_COUNTERS,
+  MOCK_GAMIFICATION_CONFIG,
+} from '@/lib/mock-data';
+import {
+  saveUserInFirestore,
+  createPostInFirestore,
+  likePostInFirestore,
+  createCommentInFirestore,
+  markNotifReadInFirestore,
+} from '@/lib/firestore-sync';
 
 interface AppState {
   // Navigation
@@ -31,6 +66,18 @@ interface AppState {
   createComment: (postId: string, content: string) => void;
   likeComment: (postId: string, commentId: string) => void;
 
+  // Community & Platform Collections (Sincronizadas con Firestore en tiempo real)
+  users: User[];
+  resources: Resource[];
+  courses: Course[];
+  liveSessions: LiveSession[];
+  ranking: RankingEntry[];
+  missions: Mission[];
+  achievements: Achievement[];
+  auditLogs: AuditLog[];
+  counters: Counters;
+  gamificationConfig: GamificationConfig;
+
   // Sidebar
   sidebarOpen: boolean;
   toggleSidebar: () => void;
@@ -47,7 +94,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   currentUser: null,
   isAuthenticated: false,
   login: (_email, _password) => {
-    set({ currentUser: CURRENT_USER, isAuthenticated: true, route: 'foro' });
+    // Sincronizar usuario autenticado con Firestore
+    const u = CURRENT_USER;
+    saveUserInFirestore(u);
+    set({ currentUser: u, isAuthenticated: true, route: 'foro' });
     return true;
   },
   loginWithGoogle: (googleUser) => {
@@ -68,10 +118,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       levelNumber: 2,
       postsCount: 1,
       commentsCount: 3,
-      bio: 'Desarrollador conectado a través de Google Workspace e integraciones Cloud.',
+      bio: 'Desarrollador conectado a través de Google Workspace e integraciones Cloud en Firestore.',
       interests: ['automatizacion', 'ia', 'webapps'],
       role: 'member',
     };
+    saveUserInFirestore(newUser);
     set({ currentUser: newUser, isAuthenticated: true, route: 'foro' });
   },
   register: (_email, _password) => {
@@ -90,6 +141,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       interests: [],
       role: 'member',
     };
+    saveUserInFirestore(newUser);
     set({ currentUser: newUser, isAuthenticated: true, route: 'onboarding' });
     return true;
   },
@@ -97,17 +149,19 @@ export const useAppStore = create<AppState>((set, get) => ({
   completeOnboarding: (data) => {
     const user = get().currentUser;
     if (!user) return;
+    const updatedUser: User = {
+      ...user,
+      displayName: data.displayName,
+      interests: data.interests as User['interests'],
+      level: data.level as User['level'],
+      bio: data.bio,
+      status: 'active',
+      xp: 50,
+      levelNumber: 1,
+    };
+    saveUserInFirestore(updatedUser);
     set({
-      currentUser: {
-        ...user,
-        displayName: data.displayName,
-        interests: data.interests as User['interests'],
-        level: data.level as User['level'],
-        bio: data.bio,
-        status: 'active',
-        xp: 50,
-        levelNumber: 1,
-      },
+      currentUser: updatedUser,
       route: 'foro',
     });
   },
@@ -116,6 +170,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   notifications: MOCK_NOTIFICATIONS,
   unreadCount: MOCK_NOTIFICATIONS.filter(n => !n.read).length,
   markAsRead: (notifId) => {
+    markNotifReadInFirestore(notifId);
     const notifications = get().notifications.map(n =>
       n.notifId === notifId ? { ...n, read: true } : n
     );
@@ -144,9 +199,14 @@ export const useAppStore = create<AppState>((set, get) => ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+    createPostInFirestore(newPost);
     set({ posts: [newPost, ...get().posts] });
   },
   likePost: (postId) => {
+    const post = get().posts.find(p => p.postId === postId);
+    if (post) {
+      likePostInFirestore(postId, post.likedByUser);
+    }
     const posts = get().posts.map(p => {
       if (p.postId !== postId) return p;
       if (p.likedByUser) return { ...p, likedByUser: false, likesCount: p.likesCount - 1 };
@@ -157,6 +217,17 @@ export const useAppStore = create<AppState>((set, get) => ({
   createComment: (postId, content) => {
     const user = get().currentUser;
     if (!user) return;
+    const comment = {
+      commentId: 'c-' + Date.now(),
+      postId,
+      authorId: user.uid,
+      authorName: user.displayName || 'Anónimo',
+      authorAvatarUrl: user.avatarUrl,
+      content,
+      likesCount: 0,
+      createdAt: new Date().toISOString(),
+    };
+    createCommentInFirestore(postId, comment);
     const posts = get().posts.map(p => {
       if (p.postId !== postId) return p;
       return { ...p, commentsCount: p.commentsCount + 1 };
@@ -164,6 +235,18 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ posts });
   },
   likeComment: (_postId, _commentId) => { /* placeholder */ },
+
+  // ── Community Collections (Inicializadas con datos base y sincronizadas vía Firestore) ──
+  users: MOCK_USERS,
+  resources: MOCK_RESOURCES,
+  courses: MOCK_COURSES,
+  liveSessions: MOCK_LIVES,
+  ranking: MOCK_RANKING,
+  missions: MOCK_MISSIONS,
+  achievements: MOCK_ACHIEVEMENTS,
+  auditLogs: MOCK_AUDIT_LOGS,
+  counters: MOCK_COUNTERS,
+  gamificationConfig: MOCK_GAMIFICATION_CONFIG,
 
   // ── Sidebar ──
   sidebarOpen: true,

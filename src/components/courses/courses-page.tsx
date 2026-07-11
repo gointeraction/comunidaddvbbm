@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAppStore } from '@/stores/app-store';
-import { MOCK_COURSES, MOCK_LESSONS } from '@/lib/mock-data';
+import { MOCK_LESSONS } from '@/lib/mock-data';
 import type { Course, Lesson } from '@/types/autodev';
 
 import { Button } from '@/components/ui/button';
@@ -172,7 +172,7 @@ function CourseDetail({
   courseId: string;
   onBack: () => void;
 }) {
-  const [localCourses, setLocalCourses] = useState(MOCK_COURSES);
+  const courses = useAppStore((s) => s.courses);
   const [localLessons, setLocalLessons] = useState<Record<string, Lesson[]>>(
     () => {
       const copy: Record<string, Lesson[]> = {};
@@ -186,7 +186,7 @@ function CourseDetail({
     null
   );
 
-  const course = localCourses.find((c) => c.courseId === courseId);
+  const course = courses.find((c) => c.courseId === courseId);
   const lessons = localLessons[courseId] || [];
 
   const selectedLesson = lessons.find((l) => l.lessonId === selectedLessonId);
@@ -196,13 +196,13 @@ function CourseDetail({
 
   function handleEnroll() {
     if (!course) return;
-    setLocalCourses((prev) =>
-      prev.map((c) =>
+    useAppStore.setState((prev) => ({
+      courses: prev.courses.map((c) =>
         c.courseId === courseId
           ? { ...c, isEnrolled: true, enrolledCount: c.enrolledCount + 1 }
           : c
-      )
-    );
+      ),
+    }));
     // Auto-select first lesson
     if (lessons.length > 0 && !selectedLessonId) {
       setSelectedLessonId(lessons[0].lessonId);
@@ -221,11 +221,11 @@ function CourseDetail({
         );
 
         // Update course progress
-        setLocalCourses((cPrev) =>
-          cPrev.map((c) =>
+        useAppStore.setState((sPrev) => ({
+          courses: sPrev.courses.map((c) =>
             c.courseId === courseId ? { ...c, progress: newProgress } : c
-          )
-        );
+          ),
+        }));
 
         return { ...prev, [courseId]: updated };
       });
@@ -547,7 +547,7 @@ function CourseDetail({
 
 // ── Courses Page (main export) ──────────────────────────
 export default function CoursesPage() {
-  const { route, navigate } = useAppStore();
+  const { route, navigate, courses } = useAppStore();
 
   // Course detail view
   if (route === 'curso-detalle' || route === 'leccion') {
@@ -579,7 +579,7 @@ export default function CoursesPage() {
 
       {/* Course grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {MOCK_COURSES.map((course) => (
+        {courses.map((course) => (
           <CourseCard
             key={course.courseId}
             course={course}

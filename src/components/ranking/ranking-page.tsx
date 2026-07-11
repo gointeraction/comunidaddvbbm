@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo } from 'react';
-import { MOCK_RANKING, MOCK_GAMIFICATION_CONFIG } from '@/lib/mock-data';
 import { useAppStore } from '@/stores/app-store';
 import type { ExperienceLevel } from '@/types/autodev';
 import { Button } from '@/components/ui/button';
@@ -23,7 +22,12 @@ const MEDAL_STYLES: Record<number, { border: string; glow: string; bg: string; t
 };
 
 function getInitials(name: string) {
-  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  return name
+    .split(' ')
+    .map(w => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 }
 
 const AVATAR_GRADIENTS: Record<ExperienceLevel, string> = {
@@ -35,8 +39,10 @@ const AVATAR_GRADIENTS: Record<ExperienceLevel, string> = {
 function getWeekRange() {
   const now = new Date();
   const day = now.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
   const monday = new Date(now);
-  monday.setDate(now.getDate() - ((day + 6) % 7));
+  monday.setDate(now.getDate() + diffToMonday);
+
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
 
@@ -50,10 +56,10 @@ function getWeekRange() {
 // ── Component ────────────────────────────────────────────
 
 export default function RankingPage() {
-  const { currentUser } = useAppStore();
+  const { currentUser, ranking, gamificationConfig } = useAppStore();
 
-  const top3 = useMemo(() => MOCK_RANKING.slice(0, 3), []);
-  const rest = useMemo(() => MOCK_RANKING.slice(3), []);
+  const top3 = useMemo(() => ranking.slice(0, 3), [ranking]);
+  const rest = useMemo(() => ranking.slice(3), [ranking]);
 
   // Reorder for podium: #2, #1, #3
   const podiumOrder = useMemo(() => {
@@ -108,28 +114,28 @@ export default function RankingPage() {
                 <MessageSquare className="h-3.5 w-3.5 text-terminal-green" />
                 Post
               </span>
-              <span className="text-terminal-green font-bold">+{MOCK_GAMIFICATION_CONFIG.postXP} XP</span>
+              <span className="text-terminal-green font-bold">+{gamificationConfig.postXP} XP</span>
             </div>
             <div className="flex items-center justify-between text-sm py-1.5 px-3 rounded-lg bg-secondary/50">
               <span className="text-muted-foreground flex items-center gap-2">
                 <Target className="h-3.5 w-3.5 text-[#10B981]" />
                 Tarea
               </span>
-              <span className="text-[#10B981] font-bold">+{MOCK_GAMIFICATION_CONFIG.taskXP} XP</span>
+              <span className="text-[#10B981] font-bold">+{gamificationConfig.taskXP} XP</span>
             </div>
             <div className="flex items-center justify-between text-sm py-1.5 px-3 rounded-lg bg-secondary/50">
               <span className="text-muted-foreground flex items-center gap-2">
                 <MessageSquare className="h-3.5 w-3.5 text-terminal-purple" />
                 Comentario
               </span>
-              <span className="text-terminal-purple font-bold">+{MOCK_GAMIFICATION_CONFIG.commentXP} XP</span>
+              <span className="text-terminal-purple font-bold">+{gamificationConfig.commentXP} XP</span>
             </div>
             <div className="flex items-center justify-between text-sm py-1.5 px-3 rounded-lg bg-secondary/50">
               <span className="text-muted-foreground flex items-center gap-2">
                 <ThumbsUp className="h-3.5 w-3.5 text-terminal-amber" />
                 Like recibido
               </span>
-              <span className="text-terminal-amber font-bold">+{MOCK_GAMIFICATION_CONFIG.likeReceivedXP} XP</span>
+              <span className="text-terminal-amber font-bold">+{gamificationConfig.likeReceivedXP} XP</span>
             </div>
           </div>
 
@@ -141,21 +147,21 @@ export default function RankingPage() {
                 <Crown className="h-3.5 w-3.5 text-gold" />
                 <span className="text-foreground">Top 1</span>
               </span>
-              <span className="text-gold font-bold">+{MOCK_GAMIFICATION_CONFIG.weeklyRewards.top1} XP</span>
+              <span className="text-gold font-bold">+{gamificationConfig.weeklyRewards.top1} XP</span>
             </div>
             <div className="flex items-center justify-between text-sm py-1.5 px-3 rounded-lg bg-secondary/50">
               <span className="flex items-center gap-2">
                 <Medal className="h-3.5 w-3.5 text-silver" />
                 <span className="text-foreground">Top 2</span>
               </span>
-              <span className="text-silver font-bold">+{MOCK_GAMIFICATION_CONFIG.weeklyRewards.top2} XP</span>
+              <span className="text-silver font-bold">+{gamificationConfig.weeklyRewards.top2} XP</span>
             </div>
             <div className="flex items-center justify-between text-sm py-1.5 px-3 rounded-lg bg-secondary/50">
               <span className="flex items-center gap-2">
                 <Medal className="h-3.5 w-3.5 text-bronze" />
                 <span className="text-foreground">Top 3</span>
               </span>
-              <span className="text-bronze font-bold">+{MOCK_GAMIFICATION_CONFIG.weeklyRewards.top3} XP</span>
+              <span className="text-bronze font-bold">+{gamificationConfig.weeklyRewards.top3} XP</span>
             </div>
           </div>
         </div>

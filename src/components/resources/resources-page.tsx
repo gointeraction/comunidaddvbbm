@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import { useAppStore } from '@/stores/app-store';
-import { MOCK_RESOURCES } from '@/lib/mock-data';
 import type { ResourceType, ResourceLevel } from '@/types/autodev';
 
 import { Button } from '@/components/ui/button';
@@ -406,11 +405,11 @@ function CreateResourceDialog({
 // ── Resources Page (main export) ────────────────────────
 export default function ResourcesPage() {
   const currentUser = useAppStore((s) => s.currentUser);
+  const resources = useAppStore((s) => s.resources);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeType, setActiveType] = useState('All');
   const [activeLevel, setActiveLevel] = useState('All');
   const [searchText, setSearchText] = useState('');
-  const [localResources, setLocalResources] = useState(MOCK_RESOURCES);
 
   const canCreate =
     currentUser?.role === 'autor' ||
@@ -418,7 +417,7 @@ export default function ResourcesPage() {
     currentUser?.role === 'admin';
 
   const filteredResources = useMemo(() => {
-    return localResources.filter((r) => {
+    return resources.filter((r) => {
       if (activeType !== 'All' && r.type !== activeType) return false;
       if (activeLevel !== 'All' && r.level !== activeLevel) return false;
       if (searchText.trim()) {
@@ -431,11 +430,11 @@ export default function ResourcesPage() {
       }
       return true;
     });
-  }, [localResources, activeType, activeLevel, searchText]);
+  }, [resources, activeType, activeLevel, searchText]);
 
   function toggleFavorite(resourceId: string) {
-    setLocalResources((prev) =>
-      prev.map((r) => {
+    useAppStore.setState((prev) => ({
+      resources: prev.resources.map((r) => {
         if (r.resourceId !== resourceId) return r;
         return {
           ...r,
@@ -444,8 +443,8 @@ export default function ResourcesPage() {
             ? r.favoritesCount - 1
             : r.favoritesCount + 1,
         };
-      })
-    );
+      }),
+    }));
   }
 
   return (

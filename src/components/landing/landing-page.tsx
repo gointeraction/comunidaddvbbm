@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { MessageSquare, GraduationCap, Package, Trophy, ArrowRight } from 'lucide-react';
 import { useAppStore } from '@/stores/app-store';
-import { MOCK_COUNTERS } from '@/lib/mock-data';
 import type { Counters } from '@/types/autodev';
 
 // ── Interactive Terminal Component ──────────────────────
@@ -207,7 +206,7 @@ function FeatureCard({
 
 // ── Landing Page ───────────────────────────────────────
 export default function LandingPage() {
-  const navigate = useAppStore((s) => s.navigate);
+  const { navigate, counters } = useAppStore();
 
   const counterItems: { key: keyof Counters; label: string }[] = [
     { key: 'developersCount', label: 'developers' },
@@ -293,7 +292,7 @@ export default function LandingPage() {
                 {counterItems.map((item) => (
                   <AnimatedCounter
                     key={item.key}
-                    value={MOCK_COUNTERS[item.key]}
+                    value={counters[item.key]}
                     label={item.label}
                   />
                 ))}
