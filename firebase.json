@@ -4,6 +4,16 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "appAssociation": "NONE",
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "comunidaddvbbm",
+          "region": "us-east4"
+        }
+      }
     ]
   },
   "firestore": {

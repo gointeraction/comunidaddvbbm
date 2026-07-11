@@ -12,6 +12,7 @@ interface AppState {
   currentUser: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => boolean;
+  loginWithGoogle: (googleUser?: { email: string; displayName: string; avatarUrl?: string }) => void;
   register: (email: string, password: string) => boolean;
   logout: () => void;
   completeOnboarding: (data: { displayName: string; interests: string[]; level: string; bio: string }) => void;
@@ -48,6 +49,30 @@ export const useAppStore = create<AppState>((set, get) => ({
   login: (_email, _password) => {
     set({ currentUser: CURRENT_USER, isAuthenticated: true, route: 'foro' });
     return true;
+  },
+  loginWithGoogle: (googleUser) => {
+    const defaultGoogleUser = {
+      email: googleUser?.email || 'dev.google@autodev.dev',
+      displayName: googleUser?.displayName || 'Google Developer',
+      avatarUrl: googleUser?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    };
+    const newUser: User = {
+      ...CURRENT_USER,
+      uid: 'u-google-' + Date.now(),
+      email: defaultGoogleUser.email,
+      displayName: defaultGoogleUser.displayName,
+      avatarUrl: defaultGoogleUser.avatarUrl,
+      status: 'active',
+      xp: 120,
+      weeklyXP: 45,
+      levelNumber: 2,
+      postsCount: 1,
+      commentsCount: 3,
+      bio: 'Desarrollador conectado a través de Google Workspace e integraciones Cloud.',
+      interests: ['automatizacion', 'ia', 'webapps'],
+      role: 'member',
+    };
+    set({ currentUser: newUser, isAuthenticated: true, route: 'foro' });
   },
   register: (_email, _password) => {
     const newUser: User = {
