@@ -352,7 +352,7 @@ export default function GamificationPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 stagger-children">
           {filteredAchievements.map(achievement => {
             const isUnlocked = unlockedIds.has(achievement.achievementId);
-            const userAch = null;
+            const userAch: any = null;
             const rarity = RARITY_CONFIG[achievement.rarity];
 
             return (

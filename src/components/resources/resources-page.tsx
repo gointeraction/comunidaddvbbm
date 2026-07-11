@@ -546,10 +546,11 @@ function ResourceDetail({ resourceId, onBack }: { resourceId: string; onBack: ()
   const relatedResources = resources.filter(r => r.resourceId !== resourceId).slice(0, 3);
 
   function handleDownload() {
+    if (!resource) return;
     if (resource.externalUrl) window.open(resource.externalUrl, '_blank');
     incrementDownloadCountFirestore(resource.resourceId);
     useAppStore.setState((prev) => ({
-      resources: prev.resources.map(r => r.resourceId === resourceId ? { ...r, downloadsCount: r.downloadsCount + 1 } : r),
+      resources: prev.resources.map(r => r.resourceId === resource?.resourceId ? { ...r, downloadsCount: r.downloadsCount + 1 } : r),
     }));
   }
 
@@ -720,7 +721,7 @@ function ResourceDetail({ resourceId, onBack }: { resourceId: string; onBack: ()
               <p className="text-[10px] font-mono text-gray-500 mt-1">↓ DESCARGAS</p>
             </div>
             <div className="border border-white/10 rounded-xl p-4 text-center bg-white/5">
-              <p className="text-2xl font-bold text-white">{resource.viewsCount || 0}</p>
+              <p className="text-2xl font-bold text-white">{(resource as any).viewsCount || 0}</p>
               <p className="text-[10px] font-mono text-gray-500 mt-1">👁 VISTAS</p>
             </div>
           </div>

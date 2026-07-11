@@ -1,10 +1,35 @@
 'use client';
 
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, signOut, updateProfile, onAuthStateChanged, type Auth, type UserCredential } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, serverTimestamp, type Firestore } from 'firebase/firestore';
-import { getMessaging, getToken, type Messaging } from 'firebase/messaging';
-import { getStorage, ref, uploadBytes, getDownloadURL, type FirebaseStorage } from 'firebase/storage';
+import { 
+  getAuth as getFirebaseAuth,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  signOut,
+  type UserCredential
+} from 'firebase/auth';
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+} from 'firebase/firestore';
+import {
+  getStorage as getFirebaseStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+} from 'firebase/storage';
+import {
+  getMessaging as getFirebaseMessaging,
+  getToken,
+} from 'firebase/messaging';
 import type { User } from '@/types/autodev';
 
 const firebaseConfig = {
@@ -17,25 +42,56 @@ const firebaseConfig = {
   measurementId: 'G-BWM8G384VC',
 };
 
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-let storage: FirebaseStorage;
-let messaging: Messaging | null;
+// Initialize Firebase App
+const app = typeof window !== 'undefined' 
+  ? (!getApps().length ? initializeApp(firebaseConfig) : getApps()[0])
+  : {} as FirebaseApp;
 
+// Initialize Instances
+const auth = typeof window !== 'undefined' ? getFirebaseAuth(app) : null as any;
+const db = typeof window !== 'undefined' ? getFirestore(app) : null as any;
+const storage = typeof window !== 'undefined' ? getFirebaseStorage(app) : null as any;
+
+let messaging: any = null;
 if (typeof window !== 'undefined') {
-  app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
-  auth = getAuth(app);
-  db = getFirestore(app, { cache: { kind: 'persistent' } });
-  storage = getStorage(app);
   try {
-    messaging = getMessaging(app);
+    messaging = getFirebaseMessaging(app);
   } catch {
     messaging = null;
   }
 }
 
-export { app, auth, db, storage, messaging };
+// Backward-compatible getter functions
+export function getFirebaseApp() { return app; }
+export function getAuth() { return auth; }
+export function getDb() { return db; }
+export function getStorage() { return storage; }
+export function getMessagingInstance() { return messaging; }
+
+export { 
+  app, 
+  auth, 
+  db, 
+  storage, 
+  messaging,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  signOut,
+  type UserCredential,
+  doc,
+  setDoc,
+  getDoc,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  getToken
+};
 
 // ── RF-066: FCM Push Notification Setup ────────────────
 export async function requestNotificationPermission(): Promise<string | null> {

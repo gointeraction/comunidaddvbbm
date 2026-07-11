@@ -1,6 +1,7 @@
 'use client';
 
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
+const getDbLazy = () => getDb();
 import {
   collection,
   doc,
@@ -76,13 +77,13 @@ export function cleanupFirestoreSync() {
 }
 
 export async function initFirestoreSync() {
-  if (typeof window === 'undefined' || !db) return;
+  if (typeof window === 'undefined' || !getDbLazy()) return;
   if (isSyncInitialized) return;
   isSyncInitialized = true;
 
   try {
     // Quick check: just see if posts collection has any docs (minimal read)
-    const postsCheck = await getDocs(query(collection(db, 'posts'), limit(1)));
+    const postsCheck = await getDocs(query(collection(getDbLazy(), 'posts'), limit(1)));
     if (postsCheck.empty) {
       console.info('>[Firestore Sync] Sembrando datos iniciales...');
       await seedFirestoreData();
@@ -100,7 +101,7 @@ export async function initFirestoreSync() {
 
     for (const col of essentialCollections) {
       unsubscribers.push(onSnapshot(
-        query(collection(db, col.name), limit(col.limit)),
+        query(collection(getDbLazy(), col.name), limit(col.limit)),
         (snap) => {
           const data = snap.docs.map((d) => d.data() as any);
           if (data.length > 0) useAppStore.setState({ [col.name]: data });
@@ -111,7 +112,7 @@ export async function initFirestoreSync() {
 
     // Users listener (lighter - only sync current user)
     unsubscribers.push(onSnapshot(
-      collection(db, 'users'),
+      collection(getDbLazy(), 'users'),
       (snap) => {
         const users = snap.docs.map((d) => d.data() as any);
         if (users.length > 0) {
@@ -129,7 +130,7 @@ export async function initFirestoreSync() {
     // Deferred: missions, achievements, counters (load after 2s)
     setTimeout(() => {
       unsubscribers.push(onSnapshot(
-        collection(db, 'missions'),
+        collection(getDbLazy(), 'missions'),
         (snap) => {
           const missions = snap.docs.map((d) => d.data() as any);
           if (missions.length > 0) useAppStore.setState({ missions });
@@ -138,7 +139,7 @@ export async function initFirestoreSync() {
       ));
 
       unsubscribers.push(onSnapshot(
-        collection(db, 'achievements'),
+        collection(getDbLazy(), 'achievements'),
         (snap) => {
           const achievements = snap.docs.map((d) => d.data() as any);
           if (achievements.length > 0) useAppStore.setState({ achievements });
@@ -147,7 +148,7 @@ export async function initFirestoreSync() {
       ));
 
       unsubscribers.push(onSnapshot(
-        collection(db, 'counters'),
+        collection(getDbLazy(), 'counters'),
         (snap) => {
           const docs = snap.docs.map((d) => d.data() as any);
           if (docs.length > 0) {
@@ -170,7 +171,7 @@ export async function initFirestoreSync() {
  * Los posts se crean con authorId del usuario actual.
  */
 export async function seedFirestoreData() {
-  if (!db) return;
+  if (!getDbLazy()) return;
   const { currentUser } = useAppStore.getState();
   const authorId = currentUser?.uid || 'system';
   const authorName = currentUser?.displayName || 'Sistema';
@@ -179,34 +180,34 @@ export async function seedFirestoreData() {
   try {
     // Seed posts with current user as author
     for (const p of SEED_DATA.posts) {
-      await setDoc(doc(db, 'posts', p.postId), { ...p, authorId, authorName, authorLevel });
+      await setDoc(doc(getDbLazy(), 'posts', p.postId), { ...p, authorId, authorName, authorLevel });
     }
     // Seed resources
     for (const r of SEED_DATA.resources) {
-      await setDoc(doc(db, 'resources', r.resourceId), { ...r, authorId, authorName });
+      await setDoc(doc(getDbLazy(), 'resources', r.resourceId), { ...r, authorId, authorName });
     }
     // Seed courses
     for (const c of SEED_DATA.courses) {
-      await setDoc(doc(db, 'courses', c.courseId), { ...c, authorId, authorName });
+      await setDoc(doc(getDbLazy(), 'courses', c.courseId), { ...c, authorId, authorName });
     }
     // Seed lessons
     for (const [courseId, lessons] of Object.entries(SEED_DATA.lessons)) {
       for (const lesson of lessons) {
-        await setDoc(doc(db, `courses/${courseId}/lessons`, lesson.lessonId), lesson);
+        await setDoc(doc(getDbLazy(), `courses/${courseId}/lessons`, lesson.lessonId), lesson);
       }
     }
     // Seed live sessions
     for (const l of SEED_DATA.lives) {
-      await setDoc(doc(db, 'liveSessions', l.liveId), { ...l, hostId: authorId, hostName: authorName });
+      await setDoc(doc(getDbLazy(), 'liveSessions', l.liveId), { ...l, hostId: authorId, hostName: authorName });
     }
     // Seed missions
-    for (const m of SEED_DATA.missions) await setDoc(doc(db, 'missions', m.missionId), m);
+    for (const m of SEED_DATA.missions) await setDoc(doc(getDbLazy(), 'missions', m.missionId), m);
     // Seed achievements
-    for (const a of SEED_DATA.achievements) await setDoc(doc(db, 'achievements', a.achievementId), a);
+    for (const a of SEED_DATA.achievements) await setDoc(doc(getDbLazy(), 'achievements', a.achievementId), a);
     // Seed counters
-    await setDoc(doc(db, 'counters', 'global'), SEED_DATA.counters as any);
+    await setDoc(doc(getDbLazy(), 'counters', 'global'), SEED_DATA.counters as any);
     // Seed gamification config
-    await setDoc(doc(db, 'gamificationConfig', 'main'), SEED_DATA.gamificationConfig as any);
+    await setDoc(doc(getDbLazy(), 'gamificationConfig', 'main'), SEED_DATA.gamificationConfig as any);
     console.info('>[Firestore Sync] ✓ Sembrado completo en Firestore.');
   } catch (err: any) {
     console.warn('>[Firestore Sync] Error durante sembrado:', err?.message || err);
@@ -216,20 +217,20 @@ export async function seedFirestoreData() {
 // ── CRUD Helpers contra Firestore ──
 
 export async function createPostInFirestore(post: any) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    await setDoc(doc(db, 'posts', post.postId), post);
+    await setDoc(doc(getDbLazy(), 'posts', post.postId), post);
   } catch (e: any) {
     console.warn('Error al guardar post en Firestore:', e?.message || e);
   }
 }
 
 export async function likePostInFirestore(postId: string, likedByUser: boolean) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   if (!throttle(`like-${postId}`, 500)) return;
   try {
     const delta = likedByUser ? -1 : 1;
-    await updateDoc(doc(db, 'posts', postId), {
+    await updateDoc(doc(getDbLazy(), 'posts', postId), {
       likesCount: increment(delta),
     });
   } catch (e: any) {
@@ -238,11 +239,11 @@ export async function likePostInFirestore(postId: string, likedByUser: boolean) 
 }
 
 export async function createCommentInFirestore(postId: string, comment: any) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   if (!throttle(`comment-${postId}`, 1000)) return;
   try {
-    await setDoc(doc(db, `posts/${postId}/comments`, comment.commentId), comment);
-    await updateDoc(doc(db, 'posts', postId), {
+    await setDoc(doc(getDbLazy(), `posts/${postId}/comments`, comment.commentId), comment);
+    await updateDoc(doc(getDbLazy(), 'posts', postId), {
       commentsCount: increment(1),
     });
   } catch (e: any) {
@@ -251,27 +252,27 @@ export async function createCommentInFirestore(postId: string, comment: any) {
 }
 
 export async function saveUserInFirestore(user: any) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    await setDoc(doc(db, 'users', user.uid), user, { merge: true });
+    await setDoc(doc(getDbLazy(), 'users', user.uid), user, { merge: true });
   } catch (e: any) {
     console.warn('Error al guardar usuario en Firestore:', e?.message || e);
   }
 }
 
 export async function markNotifReadInFirestore(notifId: string) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    await updateDoc(doc(db, 'notifications', notifId), { read: true });
+    await updateDoc(doc(getDbLazy(), 'notifications', notifId), { read: true });
   } catch (e: any) {
     console.warn('Error al marcar notificación en Firestore:', e?.message || e);
   }
 }
 
 export async function upvoteResourceInFirestore(resourceId: string, delta: number) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    await updateDoc(doc(db, 'resources', resourceId), {
+    await updateDoc(doc(getDbLazy(), 'resources', resourceId), {
       upvotes: increment(delta),
     });
   } catch (e: any) {
@@ -280,24 +281,24 @@ export async function upvoteResourceInFirestore(resourceId: string, delta: numbe
 }
 
 export async function createResourceInFirestore(resource: any) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    await setDoc(doc(db, 'resources', resource.resourceId), resource);
+    await setDoc(doc(getDbLazy(), 'resources', resource.resourceId), resource);
   } catch (e: any) {
     console.warn('Error al crear recurso en Firestore:', e?.message || e);
   }
 }
 
 export async function incrementViewCount(resourceId: string) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    await updateDoc(doc(db, 'resources', resourceId), {
+    await updateDoc(doc(getDbLazy(), 'resources', resourceId), {
       viewsCount: increment(1),
     });
   } catch (e: any) {
     // If viewsCount field doesn't exist, initialize it
     try {
-      await updateDoc(doc(db, 'resources', resourceId), {
+      await updateDoc(doc(getDbLazy(), 'resources', resourceId), {
         viewsCount: 1,
       });
     } catch (e2: any) {
@@ -307,36 +308,36 @@ export async function incrementViewCount(resourceId: string) {
 }
 
 export async function deletePostFromFirestore(postId: string) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    await deleteDoc(doc(db, 'posts', postId));
+    await deleteDoc(doc(getDbLazy(), 'posts', postId));
   } catch (e: any) {
     console.warn('Error al eliminar post en Firestore:', e?.message || e);
   }
 }
 
 export async function changeRoleInFirestore(uid: string, newRole: string) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    await updateDoc(doc(db, 'users', uid), { role: newRole });
+    await updateDoc(doc(getDbLazy(), 'users', uid), { role: newRole });
   } catch (e: any) {
     console.warn('Error al cambiar rol en Firestore:', e?.message || e);
   }
 }
 
 export async function sendLiveChatMessageInFirestore(liveId: string, message: any) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    await setDoc(doc(db, `liveSessions/${liveId}/chat`, message.id), message);
+    await setDoc(doc(getDbLazy(), `liveSessions/${liveId}/chat`, message.id), message);
   } catch (e: any) {
     console.warn('Error al enviar chat en vivo en Firestore:', e?.message || e);
   }
 }
 
 export async function claimXPInFirestore(uid: string, xpReward: number) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    await updateDoc(doc(db, 'users', uid), {
+    await updateDoc(doc(getDbLazy(), 'users', uid), {
       xp: increment(xpReward),
       weeklyXP: increment(xpReward),
     });
@@ -346,9 +347,9 @@ export async function claimXPInFirestore(uid: string, xpReward: number) {
 }
 
 export async function markLessonCompletedInFirestore(uid: string, completedLessons: string[]) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    await updateDoc(doc(db, 'users', uid), { completedLessons });
+    await updateDoc(doc(getDbLazy(), 'users', uid), { completedLessons });
   } catch (e: any) {
     console.warn('Error al guardar lección completada en Firestore:', e?.message || e);
   }
@@ -356,9 +357,9 @@ export async function markLessonCompletedInFirestore(uid: string, completedLesso
 
 // ── RF-020: Edit Post (within 30 min) ──────────────────
 export async function editPostInFirestore(postId: string, data: { title: string; content: string; tags: string[] }) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    await updateDoc(doc(db, 'posts', postId), {
+    await updateDoc(doc(getDbLazy(), 'posts', postId), {
       ...data,
       updatedAt: new Date().toISOString(),
     });
@@ -369,9 +370,9 @@ export async function editPostInFirestore(postId: string, data: { title: string;
 
 // ── RF-021: Delete Own Post ────────────────────────────
 export async function deleteOwnPostFromFirestore(postId: string) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    await deleteDoc(doc(db, 'posts', postId));
+    await deleteDoc(doc(getDbLazy(), 'posts', postId));
   } catch (e: any) {
     console.warn('Error al eliminar post en Firestore:', e?.message || e);
   }
@@ -379,13 +380,13 @@ export async function deleteOwnPostFromFirestore(postId: string) {
 
 // ── RF-030: Enroll in Course ───────────────────────────
 export async function enrollInCourseFirestore(courseId: string, userId: string) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    await setDoc(doc(db, `courses/${courseId}/enrollments`, userId), {
+    await setDoc(doc(getDbLazy(), `courses/${courseId}/enrollments`, userId), {
       userId,
       enrolledAt: new Date().toISOString(),
     });
-    await updateDoc(doc(db, 'courses', courseId), {
+    await updateDoc(doc(getDbLazy(), 'courses', courseId), {
       enrolledCount: increment(1),
     });
   } catch (e: any) {
@@ -395,9 +396,9 @@ export async function enrollInCourseFirestore(courseId: string, userId: string) 
 
 // ── RF-031: Mark Lesson Complete ───────────────────────
 export async function markLessonCompleteFirestore(courseId: string, lessonId: string, userId: string) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    await setDoc(doc(db, `courses/${courseId}/lessons/${lessonId}/completions`, userId), {
+    await setDoc(doc(getDbLazy(), `courses/${courseId}/lessons/${lessonId}/completions`, userId), {
       userId,
       completedAt: new Date().toISOString(),
     });
@@ -408,15 +409,15 @@ export async function markLessonCompleteFirestore(courseId: string, lessonId: st
 
 // ── RF-LAND-02: Update Counters ────────────────────────
 export async function updateCountersFirestore(field: string, delta: number = 1) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    await updateDoc(doc(db, 'counters', 'global'), {
+    await updateDoc(doc(getDbLazy(), 'counters', 'global'), {
       [field]: increment(delta),
     });
   } catch (e: any) {
     // If counters doc doesn't exist, create it
     try {
-      await setDoc(doc(db, 'counters', 'global'), {
+      await setDoc(doc(getDbLazy(), 'counters', 'global'), {
         developersCount: 0, postsCount: 0, commentsCount: 0, coursesCount: 0, resourcesCount: 0,
         [field]: increment(delta),
       });
@@ -428,9 +429,9 @@ export async function updateCountersFirestore(field: string, delta: number = 1) 
 
 // ── RF-041: Increment Download Count ───────────────────
 export async function incrementDownloadCountFirestore(resourceId: string) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    await updateDoc(doc(db, 'resources', resourceId), {
+    await updateDoc(doc(getDbLazy(), 'resources', resourceId), {
       downloadsCount: increment(1),
     });
   } catch (e: any) {
@@ -440,13 +441,13 @@ export async function incrementDownloadCountFirestore(resourceId: string) {
 
 // ── RF-043: Toggle Favorite ────────────────────────────
 export async function toggleFavoriteFirestore(resourceId: string, userId: string) {
-  if (!db) return;
+  if (!getDbLazy()) return;
   try {
-    const favRef = doc(db, `resources/${resourceId}/favorites/${userId}`);
+    const favRef = doc(getDbLazy(), `resources/${resourceId}/favorites/${userId}`);
     const favSnap = await getDoc(favRef);
     if (favSnap.exists()) {
       await deleteDoc(favRef);
-      await updateDoc(doc(db, 'resources', resourceId), {
+      await updateDoc(doc(getDbLazy(), 'resources', resourceId), {
         favoritesCount: increment(-1),
       });
     } else {
@@ -454,7 +455,7 @@ export async function toggleFavoriteFirestore(resourceId: string, userId: string
         userId,
         createdAt: new Date().toISOString(),
       });
-      await updateDoc(doc(db, 'resources', resourceId), {
+      await updateDoc(doc(getDbLazy(), 'resources', resourceId), {
         favoritesCount: increment(1),
       });
     }

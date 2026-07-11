@@ -397,7 +397,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   upvoteResource: (resourceId, delta = 1) => {
     upvoteResourceInFirestore(resourceId, delta);
     const resources = get().resources.map(r =>
-      r.resourceId === resourceId ? { ...r, upvotes: r.upvotes + delta } : r
+      r.resourceId === resourceId ? { ...r, favoritesCount: r.favoritesCount + delta } : r
     );
     set({ resources });
   },

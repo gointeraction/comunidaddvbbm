@@ -735,7 +735,7 @@ export default function CoursesPage() {
 
     const { updateDoc, doc } = await import('firebase/firestore');
     try {
-      await updateDoc(doc(db, 'courses', editCourse.courseId || editCourse.id), {
+      await updateDoc(doc(db, 'courses', editCourse.courseId || (editCourse as any).id), {
         title: courseTitle.trim(),
         description: courseDescription.trim(),
         durationMinutes: duration,
@@ -745,7 +745,7 @@ export default function CoursesPage() {
       });
       useAppStore.setState((prev) => ({
         courses: prev.courses.map(c =>
-          (c.courseId || c.id) === (editCourse.courseId || editCourse.id)
+          (c.courseId || (c as any).id) === (editCourse.courseId || (editCourse as any).id)
             ? { ...c, title: courseTitle.trim(), description: courseDescription.trim(), durationMinutes: duration, externalUrl: courseExternalUrl.trim() || null, coverUrl }
             : c
         ),

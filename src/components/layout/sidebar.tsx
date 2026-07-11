@@ -137,9 +137,9 @@ function SidebarContent() {
   }, [currentUser?.role, unreadCount, logout]);
 
   const handleNavClick = (item: NavItem | BottomNavItem) => {
-    if (item.action) {
+    if ('action' in item && item.action) {
       item.action();
-    } else if (item.route) {
+    } else if ('route' in item && item.route) {
       navigate(item.route);
     }
   };
