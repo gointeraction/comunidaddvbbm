@@ -188,6 +188,16 @@ function ResourceCard({
 }
 
 // ── Create Resource Dialog ──────────────────────────────
+// ── Resource Category Config ──────────────────────────────
+const RESOURCE_TYPES: { id: ResourceType; icon: string }[] = [
+  { id: 'Skill', icon: '🧠' },
+  { id: 'Plugin', icon: '🔌' },
+  { id: 'Subagent', icon: '🤖' },
+  { id: 'MCP Server', icon: '⚙️' },
+  { id: 'Agent Team', icon: '👥' },
+  { id: 'Tutorial', icon: '📚' },
+];
+
 function CreateResourceDialog({
   open,
   onOpenChange,
@@ -198,28 +208,24 @@ function CreateResourceDialog({
   const currentUser = useAppStore((s) => s.currentUser);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [content, setContent] = useState('');
   const [type, setType] = useState<ResourceType>('Skill');
   const [level, setLevel] = useState<ResourceLevel>('Principiante');
-  const [attachments, setAttachments] = useState<
-    { id: string; name: string; size: number }[]
-  >([]);
+  const [tags, setTags] = useState('');
+  const [externalUrl, setExternalUrl] = useState('');
+  const [githubUrl, setGithubUrl] = useState('');
+  const [installCmd, setInstallCmd] = useState('');
+  const [attachments, setAttachments] = useState<{ id: string; name: string; size: number }[]>([]);
+  const [publishToForum, setPublishToForum] = useState(false);
 
   const handleAddAttachment = () => {
     if (attachments.length >= 3) return;
-    const fakeNames = [
-      'archivo-ejemplo.json',
-      'template.zip',
-      'guia.pdf',
-    ];
+    const fakeNames = ['archivo-ejemplo.json', 'template.zip', 'guia.pdf'];
     const fakeSizes = [12500, 256000, 890000];
     const idx = attachments.length;
     setAttachments((prev) => [
       ...prev,
-      {
-        id: `att-${Date.now()}`,
-        name: fakeNames[idx] || `archivo-${idx + 1}.txt`,
-        size: fakeSizes[idx] || 5000,
-      },
+      { id: `att-${Date.now()}`, name: fakeNames[idx] || `archivo-${idx + 1}.txt`, size: fakeSizes[idx] || 5000 },
     ]);
   };
 
@@ -233,190 +239,196 @@ function CreateResourceDialog({
       resourceId: `res-${Date.now()}`,
       title: title.trim(),
       description: description.trim(),
+      content: content.trim(),
       type,
       level,
       authorId: currentUser?.uid || 'anon',
       authorName: currentUser?.displayName || 'Desarrollador BBM',
+      coverUrl: '',
+      externalUrl: externalUrl.trim() || null,
       downloadsCount: 0,
       favoritesCount: 0,
       upvotes: 0,
       isFavorited: false,
-      tags: [type.toLowerCase(), level.toLowerCase()],
+      tags: tags.split(',').map(t => t.trim()).filter(Boolean),
       attachments,
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     createResourceInFirestore(newRes);
-    useAppStore.setState((prev) => ({
-      resources: [newRes as any, ...prev.resources],
-    }));
-    setTitle('');
-    setDescription('');
-    setType('Skill');
-    setLevel('Principiante');
-    setAttachments([]);
+    useAppStore.setState((prev) => ({ resources: [newRes as any, ...prev.resources] }));
+    setTitle(''); setDescription(''); setContent(''); setType('Skill'); setLevel('Principiante');
+    setTags(''); setExternalUrl(''); setGithubUrl(''); setInstallCmd('');
+    setAttachments([]); setPublishToForum(false);
     onOpenChange(false);
   };
 
   const handleCancel = () => {
-    setTitle('');
-    setDescription('');
-    setType('Skill');
-    setLevel('Principiante');
-    setAttachments([]);
+    setTitle(''); setDescription(''); setContent(''); setType('Skill'); setLevel('Principiante');
+    setTags(''); setExternalUrl(''); setGithubUrl(''); setInstallCmd('');
+    setAttachments([]); setPublishToForum(false);
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-card border-border/50 max-h-[90vh] overflow-y-auto custom-scrollbar">
-        <DialogHeader>
-          <DialogTitle className="terminal-text text-primary">
-            ~/nuevo-recurso
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4 mt-2">
-          {/* Title */}
-          <div className="space-y-1.5">
-            <label className="text-sm text-muted-foreground">Título</label>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Nombre del recurso"
-              className="bg-secondary/50 border-border/50"
-            />
-          </div>
-
-          {/* Description */}
-          <div className="space-y-1.5">
-            <label className="text-sm text-muted-foreground">
-              Descripción
-            </label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe tu recurso..."
-              rows={4}
-              className="bg-secondary/50 border-border/50 resize-none"
-            />
-          </div>
-
-          {/* Type selector */}
-          <div className="space-y-1.5">
-            <label className="text-sm text-muted-foreground">Tipo</label>
-            <div className="flex flex-wrap gap-1.5">
-              {TYPE_OPTIONS.filter((t) => t !== 'All').map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setType(t as ResourceType)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer border ${
-                    type === t
-                      ? 'bg-primary/20 border-primary/50 text-primary'
-                      : 'bg-secondary/50 border-border/50 text-muted-foreground hover:border-primary/30 hover:text-primary/80'
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
+      <DialogContent className="sm:max-w-4xl bg-[#0f172a] border-white/10 max-h-[90vh] overflow-y-auto custom-scrollbar p-0">
+        {/* Terminal header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0a0f1a]">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-red-500" />
+              <div className="w-3 h-3 rounded-full bg-yellow-500" />
+              <div className="w-3 h-3 rounded-full bg-green-500" />
             </div>
+            <span className="text-xs font-mono text-gray-400">{'/> cd ~/recursos'}</span>
           </div>
+          <button onClick={handleCancel} className="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer">✕</button>
+        </div>
 
-          {/* Level selector */}
-          <div className="space-y-1.5">
-            <label className="text-sm text-muted-foreground">Nivel</label>
-            <div className="flex flex-wrap gap-1.5">
-              {LEVEL_OPTIONS.filter((l) => l !== 'All').map((l) => (
-                <button
-                  key={l}
-                  onClick={() => setLevel(l as ResourceLevel)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer border ${
-                    level === l
-                      ? 'bg-primary/20 border-primary/50 text-primary'
-                      : 'bg-secondary/50 border-border/50 text-muted-foreground hover:border-primary/30 hover:text-primary/80'
-                  }`}
-                >
-                  {l}
-                </button>
-              ))}
-            </div>
-          </div>
+        {/* Title */}
+        <div className="px-6 pt-5 pb-2">
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <span className="text-[#10B981]">📦</span> Publicar Recurso
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">Comparte plantillas, scripts, tutoriales o herramientas con la comunidad.</p>
+        </div>
 
-          {/* Attachments */}
-          <div className="space-y-2">
-            <label className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <FileText className="size-3.5" />
-              Adjuntos ({attachments.length}/3)
-            </label>
-
-            {attachments.length > 0 && (
+        {/* Content */}
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left column */}
+            <div className="space-y-5">
+              {/* Title */}
               <div className="space-y-2">
-                {attachments.map((att) => (
-                  <div
-                    key={att.id}
-                    className="flex items-center justify-between bg-secondary/50 border border-border/50 rounded-md px-3 py-2"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <FileText className="size-4 text-primary/60 shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-xs text-foreground truncate">
-                          {att.name}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {formatFileSize(att.size)}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleRemoveAttachment(att.id)}
-                      className="text-muted-foreground hover:text-terminal-red transition-colors shrink-0 ml-2"
-                      aria-label="Eliminar adjunto"
-                    >
-                      <X className="size-4" />
-                    </button>
-                  </div>
-                ))}
+                <label className="text-sm font-mono text-[#10B981]">Titulo *</label>
+                <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nombre claro y descriptivo del recurso..." className="bg-transparent border border-white/10 text-white placeholder:text-gray-600 font-mono text-sm focus:border-[#10B981]/50" />
+                <div className="flex justify-end"><span className="text-[10px] font-mono text-gray-600">{title.length}/200</span></div>
               </div>
-            )}
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAddAttachment}
-                    disabled={attachments.length >= 3}
-                    className="border-primary/30 text-primary hover:bg-primary/10 hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <Plus className="size-4 mr-1.5" />
-                    Agregar adjunto
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              {attachments.length >= 3 && (
-                <TooltipContent>
-                  Límite máximo: 3 archivos
-                </TooltipContent>
-              )}
-            </Tooltip>
+              {/* Description */}
+              <div className="space-y-2">
+                <label className="text-sm font-mono text-[#10B981]">Descripcion *</label>
+                <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Resumen corto que aparece en cards y previews..." rows={3} className="bg-transparent border border-white/10 text-white placeholder:text-gray-600 font-mono text-sm resize-none focus:border-[#10B981]/50" />
+                <span className="text-[10px] font-mono text-gray-600">Se muestra en las cards de la lista. {description.length}/600</span>
+              </div>
+
+              {/* Content */}
+              <div className="space-y-2">
+                <label className="text-sm font-mono text-[#10B981]">Contenido</label>
+                <div className="border border-white/10 rounded-lg overflow-hidden">
+                  <div className="flex items-center gap-1 px-3 py-2 border-b border-white/10 bg-white/5">
+                    <span className="text-xs text-gray-400 px-2">Paragraph</span>
+                    <div className="w-px h-4 bg-white/10 mx-1" />
+                    <button className="p-1 text-gray-400 hover:text-white"><b>B</b></button>
+                    <button className="p-1 text-gray-400 hover:text-white"><i>I</i></button>
+                    <button className="p-1 text-gray-400 hover:text-white"><u>U</u></button>
+                    <button className="p-1 text-gray-400 hover:text-white font-mono text-xs">🔗</button>
+                    <div className="w-px h-4 bg-white/10 mx-1" />
+                    <button className="p-1 text-gray-400 hover:text-white">📎</button>
+                    <button className="p-1 text-gray-400 hover:text-white">🖼️</button>
+                    <button className="p-1 text-gray-400 hover:text-white">📊</button>
+                    <button className="p-1 text-gray-400 hover:text-white">•••</button>
+                  </div>
+                  <Textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Contenido completo: headings, negrita, listas, codigo, tablas, links, imagenes..." rows={8} className="bg-transparent border-0 text-white placeholder:text-gray-600 font-mono text-sm resize-none focus-visible:ring-0" />
+                </div>
+                <span className="text-[10px] font-mono text-gray-600">{content.length} words</span>
+              </div>
+            </div>
+
+            {/* Right column */}
+            <div className="space-y-5">
+              {/* Categories */}
+              <div className="space-y-2">
+                <label className="text-sm font-mono text-[#10B981]">Categoria *</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {RESOURCE_TYPES.map((rt) => (
+                    <button key={rt.id} onClick={() => setType(rt.id)} className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border transition-all cursor-pointer ${type === rt.id ? 'bg-[#10B981]/10 border-[#10B981]/40 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20'}`}>
+                      <span>{rt.icon}</span>
+                      <span className="text-xs font-mono">{rt.id}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Miniatura */}
+              <div className="space-y-2">
+                <label className="text-sm font-mono text-[#10B981]">Miniatura</label>
+                <button className="w-full border-2 border-dashed border-white/20 rounded-lg py-6 flex flex-col items-center gap-2 hover:border-[#10B981]/40 hover:bg-[#10B981]/5 transition-all cursor-pointer">
+                  <span className="text-2xl">🖼️</span>
+                  <span className="text-xs text-gray-400">Click para subir imagen</span>
+                </button>
+              </div>
+
+              {/* Tags */}
+              <div className="space-y-2">
+                <label className="text-sm font-mono text-[#10B981]">Tags</label>
+                <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="python, django, api..." className="bg-transparent border border-white/10 text-white placeholder:text-gray-600 font-mono text-sm focus:border-[#10B981]/50" />
+                <span className="text-[10px] font-mono text-gray-600">Separados por comas</span>
+              </div>
+
+              {/* URL externa */}
+              <div className="space-y-2">
+                <label className="text-sm font-mono text-[#10B981]">URL externa</label>
+                <Input value={externalUrl} onChange={(e) => setExternalUrl(e.target.value)} placeholder="https://github.com/..." className="bg-transparent border border-white/10 text-white placeholder:text-gray-600 font-mono text-sm focus:border-[#10B981]/50" />
+                <span className="text-[10px] font-mono text-gray-600">Github, Notion, Google Drive, etc.</span>
+              </div>
+
+              {/* Repositorio GitHub */}
+              <div className="space-y-2">
+                <label className="text-sm font-mono text-[#10B981]">Repositorio GitHub</label>
+                <Input value={githubUrl} onChange={(e) => setGithubUrl(e.target.value)} placeholder="https://github.com/usuario/repo" className="bg-transparent border border-white/10 text-white placeholder:text-gray-600 font-mono text-sm focus:border-[#10B981]/50" />
+                <span className="text-[10px] font-mono text-gray-600">Enlaza al repositorio de codigo fuente</span>
+              </div>
+
+              {/* Comando de instalacion */}
+              <div className="space-y-2">
+                <label className="text-sm font-mono text-[#10B981]">Comando de instalacion</label>
+                <Input value={installCmd} onChange={(e) => setInstallCmd(e.target.value)} placeholder="claude mcp add mi-servidor" className="bg-transparent border border-white/10 text-white placeholder:text-gray-600 font-mono text-sm focus:border-[#10B981]/50" />
+                <span className="text-[10px] font-mono text-gray-600">Comando para instalar o usar este recurso con Claude Code</span>
+              </div>
+
+              {/* Dificultad */}
+              <div className="space-y-2">
+                <label className="text-sm font-mono text-[#10B981]">Dificultad</label>
+                <select value={level} onChange={(e) => setLevel(e.target.value as ResourceLevel)} className="w-full px-3 py-2.5 rounded-lg border border-white/10 bg-white/5 text-white font-mono text-sm focus:border-[#10B981]/50 cursor-pointer">
+                  <option value="Principiante">Principiante</option>
+                  <option value="Intermedio">Intermedio</option>
+                  <option value="Avanzado">Avanzado</option>
+                </select>
+                <span className="text-[10px] font-mono text-gray-600">Nivel de dificultad requerido para usar este recurso</span>
+              </div>
+
+              {/* Archivos adjuntos */}
+              <div className="space-y-2">
+                <label className="text-sm font-mono text-[#10B981]">Archivos adjuntos</label>
+                <div className="space-y-2">
+                  {[1, 2, 3].map((num) => (
+                    <button key={num} onClick={() => { if (num > attachments.length) handleAddAttachment(); }} className="w-full border border-dashed border-white/20 rounded-lg py-3 flex items-center justify-center gap-2 hover:border-[#10B981]/40 hover:bg-[#10B981]/5 transition-all cursor-pointer">
+                      <span className="text-gray-500">📎</span>
+                      <span className="text-xs text-gray-500 font-mono">Subir archivo {num}</span>
+                      <span className="text-[10px] text-gray-600 font-mono">PDF, code, ZIP, images...</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Publicar en el foro */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer" onClick={() => setPublishToForum(!publishToForum)}>
+                  <div className={`w-5 h-5 rounded border ${publishToForum ? 'bg-[#10B981] border-[#10B981]' : 'border-white/20 bg-white/5'}`} />
+                  <span className="text-sm font-mono text-white">Publicar en el foro</span>
+                </label>
+                <span className="text-[10px] font-mono text-gray-600 pl-7">Se creara un post anunciando tu recurso</span>
+              </div>
+            </div>
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              variant="ghost"
-              onClick={handleCancel}
-              className="flex-1"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handlePublish}
-              disabled={!title.trim() || !description.trim()}
-              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
-            >
-              <Plus className="size-4 mr-1.5" />
-              Publicar
+          <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/10">
+            <Button variant="ghost" onClick={handleCancel} className="text-gray-400 hover:text-white font-mono text-sm">Cancelar</Button>
+            <Button onClick={handlePublish} disabled={!title.trim() || !description.trim()} className="bg-[#10B981] text-gray-950 hover:bg-[#34D399] font-mono font-semibold px-6 py-2.5 rounded-xl shadow-[0_0_22px_rgba(16,185,129,0.4)] disabled:opacity-40">
+              <span className="mr-1">📦</span> Publicar Recurso <span className="ml-1 text-xs opacity-70">+15 XP</span>
             </Button>
           </div>
         </div>
