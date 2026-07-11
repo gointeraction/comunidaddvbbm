@@ -186,13 +186,24 @@ function SessionCard({ session, onEdit }: { session: any; onEdit: (s: any) => vo
                 <Video className="size-3.5 mr-1 animate-pulse" /> Unirse al directo
               </Button>
             ) : session.status === 'scheduled' ? (
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full">
                 <Button size="sm" variant={registered ? 'outline' : 'default'} onClick={() => setRegistered(!registered)} className={`flex-1 font-mono text-xs cursor-pointer ${registered ? 'border-[#10B981]/40 text-[#10B981] bg-[#10B981]/10' : 'bg-[#10B981] text-black hover:bg-[#10B981]/90'}`}>
                   {registered ? '✓ Registrado' : 'Registrarse'}
                 </Button>
-                {youTubeId && (
-                  <Button size="sm" variant="outline" onClick={() => setRoomOpen(true)} className="font-mono text-xs border-white/10 text-gray-400 hover:border-[#10B981]/40 hover:text-[#10B981] cursor-pointer">
-                    <Video className="size-3.5 mr-1" /> Ver
+                {session.streamUrl && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="font-mono text-xs border-white/10 text-gray-400 hover:border-[#10B981]/40 hover:text-[#10B981] cursor-pointer"
+                    onClick={() => {
+                      if (youTubeId) {
+                        setRoomOpen(true);
+                      } else {
+                        window.open(session.streamUrl, '_blank');
+                      }
+                    }}
+                  >
+                    <ExternalLink className="size-3.5 mr-1" /> Ver
                   </Button>
                 )}
               </div>
