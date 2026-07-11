@@ -188,20 +188,27 @@ export const useAppStore = create<AppState>((set, get) => ({
       avatarUrl: googleUser?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     };
     const newUser: User = {
-      ...CURRENT_USER,
       uid: defaultGoogleUser.uid,
       email: defaultGoogleUser.email,
       displayName: defaultGoogleUser.displayName,
       avatarUrl: defaultGoogleUser.avatarUrl,
+      interests: ['automatizacion', 'ia', 'webapps'],
+      level: 'intermedio',
+      bio: 'Desarrollador conectado a través de Google Workspace e integraciones Cloud en Firestore.',
+      role: 'member',
       status: 'active',
+      suspendedUntil: null,
       xp: 120,
       weeklyXP: 45,
       levelNumber: 2,
       postsCount: 1,
       commentsCount: 3,
-      bio: 'Desarrollador conectado a través de Google Workspace e integraciones Cloud en Firestore.',
-      interests: ['automatizacion', 'ia', 'webapps'],
-      role: 'member',
+      fcmToken: null,
+      pushEnabled: true,
+      emailNotifications: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      lastActiveAt: new Date().toISOString(),
     };
     saveUserInFirestore(newUser);
     set({ currentUser: newUser, isAuthenticated: true, route: 'foro' });
