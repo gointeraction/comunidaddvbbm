@@ -5,6 +5,7 @@ import {
   collection,
   doc,
   getDocs,
+  getDoc,
   setDoc,
   updateDoc,
   deleteDoc,
@@ -379,5 +380,42 @@ export async function updateCountersFirestore(field: string, delta: number = 1) 
     } catch (e2: any) {
       console.warn('Error al actualizar contadores:', e2?.message || e2);
     }
+  }
+}
+
+// ── RF-041: Increment Download Count ───────────────────
+export async function incrementDownloadCountFirestore(resourceId: string) {
+  if (!db) return;
+  try {
+    await updateDoc(doc(db, 'resources', resourceId), {
+      downloadsCount: increment(1),
+    });
+  } catch (e: any) {
+    console.warn('Error al incrementar descargas:', e?.message || e);
+  }
+}
+
+// ── RF-043: Toggle Favorite ────────────────────────────
+export async function toggleFavoriteFirestore(resourceId: string, userId: string) {
+  if (!db) return;
+  try {
+    const favRef = doc(db, `resources/${resourceId}/favorites/${userId}`);
+    const favSnap = await getDoc(favRef);
+    if (favSnap.exists()) {
+      await deleteDoc(favRef);
+      await updateDoc(doc(db, 'resources', resourceId), {
+        favoritesCount: increment(-1),
+      });
+    } else {
+      await setDoc(favRef, {
+        userId,
+        createdAt: new Date().toISOString(),
+      });
+      await updateDoc(doc(db, 'resources', resourceId), {
+        favoritesCount: increment(1),
+      });
+    }
+  } catch (e: any) {
+    console.warn('Error al toggle favorito:', e?.message || e);
   }
 }

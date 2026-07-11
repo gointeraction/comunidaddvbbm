@@ -110,3 +110,26 @@ export const appendAuditLog = onCall(async (request) => {
     actorId: request.auth.uid, actorName: user.data()?.displayName, action, targetType, targetId, motivo, metadata: metadata || {}, timestamp: FieldValue.serverTimestamp(),
   });
 });
+
+// ══════════════════════════════════════════════════════
+// RF-047: Live Session Reminders (1h before)
+// ══════════════════════════════════════════════════════
+
+export const sendLiveReminders = onSchedule("0 * * * *", async () => {
+  const now = Date.now();
+  const oneHourLater = new Date(now + 60 * 60 * 1000);
+
+  const upcoming = await db.collection("liveSessions")
+    .where("status", "==", "scheduled")
+    .where("scheduledAt", "<=", oneHourLater.toISOString())
+    .where("scheduledAt", ">=", new Date(now).toISOString())
+    .get();
+
+  for (const session of upcoming.docs) {
+    const data = session.data();
+    const registered: string[] = data.registeredUsers || [];
+    for (const userId of registered) {
+      await notify(userId, "live_reminder", { liveId: session.id }, undefined, data.title);
+    }
+  }
+});

@@ -84,11 +84,12 @@ const INTEREST_LABELS: Record<string, string> = {
 // ── Component ────────────────────────────────────────────
 
 export default function MembersPage() {
-  const { posts, navigate, users, currentUser } = useAppStore();
+  const { posts, navigate, users, currentUser, routeParams } = useAppStore();
   const [search, setSearch] = useState('');
   const [levelFilter, setLevelFilter] = useState<'todos' | ExperienceLevel>('todos');
   const [sortMode, setSortMode] = useState<'recientes' | 'activos' | 'todos'>('recientes');
-  const [selectedUid, setSelectedUid] = useState<string | null>(null);
+
+  const selectedUid = routeParams.uid || null;
 
   const filteredUsers = useMemo(() => {
     let list = users.filter(u => u.status === 'active');
@@ -147,7 +148,7 @@ export default function MembersPage() {
         <Button
           variant="ghost"
           className="text-muted-foreground hover:text-foreground gap-2"
-          onClick={() => setSelectedUid(null)}
+          onClick={() => navigate('miembros')}
         >
           <ArrowLeft className="h-4 w-4" />
           Volver
@@ -423,7 +424,7 @@ export default function MembersPage() {
               variant="ghost"
               size="sm"
               className="w-full text-xs text-[#10B981] hover:text-[#10B981] hover:bg-[#10B981]/10 border border-transparent hover:border-[#10B981]/20 gap-1.5"
-              onClick={() => setSelectedUid(user.uid)}
+              onClick={() => navigate('miembro-perfil', { uid: user.uid })}
             >
               Ver perfil
               <ChevronRight className="h-3 w-3" />

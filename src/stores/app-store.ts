@@ -54,6 +54,9 @@ import {
   getUserProfile,
 } from '@/lib/firebase';
 
+// ── RF-028: Filtro de palabras prohibidas ──
+const BLOCKED_WORDS = ['spam', 'hack', 'crack', 'xxx'];
+
 interface AppState {
   // Navigation
   route: Route;
@@ -280,6 +283,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   createPost: (title, content, tags) => {
     const user = get().currentUser;
     if (!user) return;
+    // RF-028: Check for blocked words
+    const text = (title + ' ' + content).toLowerCase();
+    if (BLOCKED_WORDS.some(w => text.includes(w))) return;
     const newPost: Post = {
       postId: 'p-' + Date.now(),
       authorId: user.uid,
@@ -419,7 +425,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (currentCompleted.includes(lessonId)) return;
     const newCompleted = [...currentCompleted, lessonId];
     markLessonCompletedInFirestore(user.uid, newCompleted);
-    const updatedUser = { ...user, completedLessons: newCompleted } as any;
+    // RF-033: Award XP for completing a lesson
+    claimXPInFirestore(user.uid, 50);
+    const updatedUser = { ...user, completedLessons: newCompleted, xp: user.xp + 50, weeklyXP: user.weeklyXP + 50 } as any;
     set({ currentUser: updatedUser });
   },
 

@@ -71,6 +71,7 @@ function AppRouter() {
     cursos: <CoursesPage />,
     directos: <DirectosPage />,
     miembros: <MembersPage />,
+    'miembro-perfil': <MembersPage />,
     ranking: <RankingPage />,
     gamificacion: <GamificationPage />,
     perfil: <ProfilePage />,

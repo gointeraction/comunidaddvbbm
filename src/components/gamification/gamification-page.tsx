@@ -69,7 +69,15 @@ export default function GamificationPage() {
   const completedMissions = useMemo(() => missions.filter(m => m.completed), [missions]);
 
   // Achievements
-  const unlockedIds = useMemo(() => new Set<string>(), []);
+  const unlockedIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (!currentUser) return ids;
+    if (currentUser.postsCount >= 1) ids.add('FIRST_POST');
+    if (currentUser.commentsCount >= 10) ids.add('CONVERSATIONALIST');
+    if (currentUser.xp >= 500) ids.add('HELPFUL_DEV');
+    if (currentUser.xp >= 2000) ids.add('CODE_MASTER');
+    return ids;
+  }, [currentUser]);
 
   const filteredAchievements = useMemo(() => {
     let list = achievements;
