@@ -37,7 +37,9 @@ import {
   registerWithEmail,
   logoutFirebase,
   getUserProfile,
+  db,
 } from '@/lib/firebase';
+import { doc, updateDoc, increment } from 'firebase/firestore';
 
 // ── RF-028: Filtro de palabras prohibidas ──
 const BLOCKED_WORDS = ['spam', 'hack', 'crack', 'xxx'];
@@ -88,6 +90,7 @@ interface AppState {
   auditLogs: AuditLog[];
   counters: Counters;
   gamificationConfig: GamificationConfig;
+  chatMessages: any[];
 
   // Sidebar
   sidebarOpen: boolean;
@@ -341,7 +344,27 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
     set({ posts });
   },
-  likeComment: (_postId, _commentId) => { /* placeholder */ },
+  likeComment: async (postId, commentId) => {
+    if (!db) return;
+    const posts = get().posts.map(p => {
+      if (p.postId !== postId) return p;
+      const comments = (p as any).comments || [];
+      const updatedComments = comments.map((c: any) => {
+        if (c.commentId !== commentId) return c;
+        const delta = c.likedByUser ? -1 : 1;
+        return { ...c, likedByUser: !c.likedByUser, likesCount: (c.likesCount || 0) + delta };
+      });
+      return { ...p, comments: updatedComments };
+    });
+    set({ posts });
+    try {
+      const comment = (posts.find(p => p.postId === postId) as any)?.comments?.find((c: any) => c.commentId === commentId);
+      const delta = comment && comment.likedByUser ? -1 : 1;
+      await updateDoc(doc(db, 'posts', postId), { [`comments.${commentId}.likesCount`]: increment(delta) });
+    } catch (e: any) {
+      console.warn('Error al dar like al comentario:', e?.message || e);
+    }
+  },
 
   // ── Community Collections (from Firestore) ──
   users: [],
@@ -354,6 +377,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   auditLogs: [],
   counters: { developersCount: 0, postsCount: 0, commentsCount: 0, coursesCount: 0, resourcesCount: 0 },
   gamificationConfig: { postXP: 10, commentXP: 5, taskXP: 15, likeReceivedXP: 5, weeklyRewards: { top1: 100, top2: 50, top3: 25 } },
+  chatMessages: [],
 
   // ── Sidebar ──
   sidebarOpen: true,

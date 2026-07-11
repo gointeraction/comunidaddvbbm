@@ -39,54 +39,6 @@ function getFirebaseErrorMessage(code: string): string {
   return errors[code] || code || 'Error al procesar la solicitud';
 }
 
-// ── Google Account Selector Modal ──
-function GoogleAccountModal({ isOpen, onClose, onSelect }: { isOpen: boolean; onClose: () => void; onSelect: (user: { email: string; displayName: string; avatarUrl?: string }) => void }) {
-  const [customEmail, setCustomEmail] = useState('');
-  const [customName, setCustomName] = useState('');
-
-  if (!isOpen) return null;
-
-  const mockAccounts = [
-    { email: 'carlos@bbmdev.dev', displayName: 'Carlos Dev', avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80' },
-    { email: 'lucia@bbmdev.dev', displayName: 'Lucia AI', avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80' },
-  ];
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in px-4">
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0f172a] p-6 shadow-2xl space-y-5">
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
-          <span className="font-semibold text-gray-100 text-base">Selecciona una cuenta</span>
-          <button onClick={onClose} className="text-gray-400 hover:text-white text-lg">✕</button>
-        </div>
-        <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-          {mockAccounts.map((acc) => (
-            <button
-              key={acc.email}
-              onClick={() => onSelect(acc)}
-              className="w-full flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 hover:border-[#10B981]/50 transition text-left cursor-pointer group"
-            >
-              <img src={acc.avatarUrl} alt={acc.displayName} className="w-10 h-10 rounded-full object-cover border border-white/20" />
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm text-gray-200 truncate">{acc.displayName}</div>
-                <div className="text-xs text-gray-400 truncate">{acc.email}</div>
-              </div>
-            </button>
-          ))}
-        </div>
-        <div className="border-t border-white/10 pt-4 space-y-3">
-          <div className="grid grid-cols-2 gap-2">
-            <Input placeholder="Tu Nombre" value={customName} onChange={(e) => setCustomName(e.target.value)} className="bg-black/40 border-white/10 text-xs text-gray-200 h-9" />
-            <Input placeholder="tu@email.com" type="email" value={customEmail} onChange={(e) => setCustomEmail(e.target.value)} className="bg-black/40 border-white/10 text-xs text-gray-200 h-9" />
-          </div>
-          <Button onClick={() => { if (customEmail) onSelect({ email: customEmail, displayName: customName || customEmail.split('@')[0] }); }} disabled={!customEmail} className="w-full bg-[#4285F4] hover:bg-[#3367D6] text-white text-xs h-9 rounded-lg font-medium cursor-pointer">
-            Continuar
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Google Sign-In Button ──
 function GoogleSignInButton({ label = 'Continuar con Google', onClick, loading = false }: { label?: string; onClick: () => void; loading?: boolean }) {
   return (
@@ -114,7 +66,6 @@ function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [showGoogleModal, setShowGoogleModal] = useState(false);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const failedAttemptsRef = useRef(0);
 
@@ -125,7 +76,7 @@ function LoginPage() {
     if (googleUser) {
       loginWithGoogle(googleUser);
     } else {
-      setShowGoogleModal(true);
+      useAppStore.setState({ authError: 'auth/popup-closed-by-user' });
     }
     setGoogleLoading(false);
   };
@@ -218,7 +169,11 @@ function LoginPage() {
         </div>
       </CardContent>
 
-      <GoogleAccountModal isOpen={showGoogleModal} onClose={() => setShowGoogleModal(false)} onSelect={(user) => { setShowGoogleModal(false); loginWithGoogle(user); }} />
+      {displayError && (
+        <div className="text-sm terminal-text terminal-error animate-slide-in">
+          {'>'} Error: {displayError}
+        </div>
+      )}
     </>
   );
 }
@@ -237,7 +192,6 @@ function RegisterPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [showGoogleModal, setShowGoogleModal] = useState(false);
 
   const handleGoogleRegister = async () => {
     setGoogleLoading(true);
@@ -246,7 +200,7 @@ function RegisterPage() {
     if (googleUser) {
       loginWithGoogle(googleUser);
     } else {
-      setShowGoogleModal(true);
+      useAppStore.setState({ authError: 'auth/popup-closed-by-user' });
     }
     setGoogleLoading(false);
   };
@@ -327,7 +281,6 @@ function RegisterPage() {
         </div>
       </CardContent>
 
-      <GoogleAccountModal isOpen={showGoogleModal} onClose={() => setShowGoogleModal(false)} onSelect={(user) => { setShowGoogleModal(false); loginWithGoogle(user); }} />
     </>
   );
 }
