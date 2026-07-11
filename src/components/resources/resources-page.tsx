@@ -440,78 +440,193 @@ function CreateResourceDialog({
 // ── Resource Detail ─────────────────────────────────────
 function ResourceDetail({ resourceId, onBack }: { resourceId: string; onBack: () => void }) {
   const resources = useAppStore((s) => s.resources);
+  const currentUser = useAppStore((s) => s.currentUser);
+  const navigate = useAppStore((s) => s.navigate);
   const resource = resources.find((r) => r.resourceId === resourceId);
+  const [reviewText, setReviewText] = useState('');
+  const [reviewRating, setReviewRating] = useState(0);
 
   if (!resource) {
     return (
-      <div className="text-center py-20 text-muted-foreground">
-        <p className="terminal-text">Recurso no encontrado</p>
-        <Button variant="ghost" className="mt-4 text-primary" onClick={onBack}>
-          <ArrowLeft className="size-4 mr-2" /> Volver a recursos
+      <div className="text-center py-20 text-gray-500">
+        <p className="font-mono">Recurso no encontrado</p>
+        <Button variant="ghost" className="mt-4 text-[#10B981]" onClick={onBack}>
+          <ArrowLeft className="size-4 mr-2" /> Volver
         </Button>
       </div>
     );
   }
 
+  const relatedResources = resources.filter(r => r.resourceId !== resourceId).slice(0, 3);
+
   function handleDownload() {
-    if (!resource) return;
-    if (resource.externalUrl) {
-      window.open(resource.externalUrl, '_blank');
-    }
+    if (resource.externalUrl) window.open(resource.externalUrl, '_blank');
     incrementDownloadCountFirestore(resource.resourceId);
     useAppStore.setState((prev) => ({
-      resources: prev.resources.map((r) =>
-        r.resourceId === resourceId ? { ...r, downloadsCount: r.downloadsCount + 1 } : r
-      ),
+      resources: prev.resources.map(r => r.resourceId === resourceId ? { ...r, downloadsCount: r.downloadsCount + 1 } : r),
     }));
   }
 
   return (
-    <div className="animate-fade-in-up space-y-4">
-      <button onClick={onBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer">
-        <ArrowLeft className="size-4" /> Volver a recursos
-      </button>
-      <Card className="glass-card border-border/50">
-        <CardContent className="p-5 md:p-6 space-y-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <Badge variant="outline" className="text-[10px] mb-2">{resource.type}</Badge>
-              <h2 className="text-xl font-semibold text-foreground">{resource.title}</h2>
-              <p className="text-sm text-muted-foreground mt-1">por {resource.authorName}</p>
+    <div className="animate-fade-in-up">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-xs font-mono text-gray-500 mb-6">
+        <span>{'/> cd ~/recursos'}</span>
+        <span>/</span>
+        <span className="text-gray-300 truncate">{resource.title}</span>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left: Content */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Tags + Date */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="px-3 py-1 rounded-full bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30 text-xs font-mono">{resource.type}</span>
+            <span className="px-3 py-1 rounded-full bg-white/5 text-gray-400 border border-white/10 text-xs font-mono">{resource.level}</span>
+            <span className="text-xs text-gray-600 font-mono ml-auto">{new Date(resource.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+          </div>
+
+          {/* Title */}
+          <h1 className="text-3xl font-bold text-white leading-tight">{resource.title}</h1>
+
+          {/* Description */}
+          <div className="border-l-4 border-[#10B981] bg-[#10B981]/5 p-4 rounded-r-lg">
+            <p className="text-gray-300 leading-relaxed">{resource.description}</p>
+          </div>
+
+          {/* Content */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-mono text-[#10B981]">
+              <span>📄</span>
+              <span>$ cat ./contenido</span>
+            </div>
+            <div className="prose prose-invert max-w-none">
+              <div className="text-gray-300 leading-relaxed whitespace-pre-line">{resource.content || 'Sin contenido adicional.'}</div>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">{resource.description}</p>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <Badge variant="outline" className={`text-[10px] ${LEVEL_COLORS[resource.level]}`}>{resource.level}</Badge>
-            <span className="flex items-center gap-1"><Download className="size-3.5" /> {resource.downloadsCount}</span>
-            <span className="flex items-center gap-1"><Star className="size-3.5" /> {resource.favoritesCount}</span>
-          </div>
-          <div className="flex gap-3">
-            {resource.externalUrl && (
-              <Button onClick={handleDownload} className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <ExternalLink className="size-4 mr-1.5" /> Descargar
-              </Button>
-            )}
-          </div>
+
+          {/* Files */}
           {resource.attachments && resource.attachments.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Archivos adjuntos</p>
-              {resource.attachments.map((att: any) => (
-                <div key={att.id} className="flex items-center justify-between bg-secondary/50 border border-border/50 rounded-md px-3 py-2">
-                  <div className="flex items-center gap-2">
-                    <FileText className="size-4 text-primary/60" />
-                    <div>
-                      <p className="text-xs text-foreground">{att.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{formatFileSize(att.size)}</p>
-                    </div>
-                  </div>
-                  <button onClick={handleDownload} className="text-xs text-primary hover:underline terminal-text">Descargar</button>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm font-mono text-[#10B981]">
+                  <span>📁</span>
+                  <span>$ ls ./archivos</span>
                 </div>
-              ))}
+                <span className="px-2 py-0.5 rounded-full bg-[#10B981]/10 text-[#10B981] text-xs font-mono">{resource.attachments.length}</span>
+              </div>
+              <div className="border border-white/10 rounded-xl p-4 bg-white/5">
+                {resource.attachments.map((att: any) => (
+                  <div key={att.id} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">📎</span>
+                      <div>
+                        <p className="text-sm text-gray-300">{att.name}</p>
+                        <p className="text-[10px] text-gray-600 font-mono">{formatFileSize(att.size)}</p>
+                      </div>
+                    </div>
+                    <button onClick={handleDownload} className="text-xs text-[#10B981] hover:underline font-mono">Descargar</button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+
+          {/* Reviews */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-mono text-[#10B981]">
+              <span>⭐</span>
+              <span>$ reviews</span>
+            </div>
+            <div className="border border-white/10 rounded-xl p-5 bg-white/5 space-y-4">
+              <p className="text-xs font-mono text-gray-500">{'// dejar un review'}</p>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button key={star} onClick={() => setReviewRating(star)} className={`text-2xl cursor-pointer transition-colors ${star <= reviewRating ? 'text-yellow-400' : 'text-gray-600 hover:text-gray-400'}`}>★</button>
+                ))}
+              </div>
+              <textarea value={reviewText} onChange={(e) => setReviewText(e.target.value)} placeholder="> comparte tu experiencia con este recurso (opcional)" className="w-full bg-transparent border border-white/10 rounded-lg p-3 text-sm text-white placeholder:text-gray-600 font-mono resize-none focus:border-[#10B981]/50" rows={3} />
+              <button className="px-4 py-2 bg-[#10B981] text-gray-950 rounded-lg text-sm font-mono font-semibold hover:bg-[#34D399] transition-colors cursor-pointer">{'>'} publicar</button>
+              <p className="text-xs text-gray-600 font-mono text-center mt-4">{'// aun no hay reviews. ¡se el primero!'}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Sidebar */}
+        <div className="space-y-4">
+          {/* Resource Image */}
+          <div className="border border-white/10 rounded-xl overflow-hidden bg-gradient-to-br from-[#10B981]/10 to-[#10B981]/5 h-48 flex items-center justify-center">
+            {resource.coverUrl ? (
+              <img src={resource.coverUrl} alt={resource.title} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-4xl opacity-30">📦</span>
+            )}
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="border border-white/10 rounded-xl p-4 text-center bg-white/5">
+              <p className="text-2xl font-bold text-white">{resource.downloadsCount}</p>
+              <p className="text-[10px] font-mono text-gray-500 mt-1">↓ DESCARGAS</p>
+            </div>
+            <div className="border border-white/10 rounded-xl p-4 text-center bg-white/5">
+              <p className="text-2xl font-bold text-white">{resource.favoritesCount || 0}</p>
+              <p className="text-[10px] font-mono text-gray-500 mt-1">👁 VISTAS</p>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <button className="w-full py-3 bg-[#10B981] text-gray-950 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#34D399] transition-colors cursor-pointer shadow-[0_0_22px_rgba(16,185,129,0.3)]">
+            <span>☐</span> guardar recurso
+          </button>
+          <button className="w-full py-3 border border-white/10 rounded-xl text-gray-300 text-sm flex items-center justify-center gap-2 hover:bg-white/5 transition-colors cursor-pointer">
+            <span>🔗</span> share
+          </button>
+          <button onClick={() => navigate('foro')} className="w-full py-3 border border-white/10 rounded-xl text-gray-300 text-sm flex items-center justify-center gap-2 hover:bg-white/5 transition-colors cursor-pointer">
+            <span>📝</span> crear post
+          </button>
+
+          {/* Author */}
+          <div className="border border-white/10 rounded-xl p-4 bg-white/5">
+            <div className="flex items-center gap-2 text-xs font-mono text-gray-500 mb-3">
+              <span>$ author</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-[#10B981] flex items-center justify-center text-white font-bold font-mono">
+                {resource.authorName?.charAt(0) || 'A'}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">{resource.authorName}</p>
+              </div>
+            </div>
+            <button className="w-full mt-3 py-2 border border-white/10 rounded-lg text-gray-400 text-xs font-mono hover:bg-white/5 transition-colors cursor-pointer">ver perfil</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Related Resources */}
+      {relatedResources.length > 0 && (
+        <div className="mt-12 space-y-4">
+          <div className="flex items-center gap-2 text-sm font-mono text-[#10B981]">
+            <span>📋</span>
+            <span>$ ls ./relacionados</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {relatedResources.map((r) => (
+              <div key={r.resourceId} onClick={() => navigate('recurso-detalle', { resourceId: r.resourceId })} className="border border-white/10 rounded-xl overflow-hidden bg-white/5 hover:border-[#10B981]/30 transition-all cursor-pointer">
+                <div className="h-32 bg-gradient-to-br from-[#10B981]/10 to-[#10B981]/5 flex items-center justify-center">
+                  <span className="text-3xl opacity-30">📦</span>
+                </div>
+                <div className="p-4">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30">{r.type}</span>
+                  <h3 className="text-sm font-semibold text-white mt-2 line-clamp-1">{r.title}</h3>
+                  <p className="text-xs text-gray-500 mt-1 line-clamp-2">{r.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
