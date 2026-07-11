@@ -921,36 +921,191 @@ function ForumList() {
         </div>
       )}
 
-      {/* Post list */}
-      <div className="space-y-3">
-        {visiblePosts.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-gray-500 text-sm font-mono">
-              {'// no se encontraron posts'}
-            </p>
-            <p className="text-gray-600 text-xs font-mono mt-1">
-              Prueba con otros filtros o crea una nueva publicación
-            </p>
-          </div>
-        ) : (
-          <>
-            {visiblePosts.map((post) => (
-              <PostCard key={post.postId} post={post} />
-            ))}
+      {/* Two-column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left column: Posts */}
+        <div className="lg:col-span-2 space-y-3">
+          {visiblePosts.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-gray-500 text-sm font-mono">{'// no se encontraron posts'}</p>
+              <p className="text-gray-600 text-xs font-mono mt-1">Prueba con otros filtros o crea una nueva publicación</p>
+            </div>
+          ) : (
+            <>
+              {visiblePosts.map((post) => (
+                <PostCard key={post.postId} post={post} />
+              ))}
+              {hasMore && (
+                <div className="flex justify-center pt-4">
+                  <Button variant="outline" onClick={() => setVisibleCount((prev) => prev + PER_PAGE)} className="border-white/10 text-gray-400 hover:bg-white/5 hover:text-white font-mono text-xs">
+                    {'>'} cargar más
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
-            {hasMore && (
-              <div className="flex justify-center pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setVisibleCount((prev) => prev + PER_PAGE)}
-                  className="border-white/10 text-gray-400 hover:bg-white/5 hover:text-white font-mono text-xs"
-                >
-                  {'>'} cargar más
-                </Button>
+        {/* Right column: Widgets */}
+        <div className="hidden lg:block space-y-4">
+          {/* Resources Widget */}
+          <ResourcesWidget />
+
+          {/* Gamification Widget */}
+          <GamificationWidget />
+
+          {/* Trending Widget */}
+          <TrendingWidget />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Resources Widget ──────────────────────────────────────
+function ResourcesWidget() {
+  const resources = useAppStore((s) => s.resources);
+  const navigate = useAppStore((s) => s.navigate);
+
+  const recentResources = resources.slice(0, 5);
+
+  function timeAgo(dateStr: string): string {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(hours / 24);
+    const weeks = Math.floor(days / 7);
+    if (hours < 1) return 'ahora';
+    if (hours < 24) return `${hours} horas`;
+    if (days < 7) return `${days} dias, ${hours % 24} horas`;
+    return `${weeks} semana${weeks > 1 ? 's' : ''}`;
+  }
+
+  const TYPE_ICONS: Record<string, string> = {
+    Skill: '🧠', Plugin: '🔌', Subagent: '🤖', 'MCP Server': '⚙️', 'Agent Team': '👥', Tutorial: '📚',
+  };
+
+  return (
+    <div className="border border-white/10 rounded-xl bg-white/5 overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">📊</span>
+          <span className="font-mono text-sm text-white">$ recursos <span className="text-gray-500">--last</span></span>
+        </div>
+        <button onClick={() => navigate('recursos')} className="text-xs font-mono text-[#10B981] hover:text-[#34D399] cursor-pointer">
+          ver todos
+        </button>
+      </div>
+      <div className="divide-y divide-white/5">
+        {recentResources.map((r) => (
+          <div key={r.resourceId} className="px-4 py-3 hover:bg-white/5 transition-colors cursor-pointer" onClick={() => navigate('recurso-detalle', { resourceId: r.resourceId })}>
+            <p className="text-sm text-white leading-snug line-clamp-2">{r.title}</p>
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30">{r.type}</span>
+              <span className="text-[10px] text-gray-600 font-mono">{timeAgo(r.createdAt)}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Gamification Widget ───────────────────────────────────
+function GamificationWidget() {
+  const currentUser = useAppStore((s) => s.currentUser);
+  const missions = useAppStore((s) => s.missions);
+  const [showCompleted, setShowCompleted] = useState(false);
+
+  if (!currentUser) return null;
+
+  const activeMissions = missions.filter(m => !m.completed);
+  const completedMissions = missions.filter(m => m.completed);
+  const totalTasks = activeMissions.reduce((sum, m) => sum + m.tasks.length, 0);
+  const completedTasks = activeMissions.reduce((sum, m) => sum + Object.values(m.progress || {}).filter(v => v > 0).length, 0);
+  const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  return (
+    <div className="border border-[#10B981]/30 rounded-xl bg-[#10B981]/5 overflow-hidden">
+      <div className="px-4 py-3 border-b border-[#10B981]/20">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+            <span>🎁</span> Gana XP extra
+          </h3>
+          <span className="text-xs font-mono text-[#10B981]">{progressPercent}%</span>
+        </div>
+        <p className="text-[10px] text-gray-500 mt-1">Completa acciones opcionales para subir de nivel</p>
+        <div className="w-full h-1.5 rounded-full bg-gray-700 overflow-hidden mt-2">
+          <div className="h-full rounded-full bg-[#10B981] transition-all" style={{ width: `${progressPercent}%` }} />
+        </div>
+      </div>
+      <div className="divide-y divide-white/5">
+        {activeMissions.slice(0, 4).map((m) => {
+          const completed = Object.values(m.progress || {}).filter(v => v > 0).length;
+          return (
+            <div key={m.missionId} className="px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">○</span>
+                <span className="text-sm text-gray-300">{m.title}</span>
+                {m.tasks.length > 1 && <span className="text-[10px] text-gray-600">({completed}/{m.tasks.length})</span>}
               </div>
-            )}
-          </>
-        )}
+              <span className="text-[10px] font-mono text-[#10B981]">+{m.xpReward} XP</span>
+            </div>
+          );
+        })}
+      </div>
+      {completedMissions.length > 0 && (
+        <div className="border-t border-white/5">
+          <button onClick={() => setShowCompleted(!showCompleted)} className="w-full px-4 py-2 flex items-center justify-between text-xs text-gray-500 hover:text-gray-400 cursor-pointer">
+            <span className="flex items-center gap-1">{showCompleted ? '▼' : '›'} Completados ({completedMissions.length})</span>
+          </button>
+          {showCompleted && (
+            <div className="divide-y divide-white/5">
+              {completedMissions.map((m) => (
+                <div key={m.missionId} className="px-4 py-2 flex items-center gap-2">
+                  <span className="text-[#10B981]">✓</span>
+                  <span className="text-sm text-gray-500 line-through">{m.title}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Trending Widget ───────────────────────────────────────
+function TrendingWidget() {
+  const posts = useAppStore((s) => s.posts);
+
+  const trendingPosts = useMemo(() => {
+    return [...posts]
+      .filter(p => !p.hidden)
+      .sort((a, b) => (b.likesCount + b.commentsCount) - (a.likesCount + a.commentsCount))
+      .slice(0, 5);
+  }, [posts]);
+
+  return (
+    <div className="border border-white/10 rounded-xl bg-white/5 overflow-hidden">
+      <div className="px-4 py-3 border-b border-white/10">
+        <span className="font-mono text-sm text-white flex items-center gap-2">
+          <span className="text-orange-400">🔥</span> $ trending
+        </span>
+      </div>
+      <div className="divide-y divide-white/5">
+        {trendingPosts.map((post) => (
+          <div key={post.postId} className="px-4 py-3 hover:bg-white/5 transition-colors cursor-pointer">
+            <p className="text-sm text-white leading-snug line-clamp-2">👋 {post.authorName} se presenta</p>
+            <div className="flex items-center gap-3 mt-1.5">
+              <span className="flex items-center gap-1 text-[10px] text-gray-500">
+                <span>❤️</span> {post.likesCount}
+              </span>
+              <span className="flex items-center gap-1 text-[10px] text-gray-500">
+                <span>💬</span> {post.commentsCount}
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
