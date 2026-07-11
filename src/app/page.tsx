@@ -38,8 +38,16 @@ function AppRouter() {
   const { route, isAuthenticated, currentUser, isLoading, initAuth } = useAppStore();
 
   useEffect(() => {
-    initAuth();
-  }, [initAuth]);
+    // Only init auth when not on landing page
+    if (route !== 'landing') {
+      initAuth();
+    }
+  }, [initAuth, route]);
+
+  // Show landing immediately — no auth check needed
+  if (route === 'landing' && !isAuthenticated) {
+    return <LandingPage />;
+  }
 
   if (isLoading) {
     return <LoadingScreen />;
