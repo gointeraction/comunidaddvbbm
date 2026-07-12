@@ -182,9 +182,21 @@ function SessionCard({ session, onEdit }: { session: any; onEdit: (s: any) => vo
           {/* Actions */}
           <div className="flex gap-2 pt-1">
             {session.status === 'live' ? (
-              <Button size="sm" onClick={() => setRoomOpen(true)} className="w-full bg-red-500 hover:bg-red-600 text-white font-mono text-xs cursor-pointer">
-                <Video className="size-3.5 mr-1 animate-pulse" /> Unirse al directo
-              </Button>
+              <div className="flex gap-2 w-full">
+                <Button size="sm" onClick={() => setRoomOpen(true)} className="flex-1 bg-red-500 hover:bg-red-600 text-white font-mono text-xs cursor-pointer">
+                  <Video className="size-3.5 mr-1 animate-pulse" /> Unirse al directo
+                </Button>
+                {session.streamUrl && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="font-mono text-xs border-white/10 text-gray-400 hover:border-[#10B981]/40 hover:text-[#10B981] cursor-pointer"
+                    onClick={() => window.open(session.streamUrl, '_blank')}
+                  >
+                    <ExternalLink className="size-3.5" />
+                  </Button>
+                )}
+              </div>
             ) : session.status === 'scheduled' ? (
               <div className="flex gap-2 w-full">
                 <Button size="sm" variant={registered ? 'outline' : 'default'} onClick={() => setRegistered(!registered)} className={`flex-1 font-mono text-xs cursor-pointer ${registered ? 'border-[#10B981]/40 text-[#10B981] bg-[#10B981]/10' : 'bg-[#10B981] text-black hover:bg-[#10B981]/90'}`}>
@@ -208,7 +220,19 @@ function SessionCard({ session, onEdit }: { session: any; onEdit: (s: any) => vo
                 )}
               </div>
             ) : (
-              <Button size="sm" disabled className="w-full font-mono text-xs opacity-50">Finalizada</Button>
+              <div className="flex gap-2 w-full">
+                <Button size="sm" disabled className="flex-1 font-mono text-xs opacity-50">Finalizada</Button>
+                {session.streamUrl && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="font-mono text-xs border-white/10 text-gray-400 hover:border-[#10B981]/40 hover:text-[#10B981] cursor-pointer"
+                    onClick={() => window.open(session.streamUrl, '_blank')}
+                  >
+                    <ExternalLink className="size-3.5 mr-1" /> Ver Grabación
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         </div>
