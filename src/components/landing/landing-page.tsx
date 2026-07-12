@@ -1,9 +1,17 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { MessageSquare, GraduationCap, Package, Trophy, ArrowRight } from 'lucide-react';
+import { 
+  MessageSquare, GraduationCap, Package, Trophy, ArrowRight,
+  Workflow, Boxes, Bot, Sparkles, Terminal, Code2, Webhook, Zap, Layers,
+  Download, Eye, Users, Shield, Rocket, MessageCircle, Star, Image as ImageIcon
+} from 'lucide-react';
 import { useAppStore } from '@/stores/app-store';
 import type { Counters } from '@/types/bbmdev';
+import { 
+  BenefitsSection, FeaturedCoursesSection, PopularResourcesSection,
+  StackSection, ActivityRankingSection, CTASection 
+} from './landing-sections';
 
 // ── Interactive Terminal Component ──────────────────────
 function InteractiveTerminal() {
@@ -356,34 +364,12 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── Section 4: CTA ── */}
-        <section className="w-full py-16 px-4">
-          <div className="max-w-md mx-auto text-center">
-            <button
-              onClick={() => navigate('registro')}
-              className="group w-full py-3 px-6 rounded-xl bg-[#10B981] text-gray-950 font-mono font-semibold text-sm shadow-[0_0_28px_rgba(16,185,129,0.45)] hover:bg-[#34D399] transition-colors cursor-pointer inline-flex items-center justify-center gap-2"
-            >
-              <span className="text-gray-950/60">$</span>
-              Comienza a automatizar
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <div className="flex justify-center gap-6 mt-4 text-sm">
-              <button
-                onClick={() => navigate('login')}
-                className="terminal-text text-[#6EE7B7] hover:underline cursor-pointer bg-transparent border-none"
-              >
-                Inicia sesión
-              </button>
-              <span className="text-white/10">|</span>
-              <button
-                onClick={() => navigate('registro')}
-                className="terminal-text text-[#6EE7B7] hover:underline cursor-pointer bg-transparent border-none"
-              >
-                Regístrate
-              </button>
-            </div>
-          </div>
-        </section>
+        <BenefitsSection />
+        <FeaturedCoursesSection />
+        <PopularResourcesSection />
+        <StackSection />
+        <ActivityRankingSection />
+        <CTASection />
       </main>
 
       {/* ── Footer ── */}

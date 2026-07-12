@@ -222,7 +222,7 @@ export default function RankingPage() {
           {/* Weekly Rewards */}
           <div className="border border-white/10 rounded-xl bg-white/5 overflow-hidden">
             <div className="px-4 py-3 border-b border-white/10">
-              <span className="text-xs font-mono text-gray-500">// premios semanales</span>
+              <span className="text-xs font-mono text-gray-500">{'// premios semanales'}</span>
             </div>
             <div className="divide-y divide-white/5">
               <div className="px-4 py-2.5 flex items-center justify-between">
