@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendWelcomeEmail = exports.sendLiveReminders = exports.appendAuditLog = exports.weeklyRankingReset = exports.onPostLiked = exports.onCommentCreated = exports.onPostCreated = void 0;
+exports.setCustomClaims = exports.syncRoleOnUpdate = exports.syncRoleOnCreate = exports.sendWelcomeEmail = exports.sendLiveReminders = exports.appendAuditLog = exports.weeklyRankingReset = exports.onPostLiked = exports.onCommentCreated = exports.onPostCreated = void 0;
 const firestore_1 = require("firebase-functions/v2/firestore");
 const scheduler_1 = require("firebase-functions/v2/scheduler");
 const https_1 = require("firebase-functions/v2/https");
@@ -91,10 +91,15 @@ exports.weeklyRankingReset = (0, scheduler_1.onSchedule)("0 0 * * 1", async () =
         await db.collection("users").doc(top.docs[i].id).update({ xp: firestore_2.FieldValue.increment(bonus) });
         await notify(top.docs[i].id, "rank_update", { rank: i + 1, bonusXP: bonus }, undefined, `Puesto #${i + 1} del ranking semanal. +${bonus} XP!`);
     }
+    // Process in batches of 500 to avoid Firestore batch limit
     const all = await db.collection("users").where("weeklyXP", ">", 0).get();
-    const batch = db.batch();
-    all.docs.forEach((d) => batch.update(d.ref, { weeklyXP: 0 }));
-    await batch.commit();
+    const BATCH_SIZE = 500;
+    for (let i = 0; i < all.docs.length; i += BATCH_SIZE) {
+        const batch = db.batch();
+        const chunk = all.docs.slice(i, i + BATCH_SIZE);
+        chunk.forEach((d) => batch.update(d.ref, { weeklyXP: 0 }));
+        await batch.commit();
+    }
 });
 // ══════════════════════════════════════════════════════
 // AUDIT LOG (Callable)
@@ -123,11 +128,27 @@ exports.sendLiveReminders = (0, scheduler_1.onSchedule)("0 * * * *", async () =>
         .where("scheduledAt", "<=", oneHourLater.toISOString())
         .where("scheduledAt", ">=", new Date(now).toISOString())
         .get();
+    // Batch notifications to avoid Firestore batch limit
+    const BATCH_SIZE = 500;
     for (const session of upcoming.docs) {
         const data = session.data();
         const registered = data.registeredUsers || [];
-        for (const userId of registered) {
-            await notify(userId, "live_reminder", { liveId: session.id }, undefined, data.title);
+        for (let i = 0; i < registered.length; i += BATCH_SIZE) {
+            const batch = db.batch();
+            const chunk = registered.slice(i, i + BATCH_SIZE);
+            for (const userId of chunk) {
+                const notifRef = db.collection("notifications").doc();
+                batch.set(notifRef, {
+                    userId,
+                    type: "live_reminder",
+                    data: { liveId: session.id },
+                    fromUserName: undefined,
+                    targetTitle: data.title,
+                    read: false,
+                    createdAt: firestore_2.FieldValue.serverTimestamp(),
+                });
+            }
+            await batch.commit();
         }
     }
 });
@@ -141,4 +162,11 @@ exports.sendWelcomeEmail = (0, firestore_1.onDocumentCreated)("users/{uid}", asy
         return;
     console.log(`[EMAIL] Welcome email sent to ${user.email}`);
 });
+// ══════════════════════════════════════════════════════
+// CUSTOM CLAIMS & RBAC
+// ══════════════════════════════════════════════════════
+var setCustomClaims_1 = require("./setCustomClaims");
+Object.defineProperty(exports, "syncRoleOnCreate", { enumerable: true, get: function () { return setCustomClaims_1.syncRoleOnCreate; } });
+Object.defineProperty(exports, "syncRoleOnUpdate", { enumerable: true, get: function () { return setCustomClaims_1.syncRoleOnUpdate; } });
+Object.defineProperty(exports, "setCustomClaims", { enumerable: true, get: function () { return setCustomClaims_1.setCustomClaims; } });
 //# sourceMappingURL=index.js.map
