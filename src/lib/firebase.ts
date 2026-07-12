@@ -53,7 +53,7 @@ import { connectStorageEmulator } from 'firebase/storage';
 
 // Initialize Instances
 const auth = typeof window !== 'undefined' ? getFirebaseAuth(app) : null as any;
-const db = typeof window !== 'undefined' ? getFirestore(app) : null as any;
+const db = typeof window !== 'undefined' ? getFirestore(app, 'ai-studio-f3f26e74-6430-4ef9-aee7-153a8a133537') : null as any;
 const storage = typeof window !== 'undefined' ? getFirebaseStorage(app) : null as any;
 
 let messaging: any = null;
