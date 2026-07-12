@@ -69,7 +69,7 @@ export default function RankingPage() {
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <div className="font-mono text-xs text-gray-500 flex items-center gap-2">
-            <span className="text-[#10B981]">$</span> autodev leaderboard --week
+            <span className="text-[#10B981]">$</span> bbmdev leaderboard --week
             <span className="animate-blink text-[#10B981]">▋</span>
           </div>
           <div className="flex items-center gap-3">

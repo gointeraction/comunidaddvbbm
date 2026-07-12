@@ -9,7 +9,7 @@ import { ChevronLeft, PlayCircle, CheckCircle2, Lock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { db } from "@/lib/firebase"
 import { doc, getDoc, collection, getDocs, setDoc, updateDoc, increment, query, orderBy } from "firebase/firestore"
-import type { Course, Lesson } from "@/types/autodev"
+import type { Course, Lesson } from "@/types/bbmdev"
 
 export default function CourseDetailPage() {
   const params = useParams()

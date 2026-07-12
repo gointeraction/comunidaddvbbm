@@ -13,7 +13,7 @@ import type {
   AuditLog,
   Counters,
   GamificationConfig,
-} from '@/types/autodev';
+} from '@/types/bbmdev';
 import {
   saveUserInFirestore,
   createPostInFirestore,

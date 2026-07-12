@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useAppStore } from '@/stores/app-store';
-import type { Post, Comment, ExperienceLevel } from '@/types/autodev';
+import type { Post, Comment, ExperienceLevel } from '@/types/bbmdev';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -560,11 +560,11 @@ function CreatePostDialog({
               <div className="w-3 h-3 rounded-full bg-green-500" />
             </div>
             <span className="text-xs font-mono text-gray-400">
-              autodev@community: <span className="text-gray-300">~/foro/new-post.sh</span>
+              bbmdev@community: <span className="text-gray-300">~/foro/new-post.sh</span>
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-[#10B981]">$ autodev post --create</span>
+            <span className="text-xs font-mono text-[#10B981]">$ bbmdev post --create</span>
             <button
               onClick={handleCancel}
               className="ml-2 text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useAppStore } from '@/stores/app-store';
-import type { Achievement, AchievementRarity } from '@/types/autodev';
+import type { Achievement, AchievementRarity } from '@/types/bbmdev';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';

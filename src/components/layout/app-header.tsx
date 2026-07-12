@@ -5,7 +5,7 @@ import { Bell, MessageSquare, BookOpen, Package, Radio, Users, Trophy, Shield, T
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/stores/app-store';
-import type { Route } from '@/types/autodev';
+import type { Route } from '@/types/bbmdev';
 
 /* -------------------------------------------------------------------------- */
 /*  Navigation links                                                          */
@@ -94,7 +94,7 @@ export function AppHeader() {
           <span className="text-[#10B981] font-bold text-sm font-mono">AD</span>
         </div>
         <div className="hidden sm:flex flex-col leading-none">
-          <span className="text-white font-semibold text-sm font-mono tracking-tight">AutoDev_</span>
+          <span className="text-white font-semibold text-sm font-mono tracking-tight">BBMDev_</span>
           <span className="text-gray-500 text-[10px] font-mono uppercase tracking-widest">Community</span>
         </div>
       </button>

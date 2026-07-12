@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAppStore } from '@/stores/app-store';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
-import type { Course, Lesson } from '@/types/autodev';
+import type { Course, Lesson } from '@/types/bbmdev';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';

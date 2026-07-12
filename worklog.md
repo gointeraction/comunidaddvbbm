@@ -1,12 +1,12 @@
 ---
 Task ID: 1
 Agent: Main Agent
-Task: Build complete AutoDev platform based on SRS v1.0 + Addendum v2.0 specifications
+Task: Build complete BBMDev platform based on SRS v1.0 + Addendum v2.0 specifications
 
 Work Log:
 - Extracted and analyzed both specification PDFs (SRS v1.0: 75 functional requirements across 11 modules; Addendum v2.0: 8 new functionalities)
 - Designed terminal-inspired dark theme with CSS custom properties, animations (blink, glow, slide-in, count-up, terminal-type)
-- Created comprehensive TypeScript type system (21 interfaces, 8 type unions) in src/types/autodev.ts
+- Created comprehensive TypeScript type system (21 interfaces, 8 type unions) in src/types/bbmdev.ts
 - Built mock data layer with 8 users, 6 posts, 5+ comments, 7 resources, 5 courses, 8+ lessons, 3 live sessions, 8 ranking entries, 4 missions, 8 achievements, 7 notifications, 3 audit logs, counters, and gamification config
 - Created Zustand store with navigation, auth, notifications, and forum state management
 - Built 16 component files across 11 modules via 4 parallel subagents
@@ -16,7 +16,7 @@ Work Log:
 - Clean lint (0 errors), clean compilation
 
 Stage Summary:
-- Complete AutoDev v2.0 platform built with all 11 modules
+- Complete BBMDev v2.0 platform built with all 11 modules
 - All 83+ functional requirements from SRS v1.0 + v2.0 Addendum implemented in the UI
 - Terminal-inspired dark theme with interactive landing page terminal
 - Firebase-ready architecture (mock data layer can be swapped for Firebase SDK)
@@ -30,7 +30,7 @@ Work Log:
 - Analyzed the complete style specification document (colors, fonts, effects, components)
 - Rewrote globals.css: new emerald color palette (#10B981 primary), Inter + JetBrains Mono fonts, updated animations (fadeInUp, slideDown, slideUp), new grid-bg with emerald tint, scanlines CRT effect, rich content styles (code blocks, blockquotes, tables, details/summary), updated scrollbar to 10px/gray-500
 - Updated layout.tsx: replaced Geist/Geist_Mono with Inter/JetBrains_Mono, added ad-scanlines class to body
-- Fixed landing-page.tsx runtime bug (line.type undefined) AND applied new style: sticky nav with scroll effect, glow blobs, terminal window with semáforo dots and erik@autodev title, stats counters with command header, feature cards with emerald glow hover, CTA with glow shadow and arrow icon
+- Fixed landing-page.tsx runtime bug (line.type undefined) AND applied new style: sticky nav with scroll effect, glow blobs, terminal window with semáforo dots and erik@bbmdev title, stats counters with command header, feature cards with emerald glow hover, CTA with glow shadow and arrow icon
 - Updated sidebar.tsx: Terminal logo icon with emerald glow, emerald active states, white/10 borders
 - Updated app-header.tsx: backdrop-blur header, emerald breadcrumb path, emerald XP badge
 - Updated auth-pages.tsx: emerald buttons with glow, updated input/card styling

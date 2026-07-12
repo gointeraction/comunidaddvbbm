@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { MessageSquare, GraduationCap, Package, Trophy, ArrowRight } from 'lucide-react';
 import { useAppStore } from '@/stores/app-store';
-import type { Counters } from '@/types/autodev';
+import type { Counters } from '@/types/bbmdev';
 
 // ── Interactive Terminal Component ──────────────────────
 function InteractiveTerminal() {

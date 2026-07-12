@@ -34,11 +34,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AvatarInitials } from '@/components/autodev/avatar-initials';
+import { AvatarInitials } from '@/components/bbmdev/avatar-initials';
 import { useAppStore } from '@/stores/app-store';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, orderBy, query, doc, getDoc, updateDoc } from 'firebase/firestore';
-import type { UserRole, Post, AuditLog } from '@/types/autodev';
+import type { UserRole, Post, AuditLog } from '@/types/bbmdev';
 import { Lock } from 'lucide-react';
 
 // ── Authorized emails for admin access ──

@@ -224,14 +224,14 @@ className="bg-[#10B981] text-gray-950 hover:bg-[#34D399] font-mono font-semibold
 ### App Shell (Authenticated)
 - **Desktop**: Fixed left sidebar (260px) + top header (56px) + main content
 - **Mobile**: Header only, sidebar in Sheet (slide-in from left)
-- **Header**: Logo `AD AutoDev_Community` + nav pills (active = emerald bg + left accent bar) + notification bell + XP/Level pill + avatar dropdown
+- **Header**: Logo `AD BBMDev_Community` + nav pills (active = emerald bg + left accent bar) + notification bell + XP/Level pill + avatar dropdown
 - **Sidebar**: Brand + user XP/level badge + nav stack (active = emerald text + left bar) + bottom actions (profile, notifications, admin, logout)
 
 ### Forum (forum-page.tsx)
 - **List**: Create post card → filters (search, sort, category chips) → 2-col layout (posts + widgets)
 - **PostCard**: Glass card, author row (avatar + level badge), title, preview, tags, actions (like/comment)
 - **Detail**: Full post + rich-content markdown rendering + comments thread + inline comment form
-- **Create Dialog**: Terminal-styled header (`$ autodev post --create`), 2-col form (title/content + category/attachments/resources)
+- **Create Dialog**: Terminal-styled header (`$ bbmdev post --create`), 2-col form (title/content + category/attachments/resources)
 
 ### Courses (courses-page.tsx)
 - **Grid**: 3-col cards with gradient covers, progress bars (if enrolled), enroll/continue buttons

@@ -30,7 +30,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAppStore } from '@/stores/app-store';
-import type { Route } from '@/types/autodev';
+import type { Route } from '@/types/bbmdev';
 
 /* -------------------------------------------------------------------------- */
 /*  Types                                                                     */

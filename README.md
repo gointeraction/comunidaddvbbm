@@ -356,7 +356,7 @@ comunidaddvbbm/
 │   ├── components/
 │   │   ├── admin/             # Panel de administración
 │   │   ├── auth/              # Login, registro, recuperación
-│   │   ├── autodev/           # Componentes específicos (Avatar, etc.)
+│   │   ├── bbmdev/           # Componentes específicos (Avatar, etc.)
 │   │   ├── courses/           # Catálogo de cursos y lecciones
 │   │   ├── directos/          # Sesiones en vivo
 │   │   ├── forum/             # Foro de discusión
@@ -387,7 +387,7 @@ comunidaddvbbm/
 │   ├── stores/
 │   │   └── app-store.ts       # Store global con Zustand
 │   └── types/
-│       └── autodev.ts         # Definiciones TypeScript completas
+│       └── bbmdev.ts         # Definiciones TypeScript completas
 ├── prisma/
 │   └── schema.prisma          # Esquema de base de datos
 ├── functions/                 # Firebase Cloud Functions

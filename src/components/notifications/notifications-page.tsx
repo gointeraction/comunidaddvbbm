@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/stores/app-store';
-import type { NotificationType } from '@/types/autodev';
+import type { NotificationType } from '@/types/bbmdev';
 
 type FilterMode = 'all' | 'unread';
 

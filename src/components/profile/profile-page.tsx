@@ -17,10 +17,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { AvatarInitials } from '@/components/autodev/avatar-initials';
+import { AvatarInitials } from '@/components/bbmdev/avatar-initials';
 import { useAppStore } from '@/stores/app-store';
 import { uploadAvatar } from '@/lib/firebase';
-import type { Interest, ExperienceLevel } from '@/types/autodev';
+import type { Interest, ExperienceLevel } from '@/types/bbmdev';
 
 const ALL_INTERESTS: Interest[] = ['automatizacion', 'ia', 'webapps', 'comunidad'];
 

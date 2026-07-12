@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Progress } from "@/components/ui/progress"
 import { db } from "@/lib/firebase"
 import { doc, getDoc, collection, getDocs, setDoc, query, orderBy, updateDoc, increment } from "firebase/firestore"
-import type { Course, Lesson } from "@/types/autodev"
+import type { Course, Lesson } from "@/types/bbmdev"
 
 export default function LessonViewerPage() {
   const params = useParams()

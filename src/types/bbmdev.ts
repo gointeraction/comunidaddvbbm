@@ -1,4 +1,4 @@
-// AutoDev — Type Definitions (v2.0)
+// BBMDev — Type Definitions (v2.0)
 // Based on SRS v1.0 + Addendum v2.0
 
 export type UserRole = 'member' | 'autor' | 'moderador' | 'admin';

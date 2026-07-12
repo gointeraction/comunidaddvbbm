@@ -30,7 +30,7 @@ import {
   getMessaging as getFirebaseMessaging,
   getToken,
 } from 'firebase/messaging';
-import type { User } from '@/types/autodev';
+import type { User } from '@/types/bbmdev';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyD4uLwlcwt2JENrN9sTgApMSJZwHpRud5k',

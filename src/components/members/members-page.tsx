@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useAppStore } from '@/stores/app-store';
-import type { User, ExperienceLevel } from '@/types/autodev';
+import type { User, ExperienceLevel } from '@/types/bbmdev';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

@@ -8,7 +8,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Markdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import type { ResourceType, ResourceLevel, Resource } from '@/types/autodev';
+import type { ResourceType, ResourceLevel, Resource } from '@/types/bbmdev';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

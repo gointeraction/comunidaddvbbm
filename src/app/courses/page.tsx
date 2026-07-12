@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Search, BookOpen, Clock, BarChart } from "lucide-react"
 import { db } from "@/lib/firebase"
 import { collection, getDocs } from "firebase/firestore"
-import type { Course } from "@/types/autodev"
+import type { Course } from "@/types/bbmdev"
 
 export default function CoursesCatalogPage() {
   const [search, setSearch] = useState("")
