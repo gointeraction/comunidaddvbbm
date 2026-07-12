@@ -165,3 +165,8 @@ export const sendWelcomeEmail = onDocumentCreated("users/{uid}", async (event) =
   if (!user) return;
   console.log(`[EMAIL] Welcome email sent to ${user.email}`);
 });
+
+// ══════════════════════════════════════════════════════
+// CUSTOM CLAIMS & RBAC
+// ══════════════════════════════════════════════════════
+export { syncRoleOnCreate, syncRoleOnUpdate, setCustomClaims } from "./setCustomClaims";

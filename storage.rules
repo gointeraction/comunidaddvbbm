@@ -1,12 +1,49 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Allow public read access to all files
-    match /{allPaths=**} {
+    // Helpers
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+    function isModerator() {
+      return isAuthenticated() && (request.auth.token.moderator == true || request.auth.token.admin == true);
+    }
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    // Avatars: user owns their folder
+    match /avatars/{uid}/{fileName} {
+      allow read: if true; // avatars públicos OK
+      allow write: if isOwner(uid)
+        && request.resource.size < 2 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isOwner(uid) || isAdmin();
+    }
+
+    // Course covers: solo moderadores
+    match /course-covers/{courseId}/{fileName} {
       allow read: if true;
-      allow write: if request.resource.size < 5 * 1024 * 1024
-                    && request.resource.contentType.matches('image/.*');
-      allow delete: if false;
+      allow write: if isModerator()
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Resource attachments: autor o admin
+    match /resources/{resourceId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() 
+        && request.resource.size < 10 * 1024 * 1024
+        // Assuming resourceId is the user's ID for ownership, otherwise firestore.get() is needed.
+        && (isOwner(resourceId) || isAdmin());
+    }
+
+    // Catch-all: deny
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }

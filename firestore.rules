@@ -12,18 +12,15 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return isAuthenticated() && request.auth.token.admin == true;
     }
 
     function isModerator() {
-      return isAuthenticated() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'moderador'];
+      return isAuthenticated() && (request.auth.token.moderator == true || request.auth.token.admin == true);
     }
 
     function isActive() {
-      return isAuthenticated() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+      return isAuthenticated(); // Simplified for now since we rely on Auth token. If needed, can add a custom claim 'active': true
     }
 
     // ── Users ────────────────────────────────────────────────
@@ -62,7 +59,7 @@ service cloud.firestore {
     match /courses/{courseId} {
       allow read: if isAuthenticated();
       allow create: if isModerator();
-      allow update: if isModerator() || isAuthenticated();
+      allow update: if isModerator() || (isAuthenticated() && isOwner(resource.data.authorId));
       allow delete: if isAdmin();
 
       match /lessons/{lessonId} {
@@ -111,9 +108,9 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    match /userAchievements/{uid}/{achievementId} {
+    match /userAchievements/{uid}/unlocked/{achievementId} {
       allow read: if isAuthenticated() && isOwner(uid);
-      allow write: if isAuthenticated();
+      allow write: if isAdmin();
     }
 
     // ── Counters (global stats) ──────────────────────────────

@@ -47,6 +47,10 @@ const app = typeof window !== 'undefined'
   ? (!getApps().length ? initializeApp(firebaseConfig) : getApps()[0])
   : {} as FirebaseApp;
 
+import { connectAuthEmulator } from 'firebase/auth';
+import { connectFirestoreEmulator } from 'firebase/firestore';
+import { connectStorageEmulator } from 'firebase/storage';
+
 // Initialize Instances
 const auth = typeof window !== 'undefined' ? getFirebaseAuth(app) : null as any;
 const db = typeof window !== 'undefined' ? getFirestore(app) : null as any;
@@ -59,6 +63,14 @@ if (typeof window !== 'undefined') {
   } catch {
     messaging = null;
   }
+}
+
+// Connect to Emulators if requested
+if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true') {
+  console.log('🔥 Conectando Frontend al Emulador de Firebase...');
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+  connectFirestoreEmulator(db, '127.0.0.1', 9150);
+  connectStorageEmulator(storage, '127.0.0.1', 9199);
 }
 
 // Backward-compatible getter functions
