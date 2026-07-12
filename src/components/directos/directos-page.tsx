@@ -60,7 +60,7 @@ function YouTubePlayer({ videoId }: { videoId: string }) {
       <iframe
         src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
         className="absolute inset-0 w-full h-full"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
         allowFullScreen
         title="Live Stream"
       />
