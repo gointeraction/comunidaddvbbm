@@ -17,8 +17,6 @@ import {
   orderBy,
 } from 'firebase/firestore';
 import { limit } from 'firebase/firestore';
-import { limit } from 'firebase/firestore';
-
 
 let isSyncInitialized = false;
 let unsubscribers: (() => void)[] = [];
