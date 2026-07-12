@@ -477,3 +477,7 @@ Hecho con ❤️ por el equipo de **BBMDev**
 [🌐 bbmdevcomunidad.web.app](https://bbmdevcomunidad.web.app) · [📧 Contacto](mailto:contacto@bbmdev.com)
 
 </div>
+
+---
+
+*�ltima actualizaci�n: Julio 2026*
