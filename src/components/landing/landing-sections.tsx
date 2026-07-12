@@ -18,8 +18,9 @@ export function BenefitsSection() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Card 1 */}
-          <div className="rounded-xl border border-white/10 bg-[#0a0f1a] p-6 hover:border-[#10B981]/30 transition-colors flex flex-col h-full">
-            <div className="w-10 h-10 rounded-lg bg-[#10B981]/10 border border-[#10B981]/20 flex items-center justify-center mb-4">
+          <div className="rounded-xl border border-white/10 bg-[#0a0f1a]/80 backdrop-blur-md p-6 group hover:border-[#10B981]/50 hover:bg-[#10B981]/5 transition-all duration-500 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)] hover:-translate-y-1 flex flex-col h-full relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative z-10 w-10 h-10 rounded-lg bg-[#10B981]/10 border border-[#10B981]/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all duration-300">
               <GraduationCap className="w-5 h-5 text-[#10B981]" />
             </div>
             <h3 className="text-gray-100 font-semibold mb-2">Cursos prácticos</h3>
@@ -31,8 +32,9 @@ export function BenefitsSection() {
             </div>
           </div>
           {/* Card 2 */}
-          <div className="rounded-xl border border-white/10 bg-[#0a0f1a] p-6 hover:border-[#10B981]/30 transition-colors flex flex-col h-full">
-            <div className="w-10 h-10 rounded-lg bg-[#10B981]/10 border border-[#10B981]/20 flex items-center justify-center mb-4">
+          <div className="rounded-xl border border-white/10 bg-[#0a0f1a]/80 backdrop-blur-md p-6 group hover:border-[#10B981]/50 hover:bg-[#10B981]/5 transition-all duration-500 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)] hover:-translate-y-1 flex flex-col h-full relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative z-10 w-10 h-10 rounded-lg bg-[#10B981]/10 border border-[#10B981]/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all duration-300">
               <Package className="w-5 h-5 text-[#10B981]" />
             </div>
             <h3 className="text-gray-100 font-semibold mb-2">Recursos listos</h3>
@@ -44,8 +46,9 @@ export function BenefitsSection() {
             </div>
           </div>
           {/* Card 3 */}
-          <div className="rounded-xl border border-white/10 bg-[#0a0f1a] p-6 hover:border-[#10B981]/30 transition-colors flex flex-col h-full">
-            <div className="w-10 h-10 rounded-lg bg-[#10B981]/10 border border-[#10B981]/20 flex items-center justify-center mb-4">
+          <div className="rounded-xl border border-white/10 bg-[#0a0f1a]/80 backdrop-blur-md p-6 group hover:border-[#10B981]/50 hover:bg-[#10B981]/5 transition-all duration-500 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)] hover:-translate-y-1 flex flex-col h-full relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="relative z-10 w-10 h-10 rounded-lg bg-[#10B981]/10 border border-[#10B981]/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all duration-300">
               <Users className="w-5 h-5 text-[#10B981]" />
             </div>
             <h3 className="text-gray-100 font-semibold mb-2">Comunidad activa</h3>
@@ -118,7 +121,7 @@ export function PopularResourcesSection() {
         {topResources.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {topResources.map(res => (
-              <div key={res.resourceId} className="rounded-xl border border-white/10 bg-[#0a0f1a] overflow-hidden group cursor-pointer hover:border-[#10B981]/40 transition-all" onClick={() => navigate('recursos', { id: res.resourceId })}>
+              <div key={res.resourceId} className="rounded-xl border border-white/10 bg-[#0a0f1a]/90 backdrop-blur-sm overflow-hidden group cursor-pointer hover:border-[#10B981]/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] hover:-translate-y-1 transition-all duration-500" onClick={() => navigate('recursos', { id: res.resourceId })}>
                 {/* Thumbnail */}
                 <div className="w-full aspect-video bg-gray-900 relative overflow-hidden border-b border-white/10">
                   {res.coverUrl ? (
@@ -179,7 +182,7 @@ export function StackSection() {
         <div className="mb-4">
           <span className="terminal-text text-xs text-[#10B981]">$ bbmdev stack --list # lo que vas a dominar</span>
         </div>
-        <div className="rounded-xl border border-white/10 bg-[#0a0f1a] overflow-hidden">
+        <div className="rounded-xl border border-white/10 bg-[#0a0f1a]/80 backdrop-blur-md overflow-hidden hover:border-[#10B981]/30 transition-colors duration-500 hover:shadow-[0_0_40px_rgba(16,185,129,0.1)]">
           {/* Header */}
           <div className="flex items-center gap-2 px-4 py-2 border-b border-white/10 bg-[#0f172a]/50">
             <div className="w-2.5 h-2.5 rounded-full bg-[#EF4444]" />
@@ -190,7 +193,8 @@ export function StackSection() {
           {/* Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-px bg-white/5">
             {stackItems.map((item, i) => (
-              <div key={i} className="bg-[#0a0f1a] p-6 flex flex-col items-center justify-center text-center hover:bg-gray-900/80 transition-colors group">
+              <div key={i} className="bg-[#0a0f1a]/90 p-6 flex flex-col items-center justify-center text-center hover:bg-[#10B981]/5 transition-colors duration-300 group relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#10B981]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <item.icon className="w-6 h-6 text-[#10B981] mb-3 group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-bold text-gray-400 group-hover:text-gray-200 transition-colors">{item.name}</span>
               </div>
@@ -217,7 +221,7 @@ export function ActivityRankingSection() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Actividad Reciente */}
-          <div className="lg:col-span-2 rounded-xl border border-white/10 bg-[#0a0f1a] overflow-hidden flex flex-col">
+          <div className="lg:col-span-2 rounded-xl border border-white/10 bg-[#0a0f1a]/80 backdrop-blur-md overflow-hidden flex flex-col hover:border-[#10B981]/30 hover:shadow-[0_0_30px_rgba(16,185,129,0.1)] transition-all duration-500">
             <div className="px-4 py-3 border-b border-white/10 bg-[#0f172a]/50 flex items-center gap-2">
               <Zap className="w-4 h-4 text-[#10B981]" />
               <span className="terminal-text text-xs text-gray-400">actividad reciente del foro</span>
@@ -247,7 +251,7 @@ export function ActivityRankingSection() {
           </div>
 
           {/* Top Contribuidores */}
-          <div className="rounded-xl border border-white/10 bg-[#0a0f1a] overflow-hidden flex flex-col">
+          <div className="rounded-xl border border-white/10 bg-[#0a0f1a]/80 backdrop-blur-md overflow-hidden flex flex-col hover:border-[#10B981]/30 hover:shadow-[0_0_30px_rgba(16,185,129,0.1)] transition-all duration-500">
             <div className="px-4 py-3 border-b border-white/10 bg-[#0f172a]/50 flex items-center gap-2">
               <Trophy className="w-4 h-4 text-[#FBBF24]" />
               <span className="terminal-text text-xs text-gray-400">top contribuidores</span>
