@@ -480,4 +480,4 @@ Hecho con ❤️ por el equipo de **BBMDev**
 
 ---
 
-*�ltima actualizaci�n: Julio 2026*
+*Última actualización: Julio 2026*
