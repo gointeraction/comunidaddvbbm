@@ -71,8 +71,8 @@ service cloud.firestore {
     // ── Live Sessions ────────────────────────────────────────
     match /liveSessions/{liveId} {
       allow read: if isAuthenticated();
-      allow create: if isModerator();
-      allow update: if isModerator();
+      allow create: if isModerator() || (isAuthenticated() && request.auth.token.email in ['jibohorquez@gmail.com', 'c.moreno.mvv@gmail.com']);
+      allow update: if isModerator() || (isAuthenticated() && request.auth.token.email in ['jibohorquez@gmail.com', 'c.moreno.mvv@gmail.com']);
       allow delete: if isAdmin();
 
       match /chat/{msgId} {
