@@ -265,4 +265,5 @@ export type Route =
   | 'privacidad'
   | 'terminos'
   | 'admin'
-  | 'saas-admin';
+  | 'saas-admin'
+  | 'saas-landing';

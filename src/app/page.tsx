@@ -22,6 +22,7 @@ const PrivacyPage = lazy(() => import('@/components/privacy/privacy-page').then(
 const TermsPage = lazy(() => import('@/components/terms/terms-page').then(m => ({ default: m.TermsPage })));
 const AdminPage = lazy(() => import('@/components/admin/admin-page').then(m => ({ default: m.AdminPage })));
 const SaaSAdminPage = lazy(() => import('@/components/saas/saas-admin-page').then(m => ({ default: m.SaaSAdminPage })));
+const SaaSLandingPage = lazy(() => import('@/components/saas/saas-landing-page').then(m => ({ default: m.SaaSLandingPage })));
 const AppHeader = lazy(() => import('@/components/layout/app-header').then(m => ({ default: m.AppHeader })));
 
 function LoadingScreen() {
@@ -121,6 +122,7 @@ function AppRouter() {
     notificaciones: <Suspense fallback={<LoadingScreen />}><NotificationsPage /></Suspense>,
     admin: currentUser.role === 'admin' ? <Suspense fallback={<LoadingScreen />}><AdminPage /></Suspense> : <Suspense fallback={<LoadingScreen />}><ForumPage /></Suspense>,
     'saas-admin': <Suspense fallback={<LoadingScreen />}><SaaSAdminPage /></Suspense>,
+    'saas-landing': <Suspense fallback={<LoadingScreen />}><SaaSLandingPage /></Suspense>,
   };
 
   const pageContent = routeMap[route] || <Suspense fallback={<LoadingScreen />}><ForumPage /></Suspense>;
