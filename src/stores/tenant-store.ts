@@ -1,11 +1,31 @@
 // BBMDev — Multi-Tenant Store & Management
 
 import { create } from 'zustand';
-import type { TenantConfig, SaaSMetrics } from '@/types/saas';
+import type { TenantConfig, SaaSMetrics, SaaSPlan } from '@/types/saas';
 import { DEFAULT_TENANT, applyTenantTheme } from '@/lib/theme';
 
+const ENRICHED_DEFAULT_TENANT: TenantConfig = {
+  ...DEFAULT_TENANT,
+  subscription: {
+    status: 'active',
+    stripeCustomerId: 'cus_bbmdev_001',
+    stripeSubscriptionId: 'sub_bbmdev_001',
+    currentPeriodEnd: '2026-08-30T00:00:00.000Z',
+    monthlyAmount: 499,
+    ownerEmail: 'admin@bbmdev.io',
+  },
+  usage: {
+    membersCount: 8450,
+    membersLimit: 100000,
+    storageUsedMB: 1450,
+    storageLimitMB: 50000,
+    postsCount: 1240,
+    coursesCount: 18,
+  },
+};
+
 const MOCK_TENANTS: TenantConfig[] = [
-  DEFAULT_TENANT,
+  ENRICHED_DEFAULT_TENANT,
   {
     tenantId: 'acme-corp',
     name: 'Acme AI Lab',
@@ -25,6 +45,22 @@ const MOCK_TENANTS: TenantConfig[] = [
       resources: true,
       liveSessions: true,
       gamification: true,
+    },
+    subscription: {
+      status: 'active',
+      stripeCustomerId: 'cus_acme_002',
+      stripeSubscriptionId: 'sub_acme_002',
+      currentPeriodEnd: '2026-08-15T00:00:00.000Z',
+      monthlyAmount: 149,
+      ownerEmail: 'billing@acmelab.ai',
+    },
+    usage: {
+      membersCount: 3200,
+      membersLimit: 5000,
+      storageUsedMB: 3800,
+      storageLimitMB: 10000,
+      postsCount: 450,
+      coursesCount: 6,
     },
     createdAt: new Date().toISOString(),
   },
@@ -48,6 +84,22 @@ const MOCK_TENANTS: TenantConfig[] = [
       liveSessions: false,
       gamification: true,
     },
+    subscription: {
+      status: 'past_due',
+      stripeCustomerId: 'cus_latam_003',
+      stripeSubscriptionId: 'sub_latam_003',
+      currentPeriodEnd: '2026-07-20T00:00:00.000Z',
+      monthlyAmount: 49,
+      ownerEmail: 'pagos@devslatam.org',
+    },
+    usage: {
+      membersCount: 480,
+      membersLimit: 500,
+      storageUsedMB: 1800,
+      storageLimitMB: 2000,
+      postsCount: 120,
+      coursesCount: 2,
+    },
     createdAt: new Date().toISOString(),
   },
 ];
@@ -58,10 +110,13 @@ interface TenantState {
   metrics: SaaSMetrics;
   switchTenant: (tenantId: string) => void;
   createTenant: (tenantData: Omit<TenantConfig, 'createdAt' | 'active'>) => void;
+  suspendTenant: (tenantId: string) => void;
+  reactivateTenant: (tenantId: string) => void;
+  updateTenantPlan: (tenantId: string, newPlan: SaaSPlan) => void;
 }
 
 export const useTenantStore = create<TenantState>((set, get) => ({
-  currentTenant: DEFAULT_TENANT,
+  currentTenant: ENRICHED_DEFAULT_TENANT,
   tenants: MOCK_TENANTS,
   metrics: {
     mrr: 4850,
@@ -70,6 +125,7 @@ export const useTenantStore = create<TenantState>((set, get) => ({
     totalMembers: 14200,
     activeCommunities: 26,
     churnRate: 1.2,
+    pastDueCommunities: 2,
   },
 
   switchTenant: (tenantId: string) => {
@@ -84,6 +140,22 @@ export const useTenantStore = create<TenantState>((set, get) => ({
     const newTenant: TenantConfig = {
       ...data,
       active: true,
+      subscription: {
+        status: 'active',
+        stripeCustomerId: `cus_${data.subdomain}_${Date.now()}`,
+        stripeSubscriptionId: `sub_${data.subdomain}_${Date.now()}`,
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(),
+        monthlyAmount: data.plan === 'starter' ? 49 : data.plan === 'pro' ? 149 : 499,
+        ownerEmail: `admin@${data.subdomain}.io`,
+      },
+      usage: {
+        membersCount: 1,
+        membersLimit: data.plan === 'starter' ? 500 : data.plan === 'pro' ? 5000 : 100000,
+        storageUsedMB: 10,
+        storageLimitMB: data.plan === 'starter' ? 2000 : data.plan === 'pro' ? 10000 : 50000,
+        postsCount: 0,
+        coursesCount: 0,
+      },
       createdAt: new Date().toISOString(),
     };
     set((state) => ({
@@ -95,5 +167,54 @@ export const useTenantStore = create<TenantState>((set, get) => ({
       },
     }));
     get().switchTenant(newTenant.tenantId);
+  },
+
+  suspendTenant: (tenantId: string) => {
+    set((state) => ({
+      tenants: state.tenants.map((t) =>
+        t.tenantId === tenantId
+          ? {
+              ...t,
+              active: false,
+              subscription: t.subscription
+                ? { ...t.subscription, status: 'suspended' as const }
+                : undefined,
+            }
+          : t
+      ),
+    }));
+  },
+
+  reactivateTenant: (tenantId: string) => {
+    set((state) => ({
+      tenants: state.tenants.map((t) =>
+        t.tenantId === tenantId
+          ? {
+              ...t,
+              active: true,
+              subscription: t.subscription
+                ? { ...t.subscription, status: 'active' as const }
+                : undefined,
+            }
+          : t
+      ),
+    }));
+  },
+
+  updateTenantPlan: (tenantId: string, newPlan: SaaSPlan) => {
+    const monthlyAmount = newPlan === 'starter' ? 49 : newPlan === 'pro' ? 149 : 499;
+    const membersLimit = newPlan === 'starter' ? 500 : newPlan === 'pro' ? 5000 : 100000;
+    set((state) => ({
+      tenants: state.tenants.map((t) =>
+        t.tenantId === tenantId
+          ? {
+              ...t,
+              plan: newPlan,
+              subscription: t.subscription ? { ...t.subscription, monthlyAmount } : undefined,
+              usage: t.usage ? { ...t.usage, membersLimit } : undefined,
+            }
+          : t
+      ),
+    }));
   },
 }));

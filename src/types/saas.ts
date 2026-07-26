@@ -1,6 +1,25 @@
 // BBMDev — SaaS Multi-Tenant Type Definitions
 
 export type SaaSPlan = 'starter' | 'pro' | 'enterprise';
+export type SubscriptionStatus = 'active' | 'past_due' | 'trialing' | 'suspended' | 'canceled';
+
+export interface TenantSubscription {
+  status: SubscriptionStatus;
+  stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
+  currentPeriodEnd: string;
+  monthlyAmount: number;
+  ownerEmail: string;
+}
+
+export interface TenantUsage {
+  membersCount: number;
+  membersLimit: number;
+  storageUsedMB: number;
+  storageLimitMB: number;
+  postsCount: number;
+  coursesCount: number;
+}
 
 export interface TenantConfig {
   tenantId: string;
@@ -22,6 +41,8 @@ export interface TenantConfig {
     liveSessions: boolean;
     gamification: boolean;
   };
+  subscription?: TenantSubscription;
+  usage?: TenantUsage;
   createdAt: string;
 }
 
@@ -32,4 +53,5 @@ export interface SaaSMetrics {
   totalMembers: number;
   activeCommunities: number;
   churnRate: number;
+  pastDueCommunities: number;
 }

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTenantStore } from '@/stores/tenant-store';
 import { useAppStore } from '@/stores/app-store';
+import { TenantControlPanel } from '@/components/saas/tenant-control-panel';
 import {
   Building2,
   DollarSign,
@@ -210,6 +211,9 @@ export function SaaSAdminPage() {
           </Card>
         ))}
       </div>
+
+      {/* Tenant Control & Billing Inspection */}
+      <TenantControlPanel />
 
       {/* Hosted Communities List */}
       <div className="space-y-4">
