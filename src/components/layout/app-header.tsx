@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useEffect } from 'react';
-import { Bell, MessageSquare, BookOpen, Package, Radio, Users, Trophy, Shield, Target, Settings } from 'lucide-react';
+import { Bell, MessageSquare, BookOpen, Package, Radio, Users, Trophy, Shield, Target, Settings, Sparkles } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/stores/app-store';
@@ -26,7 +26,8 @@ const NAV_LINKS: NavLink[] = [
   { label: 'miembros', route: 'miembros', icon: Users },
   { label: 'ranking', route: 'ranking', icon: Trophy },
   { label: 'reglas', route: 'reglas', icon: Shield },
-  { label: 'SaaS', route: 'saas-admin', icon: Shield },
+  { label: 'Obtener SaaS', route: 'saas-landing', icon: Sparkles },
+  { label: 'SaaS Admin', route: 'saas-admin', icon: Shield },
 ];
 
 /* -------------------------------------------------------------------------- */
