@@ -75,8 +75,9 @@ function PostCard({ post }: { post: Post }) {
   const likePost = useAppStore((s) => s.likePost);
 
   return (
-    <Card className="glass-card border-border/50 hover:border-primary/30 transition-colors">
-      <CardContent className="p-4 md:p-5">
+    <Card className="glass-card border-border/50 hover:border-primary/50 transition-all duration-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.1)] hover:-translate-y-[2px] bg-[#0a0f1a]/80 backdrop-blur-sm relative overflow-hidden group">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <CardContent className="p-4 md:p-5 relative z-10">
         {/* Author row */}
         <div className="flex items-center gap-3 mb-3">
           <Avatar className="h-8 w-8">

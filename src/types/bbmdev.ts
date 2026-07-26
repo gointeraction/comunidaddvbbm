@@ -243,4 +243,7 @@ export type Route =
   | 'mis-estadisticas'
   | 'gamificacion'
   | 'notificaciones'
+  | 'reglas'
+  | 'privacidad'
+  | 'terminos'
   | 'admin';

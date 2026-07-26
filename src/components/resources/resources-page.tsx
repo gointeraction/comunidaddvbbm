@@ -104,12 +104,13 @@ function ResourceCard({
   const navigate = useAppStore((s) => s.navigate);
 
   return (
-    <Card className="glass-card border-border/50 hover:border-primary/30 transition-all group overflow-hidden">
+    <Card className="glass-card border-border/50 bg-[#0a0f1a]/80 backdrop-blur-sm hover:border-[#10B981]/50 transition-all duration-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] hover:-translate-y-1 group overflow-hidden relative">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
       {/* Cover */}
       <div
-        className={`relative h-32 bg-gradient-to-br ${TYPE_GRADIENTS[resource.type] || 'from-gray-900/40 to-gray-800/30'} flex items-center justify-center`}
+        className={`relative z-10 h-32 bg-gradient-to-br ${TYPE_GRADIENTS[resource.type] || 'from-gray-900/40 to-gray-800/30'} flex items-center justify-center overflow-hidden`}
       >
-        <div className="text-primary/40 group-hover:text-primary/60 transition-colors">
+        <div className="text-primary/40 group-hover:text-primary/60 group-hover:scale-110 transition-all duration-500">
           {TYPE_ICONS[resource.type] || <FileText className="size-6" />}
         </div>
         {/* Type badge top-right */}
@@ -140,7 +141,7 @@ function ResourceCard({
         </button>
       </div>
 
-      <CardContent className="p-4">
+      <CardContent className="p-4 relative z-10">
         {/* Title (clickable link) */}
         <h3
           onClick={() => navigate('recurso-detalle', { resourceId: resource.resourceId })}
@@ -492,6 +493,32 @@ function ResourceDetail({ resourceId, onBack }: { resourceId: string; onBack: ()
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editContent, setEditContent] = useState('');
+  const [copiedMCP, setCopiedMCP] = useState(false);
+  const [copiedSkill, setCopiedSkill] = useState(false);
+
+  const handleCopyMCP = () => {
+    if (!resource) return;
+    const serverKey = resource.title.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const mcpConfig = {
+      mcpServers: {
+        [serverKey]: {
+          command: 'npx',
+          args: ['-y', resource.externalUrl || `@mcp/${serverKey}`]
+        }
+      }
+    };
+    navigator.clipboard.writeText(JSON.stringify(mcpConfig, null, 2));
+    setCopiedMCP(true);
+    setTimeout(() => setCopiedMCP(false), 2000);
+  };
+
+  const handleCopySkill = () => {
+    if (!resource) return;
+    const skillContent = `# ${resource.title}\n\n${resource.description}\n\n${resource.content || ''}`;
+    navigator.clipboard.writeText(skillContent);
+    setCopiedSkill(true);
+    setTimeout(() => setCopiedSkill(false), 2000);
+  };
 
   const isAuthorized = currentUser && (AUTHORIZED_EMAILS.includes(currentUser.email) || currentUser.role === 'admin');
 
@@ -727,6 +754,24 @@ function ResourceDetail({ resourceId, onBack }: { resourceId: string; onBack: ()
           </div>
 
           {/* Action Buttons */}
+          {resource.type === 'MCP Server' && (
+            <button
+              onClick={handleCopyMCP}
+              className="w-full py-3 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-xl font-mono font-semibold text-xs flex items-center justify-center gap-2 hover:bg-amber-500/30 transition-all cursor-pointer shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+            >
+              <span>{copiedMCP ? '✓ Copiado!' : '📋 Copiar Config MCP (JSON)'}</span>
+            </button>
+          )}
+
+          {resource.type === 'Skill' && (
+            <button
+              onClick={handleCopySkill}
+              className="w-full py-3 bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 rounded-xl font-mono font-semibold text-xs flex items-center justify-center gap-2 hover:bg-cyan-500/30 transition-all cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+            >
+              <span>{copiedSkill ? '✓ Copiado!' : '⚡ Copiar Skill Prompt'}</span>
+            </button>
+          )}
+
           <button className="w-full py-3 bg-[#10B981] text-gray-950 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#34D399] transition-colors cursor-pointer shadow-[0_0_22px_rgba(16,185,129,0.3)]">
             <span>☐</span> guardar recurso
           </button>

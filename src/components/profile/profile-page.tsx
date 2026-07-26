@@ -77,7 +77,9 @@ function ProfileView() {
   return (
     <div className="space-y-6 animate-fade-in-up">
       {/* Large profile card */}
-      <div className="glass-card rounded-xl p-6 space-y-5">
+      <div className="glass-card rounded-xl p-6 space-y-5 border-border/50 bg-[#0a0f1a]/80 backdrop-blur-sm hover:border-[#10B981]/50 transition-all duration-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] hover:-translate-y-1 relative group overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
+        <div className="relative z-10 space-y-5">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
           <AvatarInitials
             name={currentUser.displayName}
@@ -143,6 +145,7 @@ function ProfileView() {
             </div>
           ))}
         </div>
+        </div>
       </div>
 
       {/* My Stats section */}
@@ -152,7 +155,9 @@ function ProfileView() {
           <span className="terminal-path">~/estadisticas</span>
         </div>
         {hasNoActivity ? (
-          <div className="glass-card rounded-xl p-8 flex flex-col items-center justify-center gap-4 text-center">
+          <div className="glass-card rounded-xl p-8 flex flex-col items-center justify-center gap-4 text-center border-border/50 bg-[#0a0f1a]/80 backdrop-blur-sm hover:border-[#10B981]/50 transition-all duration-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] hover:-translate-y-1 relative group overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
+            <div className="relative z-10 flex flex-col items-center justify-center gap-4 text-center">
             <p className="terminal-text terminal-comment text-sm">
               {'// sin datos aún'}
             </p>
@@ -163,6 +168,7 @@ function ProfileView() {
               <Plus className="size-4" />
               Crear Post
             </Button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
@@ -174,11 +180,14 @@ function ProfileView() {
             ].map((metric) => (
               <div
                 key={metric.label}
-                className="glass-card rounded-lg p-4 flex flex-col items-center gap-2 opacity-0 animate-fade-in-up"
+                className="glass-card rounded-lg p-4 flex flex-col items-center gap-2 opacity-0 animate-fade-in-up border-border/50 bg-[#0a0f1a]/80 backdrop-blur-sm hover:border-[#10B981]/50 transition-all duration-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] hover:-translate-y-1 relative group overflow-hidden"
               >
-                <metric.icon className={`size-6 ${metric.color}`} />
-                <p className="text-2xl font-bold text-foreground">{metric.value}</p>
-                <p className="text-xs text-muted-foreground">{metric.label}</p>
+                <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
+                <div className="relative z-10 flex flex-col items-center w-full">
+                  <metric.icon className={`size-6 ${metric.color} mb-2 group-hover:scale-110 transition-transform duration-500`} />
+                  <p className="text-2xl font-bold text-foreground">{metric.value}</p>
+                  <p className="text-xs text-muted-foreground">{metric.label}</p>
+                </div>
               </div>
             ))}
           </div>

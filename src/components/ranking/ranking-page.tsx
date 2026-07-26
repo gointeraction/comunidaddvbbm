@@ -134,7 +134,9 @@ export default function RankingPage() {
           )}
 
           {/* Ranking List */}
-          <div className="border border-white/10 rounded-xl overflow-hidden bg-white/5">
+          <div className="border border-white/10 rounded-xl overflow-hidden bg-[#0a0f1a]/80 backdrop-blur-md hover:border-[#10B981]/30 transition-all duration-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.1)] relative group">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
+            <div className="relative z-10">
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
               <div className="flex items-center gap-2">
                 <span className="text-[#10B981]">🏆</span>
@@ -187,13 +189,16 @@ export default function RankingPage() {
                 );
               })}
             </div>
+            </div>
           </div>
         </div>
 
         {/* Right Sidebar */}
         <div className="space-y-4">
           {/* XP Rules */}
-          <div className="border border-white/10 rounded-xl bg-white/5 overflow-hidden">
+          <div className="border border-white/10 rounded-xl bg-[#0a0f1a]/80 backdrop-blur-md overflow-hidden hover:border-[#10B981]/30 transition-all duration-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.1)] relative group">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
+            <div className="relative z-10">
             <div className="px-4 py-3 border-b border-white/10">
               <span className="font-mono text-sm text-white flex items-center gap-2">
                 <span className="text-green-500">⊙</span> $ man xp
@@ -217,10 +222,13 @@ export default function RankingPage() {
                 <span className="text-sm font-mono text-yellow-500">+$var</span>
               </div>
             </div>
+            </div>
           </div>
 
           {/* Weekly Rewards */}
-          <div className="border border-white/10 rounded-xl bg-white/5 overflow-hidden">
+          <div className="border border-white/10 rounded-xl bg-[#0a0f1a]/80 backdrop-blur-md overflow-hidden hover:border-[#10B981]/30 transition-all duration-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.1)] relative group">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
+            <div className="relative z-10">
             <div className="px-4 py-3 border-b border-white/10">
               <span className="text-xs font-mono text-gray-500">{'// premios semanales'}</span>
             </div>
@@ -238,10 +246,13 @@ export default function RankingPage() {
                 <span className="text-sm font-mono text-[#10B981]">+{gamificationConfig.weeklyRewards.top3} XP</span>
               </div>
             </div>
+            </div>
           </div>
 
           {/* CTA */}
-          <div className="border border-[#10B981]/30 rounded-xl bg-[#10B981]/5 p-5 text-center">
+          <div className="border border-[#10B981]/30 rounded-xl bg-[#10B981]/5 p-5 text-center hover:border-[#10B981]/50 transition-all duration-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] hover:-translate-y-1 relative group overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
+            <div className="relative z-10">
             <div className="w-12 h-12 rounded-full bg-[#10B981]/20 flex items-center justify-center mx-auto mb-3">
               <Rocket className="text-[#10B981]" />
             </div>
@@ -250,6 +261,7 @@ export default function RankingPage() {
             <button className="w-full py-2.5 bg-[#10B981] text-gray-950 rounded-lg text-sm font-mono font-semibold hover:bg-[#34D399] transition-colors cursor-pointer shadow-[0_0_22px_rgba(16,185,129,0.3)]">
               {'>'} ir al foro
             </button>
+            </div>
           </div>
         </div>
       </div>

@@ -35,28 +35,28 @@ describe('Storage Rules - Avatars', () => {
     const alice = testEnv.authenticatedContext('alice');
     const profileRef = alice.storage().ref('avatars/alice/profile.png');
     
-    await assertSucceeds(profileRef.putString('fake-image-data', 'raw', { contentType: 'image/png' }));
+    await assertSucceeds(profileRef.putString('fake-image-data', 'raw', { contentType: 'image/png' }) as unknown as Promise<any>);
   });
 
   it('should deny users from uploading avatars to other accounts', async () => {
     const alice = testEnv.authenticatedContext('alice');
     const hackerRef = alice.storage().ref('avatars/bob/profile.png');
     
-    await assertFails(hackerRef.putString('fake-image-data', 'raw', { contentType: 'image/png' }));
+    await assertFails(hackerRef.putString('fake-image-data', 'raw', { contentType: 'image/png' }) as unknown as Promise<any>);
   });
 
   it('should deny uploading files that are not images', async () => {
     const alice = testEnv.authenticatedContext('alice');
     const profileRef = alice.storage().ref('avatars/alice/malware.exe');
     
-    await assertFails(profileRef.putString('fake-exe-data', 'raw', { contentType: 'application/x-msdownload' }));
+    await assertFails(profileRef.putString('fake-exe-data', 'raw', { contentType: 'application/x-msdownload' }) as unknown as Promise<any>);
   });
 
   it('should allow anyone to read avatars', async () => {
     // First, upload a file as Alice so it exists
     const alice = testEnv.authenticatedContext('alice');
     const profileRef = alice.storage().ref('avatars/alice/profile.png');
-    await profileRef.putString('fake-image-data', 'raw', { contentType: 'image/png' });
+    await (profileRef.putString('fake-image-data', 'raw', { contentType: 'image/png' }) as unknown as Promise<any>);
 
     // Then, try to read it as unauthenticated
     const unauth = testEnv.unauthenticatedContext();
@@ -72,13 +72,13 @@ describe('Storage Rules - Course Covers', () => {
     const mod = testEnv.authenticatedContext('mod1', { moderator: true });
     const coverRef = mod.storage().ref('course-covers/course1/cover.jpg');
     
-    await assertSucceeds(coverRef.putString('fake-image-data', 'raw', { contentType: 'image/jpeg' }));
+    await assertSucceeds(coverRef.putString('fake-image-data', 'raw', { contentType: 'image/jpeg' }) as unknown as Promise<any>);
   });
 
   it('should deny regular users from uploading course covers', async () => {
     const user = testEnv.authenticatedContext('user1');
     const coverRef = user.storage().ref('course-covers/course1/cover.jpg');
     
-    await assertFails(coverRef.putString('fake-image-data', 'raw', { contentType: 'image/jpeg' }));
+    await assertFails(coverRef.putString('fake-image-data', 'raw', { contentType: 'image/jpeg' }) as unknown as Promise<any>);
   });
 });

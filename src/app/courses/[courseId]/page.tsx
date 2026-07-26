@@ -160,7 +160,7 @@ export default function CourseDetailPage() {
             <div className="space-y-4">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Nivel</span>
-                <span className="font-medium capitalize">{course.level}</span>
+                <span className="font-medium capitalize">{(course as any).level || 'Todos'}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Lecciones</span>

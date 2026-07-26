@@ -2,6 +2,7 @@
 
 import { useEffect, lazy, Suspense } from 'react';
 import { useAppStore } from '@/stores/app-store';
+import type { Route } from '@/types/bbmdev';
 import LandingPage from '@/components/landing/landing-page';
 
 // Lazy-loaded page components (code splitting)
@@ -16,6 +17,9 @@ const GamificationPage = lazy(() => import('@/components/gamification/gamificati
 const ProfilePage = lazy(() => import('@/components/profile/profile-page').then(m => ({ default: m.ProfilePage })));
 const DirectosPage = lazy(() => import('@/components/directos/directos-page').then(m => ({ default: m.DirectosPage })));
 const NotificationsPage = lazy(() => import('@/components/notifications/notifications-page').then(m => ({ default: m.NotificationsPage })));
+const RulesPage = lazy(() => import('@/components/rules/rules-page').then(m => ({ default: m.RulesPage })));
+const PrivacyPage = lazy(() => import('@/components/privacy/privacy-page').then(m => ({ default: m.PrivacyPage })));
+const TermsPage = lazy(() => import('@/components/terms/terms-page').then(m => ({ default: m.TermsPage })));
 const AdminPage = lazy(() => import('@/components/admin/admin-page').then(m => ({ default: m.AdminPage })));
 const AppHeader = lazy(() => import('@/components/layout/app-header').then(m => ({ default: m.AppHeader })));
 
@@ -34,8 +38,34 @@ function LoadingScreen() {
   );
 }
 
+const VALID_ROUTES = new Set<string>([
+  'login', 'registro', 'recuperar-contrasena', 'onboarding', 'foro',
+  'foro-detalle', 'recursos', 'recurso-detalle', 'cursos', 'curso-detalle',
+  'leccion', 'directos', 'miembros', 'miembro-perfil', 'ranking', 'perfil',
+  'perfil-editar', 'mis-estadisticas', 'gamificacion', 'notificaciones',
+  'reglas', 'privacidad', 'terminos', 'admin'
+]);
+
 function AppRouter() {
   const { route, isAuthenticated, currentUser, isLoading, initAuth } = useAppStore();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname.replace(/^\//, '');
+      if (VALID_ROUTES.has(pathname) && pathname !== route) {
+        useAppStore.setState({ route: pathname as Route });
+      }
+    }
+
+    const handlePopState = () => {
+      const pathname = window.location.pathname.replace(/^\//, '');
+      const targetRoute = VALID_ROUTES.has(pathname) ? (pathname as Route) : 'landing';
+      useAppStore.setState({ route: targetRoute });
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     // Only init auth when not on landing page
@@ -82,6 +112,9 @@ function AppRouter() {
     'miembro-perfil': <Suspense fallback={<LoadingScreen />}><MembersPage /></Suspense>,
     ranking: <Suspense fallback={<LoadingScreen />}><RankingPage /></Suspense>,
     gamificacion: <Suspense fallback={<LoadingScreen />}><GamificationPage /></Suspense>,
+    reglas: <Suspense fallback={<LoadingScreen />}><RulesPage /></Suspense>,
+    privacidad: <Suspense fallback={<LoadingScreen />}><PrivacyPage /></Suspense>,
+    terminos: <Suspense fallback={<LoadingScreen />}><TermsPage /></Suspense>,
     perfil: <Suspense fallback={<LoadingScreen />}><ProfilePage /></Suspense>,
     'perfil-editar': <Suspense fallback={<LoadingScreen />}><ProfilePage /></Suspense>,
     notificaciones: <Suspense fallback={<LoadingScreen />}><NotificationsPage /></Suspense>,

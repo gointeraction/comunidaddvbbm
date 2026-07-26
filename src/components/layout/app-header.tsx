@@ -25,6 +25,7 @@ const NAV_LINKS: NavLink[] = [
   { label: 'directos', route: 'directos', icon: Radio, requiresAuth: ['jibohorquez@gmail.com', 'c.moreno.mvv@gmail.com'] },
   { label: 'miembros', route: 'miembros', icon: Users },
   { label: 'ranking', route: 'ranking', icon: Trophy },
+  { label: 'reglas', route: 'reglas', icon: Shield },
 ];
 
 /* -------------------------------------------------------------------------- */

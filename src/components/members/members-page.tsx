@@ -155,7 +155,9 @@ export default function MembersPage() {
         </Button>
 
         {/* Profile Card */}
-        <div className="glass-card rounded-xl p-6 md:p-8">
+        <div className="glass-card rounded-xl p-6 md:p-8 border-border/50 bg-[#0a0f1a]/80 backdrop-blur-sm hover:border-[#10B981]/50 transition-all duration-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] hover:-translate-y-1 relative group overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
+          <div className="relative z-10">
           <div className="flex flex-col md:flex-row items-start gap-6">
             {/* Avatar */}
             <div
@@ -220,10 +222,13 @@ export default function MembersPage() {
               </div>
             </div>
           </div>
+          </div>
         </div>
 
         {/* Recent Activity */}
-        <div className="glass-card rounded-xl p-6">
+        <div className="glass-card rounded-xl p-6 border-border/50 bg-[#0a0f1a]/80 backdrop-blur-sm hover:border-[#10B981]/50 transition-all duration-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] hover:-translate-y-1 relative group overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
+          <div className="relative z-10">
           <h3 className="terminal-text text-lg font-semibold mb-4 flex items-center gap-2">
             <span className="text-[#10B981]">$</span> Actividad reciente
           </h3>
@@ -259,6 +264,7 @@ export default function MembersPage() {
               <span className="terminal-text">#</span> Sin posts recientes
             </div>
           )}
+          </div>
         </div>
 
         {/* Joined */}
@@ -366,10 +372,12 @@ export default function MembersPage() {
         {filteredUsers.map(user => (
           <div
             key={user.uid}
-            className={`glass-card rounded-xl p-5 hover:border-[#10B981]/30 transition-all duration-200 group animate-fade-in-up ${
+            className={`glass-card rounded-xl p-5 border-border/50 bg-[#0a0f1a]/80 backdrop-blur-sm hover:border-[#10B981]/50 transition-all duration-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] hover:-translate-y-1 relative group overflow-hidden animate-fade-in-up ${
               currentUser?.uid === user.uid ? 'ring-1 ring-[#10B981]/20' : ''
             }`}
           >
+            <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
+            <div className="relative z-10">
             {/* Top row: avatar + name */}
             <div className="flex items-start gap-3 mb-3">
               <div
@@ -429,6 +437,7 @@ export default function MembersPage() {
               Ver perfil
               <ChevronRight className="h-3 w-3" />
             </Button>
+            </div>
           </div>
         ))}
       </div>

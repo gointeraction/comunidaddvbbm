@@ -86,7 +86,7 @@ function CourseCard({
 
   return (
     <Card
-      className="glass-card border-border/50 hover:border-primary/30 transition-all group cursor-pointer overflow-hidden"
+      className="glass-card border-border/50 bg-[#0a0f1a]/80 backdrop-blur-sm hover:border-[#10B981]/50 transition-all duration-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] hover:-translate-y-1 group cursor-pointer overflow-hidden relative"
       onClick={() => {
         if (course.externalUrl) {
           window.open(course.externalUrl, '_blank');
@@ -95,14 +95,16 @@ function CourseCard({
         }
       }}
     >
+      <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
+      <div className="relative z-10 w-full">
       {/* Cover */}
       <div
         className={`relative h-36 bg-gradient-to-br ${gradient} flex items-center justify-center overflow-hidden`}
       >
         {(course as any).coverUrl ? (
-          <img src={(course as any).coverUrl} alt={course.title} className="w-full h-full object-cover" />
+          <img src={(course as any).coverUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         ) : (
-          <div className="text-primary/30 group-hover:text-primary/50 transition-colors">
+          <div className="text-primary/30 group-hover:text-primary/60 group-hover:scale-110 transition-all duration-500">
             {getCourseIcon(course.courseId)}
           </div>
         )}
@@ -210,6 +212,7 @@ function CourseCard({
           )}
         </Button>
       </CardContent>
+      </div>
     </Card>
   );
 }

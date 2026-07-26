@@ -112,7 +112,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   // ── Navigation ──
   route: 'landing',
   routeParams: {},
-  navigate: (route, params = {}) => set({ route, routeParams: params }),
+  navigate: (route, params = {}) => {
+    set({ route, routeParams: params });
+    if (typeof window !== 'undefined') {
+      const path = route === 'landing' ? '/' : `/${route}`;
+      if (window.location.pathname !== path) {
+        window.history.pushState({ route, params }, '', path);
+      }
+    }
+  },
 
   // ── Auth (Firebase-backed) ──
   currentUser: null,

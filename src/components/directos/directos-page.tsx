@@ -123,7 +123,9 @@ function SessionCard({ session, onEdit }: { session: any; onEdit: (s: any) => vo
   return (
     <>
       <LiveRoomModal open={roomOpen} onClose={() => setRoomOpen(false)} session={session} />
-      <div className="glass-card rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-colors">
+      <div className="glass-card rounded-xl overflow-hidden border border-white/10 hover:border-[#10B981]/50 transition-all duration-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] hover:-translate-y-1 relative group">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#10B981]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
+        <div className="relative z-10">
         {/* YouTube Preview */}
         {youTubeId && session.status === 'live' ? (
           <YouTubePlayer videoId={youTubeId} />
@@ -234,6 +236,7 @@ function SessionCard({ session, onEdit }: { session: any; onEdit: (s: any) => vo
                 )}
               </div>
             )}
+          </div>
           </div>
         </div>
       </div>
