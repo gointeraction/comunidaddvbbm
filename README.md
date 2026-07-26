@@ -1,483 +1,165 @@
-# 🚀 BBMDev — Plataforma Comunitaria para Desarrolladores
+# 🚀 BBMDev — Plataforma de Comunidad Tech, IA & Solución SaaS Multi-Inquilino (White-Label)
 
-<div align="center">
-
-
-**Una comunidad moderna, gamificada y en tiempo real para desarrolladores de automatización, IA y desarrollo web.**
-
-[![Next.js](https://img.shields.io/badge/Next.js-16.x-black?style=flat-square&logo=next.js)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19.x-61DAFB?style=flat-square&logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![Firebase](https://img.shields.io/badge/Firebase-11.x-FFCA28?style=flat-square&logo=firebase)](https://firebase.google.com/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.x-06B6D4?style=flat-square&logo=tailwindcss)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/License-Private-red?style=flat-square)](LICENSE)
-
-🌐 **Live:** [https://bbmdevcomunidad.web.app](https://bbmdevcomunidad.web.app)
-
-</div>
+![Next.js 16](https://img.shields.io/badge/Next.js-16.2-black?style=for-the-badge&logo=next.js)
+![React 19](https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react)
+![Tailwind CSS 4](https://img.shields.io/badge/Tailwind-4.0-38bdf8?style=for-the-badge&logo=tailwindcss)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
+![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore%20%7C%20Storage-ffca28?style=for-the-badge&logo=firebase)
+![SaaS Multi-Tenant](https://img.shields.io/badge/SaaS-Multi--Tenant-emerald?style=for-the-badge)
 
 ---
 
-## 📋 Tabla de Contenidos
+## 🎯 1. Visión General del Proyecto
 
-- [Descripción General](#-descripción-general)
-- [Características Principales](#-características-principales)
-- [Stack Tecnológico](#-stack-tecnológico)
-- [Arquitectura del Proyecto](#-arquitectura-del-proyecto)
-- [Módulos y Funcionalidades](#-módulos-y-funcionalidades)
-- [Instalación y Configuración](#-instalación-y-configuración)
-- [Variables de Entorno](#-variables-de-entorno)
-- [Scripts Disponibles](#-scripts-disponibles)
-- [Estructura de Carpetas](#-estructura-de-carpetas)
-- [Despliegue](#-despliegue)
+**BBMDev** es una plataforma web moderna e interactiva diseñada para comunidades de desarrolladores, entusiastas de la Inteligencia Artificial y creadores de software. Combina un motor de interacción comunitaria (foro de discusión, cursos con quizzes interactivos, salas de directos con chat en vivo, biblioteca de recursos copiables en 1 clic y gamificación) con una **Arquitectura B2B SaaS Multi-Inquilino (White-Label)** que permite alojar y parametrizar cientos de comunidades independientes bajo su propia marca, subdominio y paleta de colores.
 
 ---
 
-## 🎯 Descripción General
-
-**BBMDev** es una plataforma comunitaria SaaS diseñada para desarrolladores especializados en automatización, inteligencia artificial, aplicaciones web y ecosistemas de agentes de IA. La plataforma combina un foro de discusión, biblioteca de recursos, cursos, sesiones en vivo, gamificación y herramientas de colaboración en tiempo real en un único producto cohesivo.
-
-La aplicación está construida como una **Single Page Application (SPA)** con Next.js, utilizando Firebase como backend principal (autenticación, base de datos en tiempo real Firestore, notificaciones push FCM) e integración con YouTube Live para transmisiones en directo.
-
----
-
-## ✨ Características Principales
-
-| Módulo | Funcionalidad | Estado |
-|--------|--------------|--------|
-| 🔐 Autenticación | Login, registro, recuperación de contraseña | ✅ Activo |
-| 🧭 Onboarding | Wizard de configuración de perfil inicial | ✅ Activo |
-| 💬 Foro | Posts, comentarios, likes, tags, moderación | ✅ Activo |
-| 📚 Recursos | Skills, Plugins, Subagents, MCP Servers, Tutoriales | ✅ Activo |
-| 🎓 Cursos | Cursos con lecciones, progreso y XP | ✅ Activo |
-| 📡 Directos | Sesiones en vivo con YouTube Live | ✅ Activo |
-| 👥 Miembros | Directorio de la comunidad con perfiles | ✅ Activo |
-| 🏆 Ranking | Tabla de líderes semanal y global por XP | ✅ Activo |
-| 🎮 Gamificación | Misiones, logros, niveles y recompensas XP | ✅ Activo |
-| 👤 Perfil | Perfil personal, estadísticas, DevCard | ✅ Activo |
-| 🔔 Notificaciones | Notificaciones push (FCM) y en-app | ✅ Activo |
-| 🛡️ Administración | Panel admin con moderación y auditoría | ✅ Activo |
-
----
-
-## 🛠️ Stack Tecnológico
-
-### Frontend
-- **[Next.js 16](https://nextjs.org/)** — Framework React con SSR y output standalone
-- **[React 19](https://react.dev/)** — Biblioteca de UI
-- **[TypeScript 5](https://www.typescriptlang.org/)** — Tipado estático
-- **[Tailwind CSS 4](https://tailwindcss.com/)** — Framework de estilos utilitarios
-- **[shadcn/ui](https://ui.shadcn.com/)** + **[Radix UI](https://www.radix-ui.com/)** — Componentes accesibles
-- **[Framer Motion](https://www.framer.com/motion/)** — Animaciones
-- **[Lucide React](https://lucide.dev/)** — Iconografía
-
-### Backend & Servicios
-- **[Firebase 11](https://firebase.google.com/)**
-  - **Firestore** — Base de datos NoSQL en tiempo real
-  - **Firebase Auth** — Autenticación de usuarios
-  - **FCM (Firebase Cloud Messaging)** — Notificaciones push
-  - **Firebase Hosting** — Despliegue y CDN
-- **YouTube Live** — Integración de directos y transmisiones en vivo
-- **[Prisma](https://www.prisma.io/)** + **SQLite** — ORM para datos locales/secundarios
-- **[NextAuth](https://next-auth.js.org/)** — Capa de autenticación adicional
-
-### Estado & Datos
-- **[Zustand](https://zustand-demo.pmnd.rs/)** — Gestión de estado global
-- **[TanStack Query](https://tanstack.com/query)** — Server state y caché
-- **[TanStack Table](https://tanstack.com/table)** — Tablas de datos avanzadas
-- **[React Hook Form](https://react-hook-form.com/)** + **[Zod](https://zod.dev/)** — Formularios y validación
-
-### Utilidades
-- **[next-pwa](https://github.com/DuCanh2912/next-pwa)** — Progressive Web App
-- **[next-intl](https://next-intl-docs.vercel.app/)** — Internacionalización
-- **[date-fns](https://date-fns.org/)** — Manipulación de fechas
-- **[Recharts](https://recharts.org/)** — Gráficas y estadísticas
-- **[MDXEditor](https://mdxeditor.dev/)** — Editor de Markdown rico
-
----
-
-## 🏗️ Arquitectura del Proyecto
+## 💻 2. Stack Tecnológico
 
 ```
-┌─────────────────────────────────────────────────┐
-│                  Cliente (Browser)               │
-│  Next.js SPA + Zustand Store + TanStack Query    │
-└────────────────────────┬────────────────────────┘
-                         │
-          ┌──────────────┴──────────────┐
-          │                             │
-  ┌───────▼───────┐           ┌─────────▼──────┐
-  │  Firebase     │           │   LiveKit       │
-  │  ─ Auth       │           │  (Audio/Video)  │
-  │  ─ Firestore  │           └────────────────┘
-  │  ─ FCM        │
-  │  ─ Hosting    │
-  └───────────────┘
-```
-
-### Flujo de Navegación
-
-```
-Landing Page (pública)
-    │
-    ├── Login / Registro / Recuperar contraseña
-    │
-    └── [Autenticado]
-            │
-            ├── Onboarding Wizard (solo nuevos usuarios)
-            │
-            └── App Principal
-                    ├── Foro
-                    ├── Recursos
-                    ├── Cursos
-                    ├── Directos
-                    ├── Miembros
-                    ├── Ranking
-                    ├── Gamificación
-                    ├── Perfil
-                    ├── Notificaciones
-                    └── Admin (solo rol admin)
+┌────────────────────────────────────────────────────────────────────────┐
+│                          STACK TECNOLÓGICO                              │
+├───────────────────┬──────────────────────┬─────────────────────────────┤
+│ 🚀 Core & UI      │ ⚡ Estado & Sync     │ 🛡️ Backend & Seguridad      │
+│ ─ Next.js 16.2    │ ─ Zustand 5.0        │ ─ Firebase Auth             │
+│ ─ React 19        │ ─ Firestore Realtime │ ─ Cloud Firestore (NoSQL)   │
+│ ─ Turbopack       │ ─ Tenant Store       │ ─ Firebase Storage          │
+│ ─ Tailwind CSS 4  │ ─ Dynamic Theme CSS  │ ─ Edge Subdomain Middleware │
+└───────────────────┴──────────────────────┴─────────────────────────────┘
 ```
 
 ---
 
-## 📦 Módulos y Funcionalidades
+## 🔬 3. Módulos y Funcionalidades Principales
 
-### 🔐 Autenticación (`/components/auth`)
-- Formulario de **Login** con email y contraseña
-- Formulario de **Registro** de nueva cuenta
-- **Recuperación de contraseña** por email
-- Integración con **Firebase Auth** + **NextAuth**
-- Redirección automática según estado del usuario
+### 💬 A. Foro de Discusiones e Interacción
+- Publicación de dudas técnicas, noticias y fragmentos de código formateados.
+- Filtros por categorías (`automatizacion`, `ia`, `webapps`, `comunidad`) y ordenamiento por `Más Recientes` o `Más Populares`.
+- Contador de Likes atómico con rate-limiting (`throttle`).
+- Subcolección de comentarios `posts/{postId}/comments` con renderizado Markdown.
+- Asignación de XP por participación (+20 XP post, +5 XP comentario).
 
-### 🧭 Onboarding (`/components/onboarding`)
-- Wizard multi-paso para nuevos usuarios
-- Configuración de **nombre**, **intereses** y **nivel de experiencia**
-- Escritura de **bio** personal
-- Transición automática a la app al completar
+### 📦 B. Biblioteca de Recursos & Dev-UX
+- Clasificación por tipo: `Skill`, `Plugin`, `Subagent`, `MCP Server`, `Agent Team` y `Tutorial`.
+- **Herramientas Copiar en 1 Clic**:
+  * **Copiar Config MCP (JSON)**: Genera y copia la configuración JSON lista para pegar en `antigravity_mcp_config.json` o `claude_desktop_config.json`.
+  * **Copiar Skill Prompt**: Copia la instrucción formateada para asistentes de IA.
+- Votación de recursos útiles (`upvoteResourceInFirestore`).
 
-### 💬 Foro (`/components/forum`)
-- **Feed de posts** con ordenamiento por recientes o populares
-- **Creación de posts** con título, contenido enriquecido y etiquetas
-- **Sistema de comentarios** anidados
-- **Likes** en posts y comentarios
-- **Filtros por tags**: `automatizacion`, `ia`, `webapps`, `comunidad`
-- **Moderación**: ocultar/mostrar posts (moderadores y admins)
-- Integración con **Firestore** para datos en tiempo real
+### 📚 C. Cursos, Lecciones y Quizzes de Verificación
+- Cursos estructurados en lecciones secuenciales con seguimiento de progreso porcentual (`0%` a `100%`).
+- **Quiz Interactivo de Verificación**: Evaluación de opción múltiple al final de cada lección. La XP y el marcado de lección como completada requieren responder correctamente.
+- Generador de Certificado Digital Oficial en HTML/PDF al completar el 100% del curso.
 
-### 📚 Recursos (`/components/resources`)
-Biblioteca comunitaria de recursos técnicos categorizada por tipo y nivel:
+### 📺 D. Directos en Vivo con Chat en Tiempo Real
+- Modal de transmisión en vivo (`LiveRoomModal`) con reproductor embebido de YouTube Live (extracción dinámica de Video ID por Regex).
+- Panel de chat en tiempo real escuchando la subcolección `liveSessions/{liveId}/chat` con `onSnapshot()`.
 
-| Tipo | Descripción |
-|------|-------------|
-| **Skill** | Habilidades y capacidades para agentes |
-| **Plugin** | Extensiones y plugins |
-| **Subagent** | Subagentes especializados |
-| **MCP Server** | Servidores de Model Context Protocol |
-| **Agent Team** | Equipos de agentes coordinados |
-| **Tutorial** | Guías y tutoriales paso a paso |
+### 👤 E. Perfil de Desarrollador & GitHub Sync
+- **DevCard** de perfil con avatar dinámico, nivel, rol e intereses.
+- **GitHub Sync**: Fetching en vivo a `api.github.com/users/{username}/repos` para renderizar los 3 repositorios públicos destacados del usuario con sus estrellas y lenguaje principal.
+- Subida de avatares a Firebase Storage (`avatars/{uid}/avatar.jpg`).
 
-- Niveles: `Principiante`, `Intermedio`, `Avanzado`
-- Sistema de **favoritos** y contador de **descargas**
-- **Búsqueda** y filtros combinados
-- **Subida de recursos** con adjuntos
-
-### 🎓 Cursos (`/components/courses`)
-- Catálogo de **cursos estructurados** con lecciones
-- **Progreso por lección** con XP rewards
-- Sistema de **inscripción**
-- Vista de detalle con reproductor de contenido
-- Indicador de **duración** y número de lecciones
-
-### 📡 Directos (`/components/directos`)
-- Calendario de **sesiones en vivo** programadas
-- Estados: `Programado`, `En vivo`, `Finalizado`, `Cancelado`
-- Integración con **YouTube Live** (reproductor integrado de directos y enlaces externos)
-- Creación y edición de directos (para roles autorizados: administradores y autores)
-- Ocultación automática de sesiones finalizadas y canceladas tras 24 horas de su programación
-
-### 👥 Miembros (`/components/members`)
-- **Directorio completo** de la comunidad
-- **Búsqueda** por nombre y filtros por nivel e interés
-- Tarjeta de perfil con XP, nivel y badges
-- Vista de **perfil detallado** de cada miembro
-- Indicador de **presencia online** en tiempo real
-
-### 🏆 Ranking (`/components/ranking`)
-- **Tabla de líderes semanal** por XP
-- **Ranking global** histórico
-- Visualización de posición propia dentro de la comunidad
-- Podio con los **top 3** miembros destacados
-
-### 🎮 Gamificación (`/components/gamification`)
-Sistema completo de motivación y recompensas:
-
-- **Puntos XP** por acciones: crear posts, comentar, recibir likes, completar lecciones
-- **Sistema de niveles** con número de nivel y barra de progreso
-- **Misiones** (diarias, semanales) con tareas específicas y recompensas XP
-- **Logros** con rareza: `Common`, `Rare`, `Epic`, `Legendary`
-- **Recompensas semanales** automáticas para el Top 3 del ranking
-- Configuración flexible de XP por acción desde el panel admin
-
-### 👤 Perfil (`/components/profile`)
-- Visualización y **edición de perfil** completo
-- **DevCard** exportable como imagen
-- Estadísticas personales: posts, comentarios, XP, logros
-- Historial de **actividad** y **logros desbloqueados**
-- Gestión de **notificaciones** (push y email)
-
-### 🔔 Notificaciones (`/components/notifications`)
-Tipos de notificaciones soportadas:
-- `new_comment` — Nuevo comentario en tu post
-- `new_like` — Nuevo like en tu contenido
-- `mention` — Mención de otro usuario
-- `mission_completed` — Misión completada
-- `rank_update` — Cambio en el ranking
-- `directo_reminder` — Recordatorio de sesión en vivo
-- `achievement_unlocked` — Logro desbloqueado
-
-- **Notificaciones push** vía Firebase Cloud Messaging (FCM)
-- Marcado como leída individual o **marcar todas como leídas**
-- Badge con contador de no leídas en el header
-
-### 🛡️ Administración (`/components/admin`)
-Panel exclusivo para el rol `admin`:
-- **Moderación de contenido**: ocultar/mostrar posts y comentarios
-- **Gestión de usuarios**: suspender, cambiar rol
-- **Log de auditoría**: registro de todas las acciones administrativas
-- **Configuración de gamificación**: ajustar XP por acción y recompensas
-- **Métricas de la plataforma**: usuarios, posts, cursos y recursos
+### 🏆 F. Gamificación, XP y Ranking
+- Tabla de clasificación (`Leaderboard`) global y semanal por experiencia acumulada.
+- Niveles automáticos calculados por umbrales de XP.
+- Misiones diarias y medallas clasificadas por rareza (`common`, `rare`, `epic`, `legendary`).
 
 ---
 
-## ⚙️ Instalación y Configuración
+## 🏢 4. Subsistema SaaS Multi-Inquilino (White-Label)
+
+```
+                       [ Petición del Cliente ]
+                        acme.bbmdev.io
+                              │
+                              ▼
+                 ┌──────────────────────────┐
+                 │  Next.js Edge Middleware │ ─── (Resuelve tenantId: 'acme')
+                 └────────────┬─────────────┘
+                              │
+                              ▼
+                 ┌──────────────────────────┐
+                 │ Dynamic Theme Engine     │ ─── (Aplica variables CSS :root)
+                 └────────────┬─────────────┘
+                              │
+                              ▼
+                 ┌──────────────────────────┐
+                 │ Cloud Firestore Query    │ ─── (Filtra por tenantId)
+                 └────────────┬─────────────┘
+```
+
+1. **Resolutor de Subdominios Edge ([middleware.ts](file:///c:/Users/IAEGEA/ComunidadBBM/src/middleware.ts))**: Extrae el subdominio del cliente (`acme.bbmdev.io`) e inyecta el encabezado `x-tenant-id`.
+2. **Motor de Temas Dinámicos ([theme.ts](file:///c:/Users/IAEGEA/ComunidadBBM/src/lib/theme.ts))**: Modifica las variables CSS `:root` (`--primary`, `--background`, `--card`) en tiempo de ejecución.
+3. **Portal Super-Admin SaaS ([saas-admin-page.tsx](file:///c:/Users/IAEGEA/ComunidadBBM/src/components/saas/saas-admin-page.tsx))**: Métricas globales MRR/ARR, simulador de marcas y aprovisionador en 1 clic (incluyendo plan **Exonerado de $0 / 150 miembros**).
+4. **Centro de Control de Inquilinos ([tenant-control-panel.tsx](file:///c:/Users/IAEGEA/ComunidadBBM/src/components/saas/tenant-control-panel.tsx))**: Monitoreo de estados de pago (`active`, `past_due`, `trialing`, `suspended`, `canceled`), cuotas de consumo y botones de acción (🔴 Suspender, 🟢 Reactivar, 📧 Cobrar).
+5. **Dashboard de Analítica de Inquilinos ([tenant-analytics-dashboard.tsx](file:///c:/Users/IAEGEA/ComunidadBBM/src/components/saas/tenant-analytics-dashboard.tsx))**: Fuentes de adquisición, tasa de conversión Trial->Paid %, desglose por país, actividad diaria y **Exportador de Contactos a CSV**.
+6. **Página Dedicada de Ventas SaaS B2B & Stripe Checkout ([saas-landing-page.tsx](file:///c:/Users/IAEGEA/ComunidadBBM/src/components/saas/saas-landing-page.tsx))**: Demostrador interactivo de marca blanca, ventajas por vertical y pasarela de pago segura.
+
+---
+
+## 🌐 5. Rutas de la Plataforma (`Route`)
+
+| URL / Ruta | Nombre (`Route`) | Descripción |
+| :--- | :--- | :--- |
+| `https://bbmdev.io/` | `landing` | Landing Page de Bienvenida |
+| `https://bbmdev.io/login` | `login` | Iniciar Sesión |
+| `https://bbmdev.io/registro` | `registro` | Crear Cuenta |
+| `https://bbmdev.io/recuperar-contrasena` | `recuperar-contrasena` | Recuperación de Clave |
+| `https://bbmdev.io/onboarding` | `onboarding` | Wizard Inicial de Intereses |
+| `https://bbmdev.io/foro` | `foro` | Foro de Discusiones |
+| `https://bbmdev.io/foro?post={id}` | `foro-detalle` | Detalle de Publicación con Comentarios |
+| `https://bbmdev.io/recursos` | `recursos` | Biblioteca MCP & Skills |
+| `https://bbmdev.io/recursos?id={id}` | `recurso-detalle` | Detalle de Recurso |
+| `https://bbmdev.io/cursos` | `cursos` | Catálogo de Cursos |
+| `https://bbmdev.io/cursos?id={id}` | `curso-detalle` | Temario del Curso |
+| `https://bbmdev.io/leccion` | `leccion` | Lección con Quiz Interactivo |
+| `https://bbmdev.io/directos` | `directos` | Transmisiones en Vivo + Chat Firestore |
+| `https://bbmdev.io/miembros` | `miembros` | Directorio de Desarrolladores |
+| `https://bbmdev.io/miembro?uid={uid}` | `miembro-perfil` | Perfil Público de Miembro |
+| `https://bbmdev.io/ranking` | `ranking` | Tabla de Clasificación por XP |
+| `https://bbmdev.io/perfil` | `perfil` | Mi Perfil & GitHub Repos Sync |
+| `https://bbmdev.io/perfil-editar` | `perfil-editar` | Editar Datos de Perfil |
+| `https://bbmdev.io/mis-estadisticas` | `mis-estadisticas` | Estadísticas Personales de XP |
+| `https://bbmdev.io/gamificacion` | `gamificacion` | Misiones Diarias y Medallas |
+| `https://bbmdev.io/notificaciones` | `notificaciones` | Centro de Notificaciones |
+| `https://bbmdev.io/saas-landing` | `saas-landing` | **Página Dedicada de Ventas SaaS B2B & Stripe Checkout** |
+| `https://bbmdev.io/saas-admin` | `saas-admin` | **Portal Super-Admin SaaS & Analítica** |
+| `https://bbmdev.io/admin` | `admin` | Moderación de Contenido |
+| `https://bbmdev.io/reglas` | `reglas` | Reglas de la Comunidad |
+| `https://bbmdev.io/privacidad` | `privacidad` | Políticas de Privacidad |
+| `https://bbmdev.io/terminos` | `terminos` | Términos de Servicio |
+| `https://{subdominio}.bbmdev.io/` | Multi-Tenant | Comunidad Inquilino Marca Blanca |
+
+---
+
+## 🛠️ 6. Instalación y Despliegue Local
 
 ### Requisitos Previos
-- **Node.js** >= 18.x
-- **Bun** >= 1.x (recomendado) o npm/yarn
-- **Firebase CLI** (`npm install -g firebase-tools`)
-- Proyecto en **Firebase** configurado
+- Node.js 18+ y npm / pnpm.
 
-### Instalación
-
+### Pasos de Instalación
 ```bash
-# Clonar el repositorio
+# 1. Clonar el repositorio
 git clone https://github.com/gointeraction/comunidaddvbbm.git
-cd comunidaddvbbm
+cd ComunidadBBM
 
-# Instalar dependencias (con Bun)
-bun install
-
-# O con npm
+# 2. Instalar dependencias
 npm install
-```
 
-### Configuración de Prisma
-
-```bash
-# Generar cliente de Prisma
-bun run db:generate
-
-# Aplicar esquema a la base de datos
-bun run db:push
-```
-
-### Iniciar en Desarrollo
-
-```bash
-bun run dev
-# o
+# 3. Iniciar servidor de desarrollo (Next.js 16 + Turbopack)
 npm run dev
+
+# 4. Verificación estricta de TypeScript
+npm run typecheck
+
+# 5. Compilar para producción
+npm run build
 ```
-
-La aplicación estará disponible en [http://localhost:3000](http://localhost:3000)
-
----
-
-## 🔑 Variables de Entorno
-
-Crear un archivo `.env` en la raíz del proyecto con las siguientes variables:
-
-```env
-# Base de datos (Prisma + SQLite)
-DATABASE_URL="file:./db/custom.db"
-
-# Firebase Web SDK
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-NEXT_PUBLIC_FIREBASE_APP_ID=
-NEXT_PUBLIC_FIREBASE_VAPID_KEY=
-
-# Firebase Admin SDK (servidor)
-FIREBASE_PROJECT_ID=
-FIREBASE_PRIVATE_KEY=
-FIREBASE_CLIENT_EMAIL=
-
-# NextAuth
-NEXTAUTH_SECRET=
-NEXTAUTH_URL=http://localhost:3000
-```
-
----
-
-## 📜 Scripts Disponibles
-
-| Comando | Descripción |
-|---------|-------------|
-| `bun run dev` | Inicia el servidor de desarrollo en el puerto 3000 |
-| `bun run build` | Genera el build de producción |
-| `bun run start` | Inicia el servidor de producción |
-| `bun run lint` | Ejecuta ESLint para verificar el código |
-| `bun run db:generate` | Genera el cliente de Prisma |
-| `bun run db:push` | Sincroniza el esquema con la base de datos |
-| `bun run db:migrate` | Crea y aplica migraciones |
-| `bun run db:reset` | Resetea la base de datos |
-
----
-
-## 📁 Estructura de Carpetas
-
-```
-comunidaddvbbm/
-├── public/                    # Assets estáticos
-│   ├── logo.svg
-│   ├── manifest.json          # PWA manifest
-│   └── robots.txt
-├── src/
-│   ├── app/                   # Next.js App Router
-│   │   ├── api/               # API Routes
-│   │   │   └── livekit/       # Endpoint de tokens LiveKit
-│   │   ├── globals.css        # Estilos globales
-│   │   ├── layout.tsx         # Layout raíz
-│   │   └── page.tsx           # Entrada principal (router SPA)
-│   ├── components/
-│   │   ├── admin/             # Panel de administración
-│   │   ├── auth/              # Login, registro, recuperación
-│   │   ├── bbmdev/           # Componentes específicos (Avatar, etc.)
-│   │   ├── courses/           # Catálogo de cursos y lecciones
-│   │   ├── directos/          # Sesiones en vivo
-│   │   ├── forum/             # Foro de discusión
-│   │   ├── gamification/      # Misiones, logros y niveles
-│   │   ├── landing/           # Página de inicio pública
-│   │   ├── layout/            # Header y Sidebar de la app
-│   │   ├── members/           # Directorio de miembros
-│   │   ├── notifications/     # Centro de notificaciones
-│   │   ├── onboarding/        # Wizard de configuración inicial
-│   │   ├── profile/           # Perfil de usuario
-│   │   ├── ranking/           # Tabla de líderes
-│   │   ├── resources/         # Biblioteca de recursos
-│   │   └── ui/                # Componentes base (shadcn/ui)
-│   ├── hooks/
-│   │   ├── use-fcm.ts         # Hook para Firebase Cloud Messaging
-│   │   ├── use-mobile.ts      # Detección de dispositivo móvil
-│   │   ├── use-presence.ts    # Presencia online en tiempo real
-│   │   ├── use-realtime.ts    # Suscripciones Firestore
-│   │   └── use-toast.ts       # Notificaciones toast
-│   ├── lib/
-│   │   ├── auth.ts            # Configuración NextAuth
-│   │   ├── db.ts              # Cliente Prisma
-│   │   ├── firebase-admin.ts  # Firebase Admin SDK
-│   │   ├── firebase-config.ts # Firebase Web SDK
-│   │   ├── mock-data.ts       # Datos de desarrollo/demo
-│   │   ├── queries/           # Funciones de consulta a Firestore
-│   │   └── utils.ts           # Utilidades generales
-│   ├── stores/
-│   │   └── app-store.ts       # Store global con Zustand
-│   └── types/
-│       └── bbmdev.ts         # Definiciones TypeScript completas
-├── prisma/
-│   └── schema.prisma          # Esquema de base de datos
-├── functions/                 # Firebase Cloud Functions
-├── scripts/                   # Scripts de utilidad (seed, etc.)
-├── examples/                  # Ejemplos de integraciones
-├── .firebaserc                # Configuración proyecto Firebase
-├── firebase.json              # Configuración despliegue Firebase
-├── firestore.rules            # Reglas de seguridad Firestore
-├── firestore.indexes.json     # Índices de Firestore
-├── next.config.ts             # Configuración Next.js
-├── tailwind.config.ts         # Configuración Tailwind CSS
-└── package.json
-```
-
----
-
-## 🚀 Despliegue
-
-### Firebase Hosting
-
-Este proyecto está configurado para desplegarse en **Firebase Hosting** con **Cloud Functions** para el runtime de Next.js.
-
-```bash
-# Login en Firebase
-firebase login
-
-# Seleccionar proyecto
-firebase use bbmdevcomunidad
-
-# Build de producción
-bun run build
-
-# Desplegar
-firebase deploy
-```
-
-### Variables de entorno en producción
-
-Configura las variables de entorno en **Firebase Functions** antes del deploy:
-
-```bash
-firebase functions:config:set \
-  nextauth.secret="TU_SECRET"
-```
-
----
-
-## 🧩 Modelo de Datos
-
-### Entidades Principales
-
-| Entidad | Descripción |
-|---------|-------------|
-| `User` | Perfil completo de usuario con XP, nivel y rol |
-| `Post` | Publicación en el foro con tags y moderación |
-| `Comment` | Comentario en un post |
-| `Resource` | Recurso técnico (Skill, Plugin, MCP, etc.) |
-| `Course` | Curso con lecciones y progreso |
-| `Lesson` | Lección individual con recompensa XP |
-| `LiveSession` | Sesión en vivo programada con YouTube Live |
-| `Mission` | Misión gamificada con tareas y recompensas |
-| `Achievement` | Logro desbloqueable por criterios específicos |
-| `Notification` | Notificación in-app y/o push |
-| `AuditLog` | Registro de acciones de moderación |
-
-### Roles de Usuario
-
-| Rol | Permisos |
-|-----|----------|
-| `member` | Leer, crear posts y comentarios, acceder recursos |
-| `autor` | Mismos que member + publicar recursos y cursos |
-| `moderador` | Mismos que autor + moderar contenido |
-| `admin` | Acceso total + panel de administración |
 
 ---
 
 ## 📄 Licencia
 
-Este proyecto es de uso privado. Todos los derechos reservados © 2026 BBMDev / GoInteraction.
-
----
-
-<div align="center">
-
-Hecho con ❤️ por el equipo de **BBMDev**
-
-[🌐 bbmdevcomunidad.web.app](https://bbmdevcomunidad.web.app) · [📧 Contacto](mailto:contacto@bbmdev.com)
-
-</div>
-
----
-
-*Última actualización: Julio 2026*
+Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` para más detalles.
