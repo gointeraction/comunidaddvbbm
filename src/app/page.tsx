@@ -21,6 +21,7 @@ const RulesPage = lazy(() => import('@/components/rules/rules-page').then(m => (
 const PrivacyPage = lazy(() => import('@/components/privacy/privacy-page').then(m => ({ default: m.PrivacyPage })));
 const TermsPage = lazy(() => import('@/components/terms/terms-page').then(m => ({ default: m.TermsPage })));
 const AdminPage = lazy(() => import('@/components/admin/admin-page').then(m => ({ default: m.AdminPage })));
+const SaaSAdminPage = lazy(() => import('@/components/saas/saas-admin-page').then(m => ({ default: m.SaaSAdminPage })));
 const AppHeader = lazy(() => import('@/components/layout/app-header').then(m => ({ default: m.AppHeader })));
 
 function LoadingScreen() {
@@ -119,6 +120,7 @@ function AppRouter() {
     'perfil-editar': <Suspense fallback={<LoadingScreen />}><ProfilePage /></Suspense>,
     notificaciones: <Suspense fallback={<LoadingScreen />}><NotificationsPage /></Suspense>,
     admin: currentUser.role === 'admin' ? <Suspense fallback={<LoadingScreen />}><AdminPage /></Suspense> : <Suspense fallback={<LoadingScreen />}><ForumPage /></Suspense>,
+    'saas-admin': <Suspense fallback={<LoadingScreen />}><SaaSAdminPage /></Suspense>,
   };
 
   const pageContent = routeMap[route] || <Suspense fallback={<LoadingScreen />}><ForumPage /></Suspense>;

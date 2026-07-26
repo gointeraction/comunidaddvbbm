@@ -264,4 +264,5 @@ export type Route =
   | 'reglas'
   | 'privacidad'
   | 'terminos'
-  | 'admin';
+  | 'admin'
+  | 'saas-admin';

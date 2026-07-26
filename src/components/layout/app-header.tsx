@@ -26,6 +26,7 @@ const NAV_LINKS: NavLink[] = [
   { label: 'miembros', route: 'miembros', icon: Users },
   { label: 'ranking', route: 'ranking', icon: Trophy },
   { label: 'reglas', route: 'reglas', icon: Shield },
+  { label: 'SaaS', route: 'saas-admin', icon: Shield },
 ];
 
 /* -------------------------------------------------------------------------- */
