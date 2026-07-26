@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   MessageSquare,
   Eye,
@@ -65,6 +65,78 @@ function relativeTime(dateStr: string): string {
   if (hours < 24) return `hace ${hours}h`;
   const days = Math.floor(hours / 24);
   return `hace ${days}d`;
+}
+
+// ── GitHub Repos Section ──────────────────────────────────
+function GitHubReposSection({ username }: { username?: string }) {
+  const [repos, setRepos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!username) return;
+    setLoading(true);
+    fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=3`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setRepos(data);
+      })
+      .catch((err) => console.warn('Error fetching GitHub repos:', err))
+      .finally(() => setLoading(false));
+  }, [username]);
+
+  if (!username) return null;
+
+  return (
+    <div className="space-y-3">
+      <div className="terminal-text flex items-center justify-between text-sm">
+        <div className="flex items-center gap-2">
+          <span className="terminal-prompt">$</span>
+          <span className="terminal-path">~/github/{username}</span>
+        </div>
+        <a
+          href={`https://github.com/${username}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-[#10B981] hover:underline font-mono"
+        >
+          Ver en GitHub ↗
+        </a>
+      </div>
+
+      {loading ? (
+        <p className="text-xs text-gray-500 font-mono">Cargando repositorios...</p>
+      ) : repos.length === 0 ? (
+        <p className="text-xs text-gray-500 font-mono">No se encontraron repositorios públicos.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {repos.map((repo) => (
+            <a
+              key={repo.id}
+              href={repo.html_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="glass-card rounded-lg p-3 border border-white/10 hover:border-[#10B981]/40 transition-all font-mono block group bg-[#0a0f1a]/80"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-semibold text-white truncate group-hover:text-[#10B981]">
+                  {repo.name}
+                </span>
+                <span className="text-[10px] text-amber-400">★ {repo.stargazers_count}</span>
+              </div>
+              <p className="text-[11px] text-gray-400 line-clamp-2 mb-2">
+                {repo.description || 'Sin descripción'}
+              </p>
+              {repo.language && (
+                <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 text-[#10B981] border border-white/10">
+                  {repo.language}
+                </span>
+              )}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ── View Mode ────────────────────────────────────────────
@@ -194,6 +266,9 @@ function ProfileView() {
         )}
       </div>
 
+      {/* GitHub Repositories section */}
+      <GitHubReposSection username={currentUser.githubUsername} />
+
       {/* Achievements section */}
       {false && (
         <div className="space-y-3">
@@ -242,6 +317,7 @@ function ProfileEdit() {
   const [level, setLevel] = useState<ExperienceLevel>(currentUser?.level || 'principiante');
   const [avatarPreview, setAvatarPreview] = useState<string | null>(currentUser?.avatarUrl || null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [githubUsername, setGithubUsername] = useState(currentUser?.githubUsername || '');
   const [uploading, setUploading] = useState(false);
 
   const toggleInterest = (i: Interest) => {
@@ -292,6 +368,7 @@ function ProfileEdit() {
       interests,
       level,
       avatarUrl,
+      githubUsername: githubUsername.trim() || undefined,
     });
     navigate('perfil');
   };
@@ -373,6 +450,19 @@ function ProfileEdit() {
               placeholder="Cuéntanos sobre ti..."
               rows={3}
               className="bg-background/50 border-border focus:border-[#10B981]/50 min-h-[80px]"
+            />
+          </div>
+
+          {/* GitHub Username */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[#10B981] terminal-text">
+              Usuario de GitHub
+            </label>
+            <Input
+              value={githubUsername}
+              onChange={(e) => setGithubUsername(e.target.value)}
+              placeholder="ej: octocat"
+              className="bg-background/50 border-border focus:border-[#10B981]/50 font-mono text-sm"
             />
           </div>
 

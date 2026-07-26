@@ -228,6 +228,7 @@ function CourseDetail({
   const courses = useAppStore((s) => s.courses);
   const [localLessons, setLocalLessons] = useState<Record<string, Lesson[]>>({});
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+  const [quizSelectedOption, setQuizSelectedOption] = useState<number | null>(null);
 
   // Fetch lessons from Firestore
   useEffect(() => {
@@ -556,6 +557,54 @@ function CourseDetail({
                       .replace(/\n/g, '<br/>')
                   }}
                 />
+
+                {/* Quiz Section */}
+                {(() => {
+                  const currentQuiz = selectedLesson.quiz || {
+                    question: `¿Cuál es el concepto clave validado en "${selectedLesson.title}"?`,
+                    options: [
+                      'Comprender y dominar los patrones expuestos en la lección',
+                      'Ejecutar código en producción sin validación previa',
+                      'Ignorar las alertas de seguridad y tipado',
+                      'Saltarse los pasos de testing'
+                    ],
+                    correctAnswer: 0
+                  };
+                  const isCorrect = quizSelectedOption === currentQuiz.correctAnswer;
+                  return (
+                    <div className="my-6 p-4 rounded-xl border border-primary/30 bg-primary/5 space-y-3 font-mono">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-primary font-semibold flex items-center gap-1.5">
+                          <span>📝</span> Quiz de Verificación
+                        </span>
+                        {quizSelectedOption !== null && (
+                          <span className={`text-[11px] font-bold ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {isCorrect ? '✓ ¡Respuesta Correcta!' : '✕ Inténtalo de nuevo'}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-200 font-sans">{currentQuiz.question}</p>
+                      <div className="space-y-2">
+                        {currentQuiz.options.map((option, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setQuizSelectedOption(idx)}
+                            className={`w-full text-left p-2.5 rounded-lg border text-xs font-mono transition-all cursor-pointer ${
+                              quizSelectedOption === idx
+                                ? idx === currentQuiz.correctAnswer
+                                  ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
+                                  : 'bg-rose-500/20 border-rose-500/50 text-rose-300'
+                                : 'bg-white/5 border-white/10 text-gray-300 hover:border-white/20'
+                            }`}
+                          >
+                            <span className="mr-2 text-gray-500">{String.fromCharCode(65 + idx)})</span>
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <Separator className="my-4 bg-border/50" />
 

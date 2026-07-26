@@ -8,10 +8,10 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { AvatarInitials } from '@/components/bbmdev/avatar-initials';
-import type { LiveStatus } from '@/types/bbmdev';
+import type { LiveStatus, LiveChatMessage } from '@/types/bbmdev';
 import { useAppStore } from '@/stores/app-store';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, updateDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, onSnapshot, query, orderBy } from 'firebase/firestore';
 
 // ── Authorized emails ──
 const AUTHORIZED_EMAILS = ['jibohorquez@gmail.com', 'c.moreno.mvv@gmail.com'];
@@ -74,11 +74,45 @@ function YouTubePlayer({ videoId }: { videoId: string }) {
 function LiveRoomModal({ open, onClose, session }: { open: boolean; onClose: () => void; session: any }) {
   if (!open) return null;
 
+  const currentUser = useAppStore((s) => s.currentUser);
+  const [messages, setMessages] = useState<LiveChatMessage[]>([]);
+  const [inputText, setInputText] = useState('');
   const youTubeId = session?.streamUrl ? extractYouTubeId(session.streamUrl) : null;
+
+  useEffect(() => {
+    if (!session?.liveId || !db) return;
+    const unsub = onSnapshot(
+      query(collection(db, `liveSessions/${session.liveId}/chat`), orderBy('createdAt', 'asc')),
+      (snapshot) => {
+        const msgs = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }) as LiveChatMessage);
+        setMessages(msgs);
+      },
+      (err) => console.warn('Chat error:', err)
+    );
+    return () => unsub();
+  }, [session?.liveId]);
+
+  const handleSendMessage = async () => {
+    if (!inputText.trim() || !currentUser || !session?.liveId || !db) return;
+    const msgData = {
+      liveId: session.liveId,
+      userId: currentUser.uid,
+      userName: currentUser.displayName || 'Dev',
+      userAvatar: currentUser.avatarUrl,
+      content: inputText.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    setInputText('');
+    try {
+      await addDoc(collection(db, `liveSessions/${session.liveId}/chat`), msgData);
+    } catch (err) {
+      console.warn('Error sending chat message:', err);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-      <div className="w-full max-w-4xl bg-[#0a0f1a] border border-white/10 rounded-xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="w-full max-w-6xl bg-[#0a0f1a] border border-white/10 rounded-xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0f172a]">
           <div className="flex items-center gap-2">
@@ -88,20 +122,62 @@ function LiveRoomModal({ open, onClose, session }: { open: boolean; onClose: () 
           <button onClick={onClose} className="text-gray-500 hover:text-white cursor-pointer">✕</button>
         </div>
 
-        {/* Video/Stream */}
-        <div className="flex-1 bg-black flex items-center justify-center min-h-[400px]">
-          {youTubeId ? (
-            <YouTubePlayer videoId={youTubeId} />
-          ) : session?.streamUrl ? (
-            <a href={session.streamUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[#10B981] hover:underline">
-              <ExternalLink className="size-4" /> Abrir stream en YouTube
-            </a>
-          ) : (
-            <div className="text-center text-gray-600">
-              <Radio className="size-12 mx-auto mb-2 opacity-30" />
-              <p className="text-sm font-mono">Esperando transmisión...</p>
+        {/* Video & Chat layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 flex-1 min-h-[420px]">
+          {/* Video/Stream */}
+          <div className="lg:col-span-2 bg-black flex items-center justify-center p-2">
+            {youTubeId ? (
+              <YouTubePlayer videoId={youTubeId} />
+            ) : session?.streamUrl ? (
+              <a href={session.streamUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[#10B981] hover:underline">
+                <ExternalLink className="size-4" /> Abrir stream en YouTube
+              </a>
+            ) : (
+              <div className="text-center text-gray-600">
+                <Radio className="size-12 mx-auto mb-2 opacity-30" />
+                <p className="text-sm font-mono">Esperando transmisión...</p>
+              </div>
+            )}
+          </div>
+
+          {/* Realtime Chat */}
+          <div className="border-t lg:border-t-0 lg:border-l border-white/10 flex flex-col bg-[#050811]">
+            <div className="p-3 border-b border-white/10 flex items-center justify-between font-mono text-xs">
+              <span className="text-[#10B981] font-semibold">💬 Chat en vivo</span>
+              <span className="text-gray-500">{messages.length} mensajes</span>
             </div>
-          )}
+
+            <div className="flex-1 p-3 overflow-y-auto space-y-3 max-h-[300px] lg:max-h-[380px] custom-scrollbar">
+              {messages.length === 0 ? (
+                <div className="text-center py-10 text-gray-600 font-mono text-xs">
+                  <p>¡Sé el primero en enviar un mensaje!</p>
+                </div>
+              ) : (
+                messages.map((m) => (
+                  <div key={m.id} className="flex items-start gap-2 text-xs font-mono">
+                    <AvatarInitials name={m.userName} avatarUrl={m.userAvatar} className="size-6 text-[10px] shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-gray-400 font-semibold mr-1.5">{m.userName}:</span>
+                      <span className="text-gray-200 break-words">{m.content}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="p-3 border-t border-white/10 flex gap-2">
+              <Input
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                placeholder="Escribe un mensaje..."
+                className="bg-white/5 border-white/10 text-white text-xs font-mono focus:border-[#10B981]/50"
+              />
+              <Button onClick={handleSendMessage} className="bg-[#10B981] text-gray-950 text-xs font-mono font-semibold hover:bg-[#34D399] shrink-0">
+                Enviar
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

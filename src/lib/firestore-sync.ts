@@ -52,16 +52,16 @@ export async function initFirestoreSync() {
     // Only subscribe to essential collections on initial load
     // Defer non-essential listeners (missions, achievements, counters)
     const essentialCollections = [
-      { name: 'posts', limit: 50 },
-      { name: 'resources', limit: 50 },
-      { name: 'courses', limit: 50 },
-      { name: 'liveSessions', limit: 20 },
-      { name: 'notifications', limit: 50 },
+      { name: 'posts', limit: 25 },
+      { name: 'resources', limit: 25 },
+      { name: 'courses', limit: 25 },
+      { name: 'liveSessions', limit: 15 },
+      { name: 'notifications', limit: 25 },
     ];
 
     for (const col of essentialCollections) {
       unsubscribers.push(onSnapshot(
-        query(collection(getDbLazy(), col.name), limit(col.limit)),
+        query(collection(getDbLazy(), col.name), orderBy('createdAt', 'desc'), limit(col.limit)),
         (snap) => {
           const data = snap.docs.map((d) => d.data() as any);
           if (data.length > 0) useAppStore.setState({ [col.name]: data });

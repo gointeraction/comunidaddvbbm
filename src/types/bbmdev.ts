@@ -30,6 +30,7 @@ export interface User {
   fcmToken: string | null;
   pushEnabled: boolean;
   emailNotifications: boolean;
+  githubUsername?: string;
   createdAt: string;
   updatedAt: string;
   lastActiveAt: string;
@@ -111,6 +112,12 @@ export interface Course {
   externalUrl?: string | null;
 }
 
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+}
+
 export interface Lesson {
   lessonId: string;
   courseId: string;
@@ -119,6 +126,17 @@ export interface Lesson {
   order: number;
   xpReward: number;
   isCompleted: boolean;
+  quiz?: QuizQuestion;
+}
+
+export interface LiveChatMessage {
+  id: string;
+  liveId: string;
+  userId: string;
+  userName: string;
+  userAvatar: string | null;
+  content: string;
+  createdAt: string;
 }
 
 export interface LiveSession {
