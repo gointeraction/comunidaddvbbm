@@ -1,6 +1,6 @@
 // BBMDev — SaaS Multi-Tenant Type Definitions
 
-export type SaaSPlan = 'starter' | 'pro' | 'enterprise';
+export type SaaSPlan = 'exempt' | 'starter' | 'pro' | 'enterprise';
 export type SubscriptionStatus = 'active' | 'past_due' | 'trialing' | 'suspended' | 'canceled';
 
 export interface TenantSubscription {

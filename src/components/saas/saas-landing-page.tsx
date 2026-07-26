@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAppStore } from '@/stores/app-store';
 import { useTenantStore } from '@/stores/tenant-store';
+import type { SaaSPlan } from '@/types/saas';
 import {
   Sparkles,
   Zap,
@@ -41,7 +42,7 @@ export function SaaSLandingPage() {
   const [demoColor, setDemoColor] = useState('#10B981');
 
   // Checkout Payment Gateway State
-  const [selectedPlan, setSelectedPlan] = useState<'starter' | 'pro' | 'enterprise'>('pro');
+  const [selectedPlan, setSelectedPlan] = useState<SaaSPlan>('pro');
   const [communityName, setCommunityName] = useState('');
   const [subdomain, setSubdomain] = useState('');
   const [adminEmail, setAdminEmail] = useState('');

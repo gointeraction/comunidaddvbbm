@@ -35,7 +35,7 @@ export function SaaSAdminPage() {
   const [name, setName] = useState('');
   const [subdomain, setSubdomain] = useState('');
   const [customDomain, setCustomDomain] = useState('');
-  const [plan, setPlan] = useState<'starter' | 'pro' | 'enterprise'>('pro');
+  const [plan, setPlan] = useState<'exempt' | 'starter' | 'pro' | 'enterprise'>('pro');
   const [primaryColor, setPrimaryColor] = useState('#3B82F6');
 
   const handleCreate = () => {
@@ -149,6 +149,7 @@ export function SaaSAdminPage() {
                       onChange={(e: any) => setPlan(e.target.value)}
                       className="w-full bg-[#0a0f1a] border border-white/10 rounded-lg p-2 text-xs text-white font-mono"
                     >
+                      <option value="exempt">Exonerado ($0 / 150 miembros)</option>
                       <option value="starter">Starter ($49/m)</option>
                       <option value="pro">Pro ($149/m)</option>
                       <option value="enterprise">Enterprise ($499/m)</option>

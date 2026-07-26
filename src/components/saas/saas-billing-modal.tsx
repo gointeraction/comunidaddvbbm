@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTenantStore } from '@/stores/tenant-store';
+import type { SaaSPlan } from '@/types/saas';
 import { Check, Sparkles, Zap, Shield, CreditCard, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -74,7 +75,7 @@ export function SaaSBillingModal({
   onOpenChange: (open: boolean) => void;
 }) {
   const { currentTenant } = useTenantStore();
-  const [selectedPlan, setSelectedPlan] = useState<'starter' | 'pro' | 'enterprise'>(currentTenant.plan || 'pro');
+  const [selectedPlan, setSelectedPlan] = useState<SaaSPlan>(currentTenant.plan || 'pro');
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
 

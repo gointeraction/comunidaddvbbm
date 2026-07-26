@@ -145,14 +145,14 @@ export const useTenantStore = create<TenantState>((set, get) => ({
         stripeCustomerId: `cus_${data.subdomain}_${Date.now()}`,
         stripeSubscriptionId: `sub_${data.subdomain}_${Date.now()}`,
         currentPeriodEnd: new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(),
-        monthlyAmount: data.plan === 'starter' ? 49 : data.plan === 'pro' ? 149 : 499,
+        monthlyAmount: data.plan === 'exempt' ? 0 : data.plan === 'starter' ? 49 : data.plan === 'pro' ? 149 : 499,
         ownerEmail: `admin@${data.subdomain}.io`,
       },
       usage: {
         membersCount: 1,
-        membersLimit: data.plan === 'starter' ? 500 : data.plan === 'pro' ? 5000 : 100000,
+        membersLimit: data.plan === 'exempt' ? 150 : data.plan === 'starter' ? 500 : data.plan === 'pro' ? 5000 : 100000,
         storageUsedMB: 10,
-        storageLimitMB: data.plan === 'starter' ? 2000 : data.plan === 'pro' ? 10000 : 50000,
+        storageLimitMB: data.plan === 'exempt' ? 1000 : data.plan === 'starter' ? 2000 : data.plan === 'pro' ? 10000 : 50000,
         postsCount: 0,
         coursesCount: 0,
       },
@@ -202,8 +202,8 @@ export const useTenantStore = create<TenantState>((set, get) => ({
   },
 
   updateTenantPlan: (tenantId: string, newPlan: SaaSPlan) => {
-    const monthlyAmount = newPlan === 'starter' ? 49 : newPlan === 'pro' ? 149 : 499;
-    const membersLimit = newPlan === 'starter' ? 500 : newPlan === 'pro' ? 5000 : 100000;
+    const monthlyAmount = newPlan === 'exempt' ? 0 : newPlan === 'starter' ? 49 : newPlan === 'pro' ? 149 : 499;
+    const membersLimit = newPlan === 'exempt' ? 150 : newPlan === 'starter' ? 500 : newPlan === 'pro' ? 5000 : 100000;
     set((state) => ({
       tenants: state.tenants.map((t) =>
         t.tenantId === tenantId
