@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTenantStore } from '@/stores/tenant-store';
 import { useAppStore } from '@/stores/app-store';
 import { TenantControlPanel } from '@/components/saas/tenant-control-panel';
+import { TenantAnalyticsDashboard } from '@/components/saas/tenant-analytics-dashboard';
 import {
   Building2,
   DollarSign,
@@ -212,6 +213,9 @@ export function SaaSAdminPage() {
           </Card>
         ))}
       </div>
+
+      {/* Tenant Analytics & Contact Directory */}
+      <TenantAnalyticsDashboard />
 
       {/* Tenant Control & Billing Inspection */}
       <TenantControlPanel />
